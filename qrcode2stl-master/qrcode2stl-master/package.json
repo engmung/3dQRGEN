@@ -1,0 +1,46 @@
+{
+  "name": "qrcode2stl",
+  "version": "1.19.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.vue",
+    "serve": "npx serve public"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.4",
+    "@tailwindcss/vite": "^4.1.8",
+    "babel-runtime": "^6.26.0",
+    "bulma": "^0.9.4",
+    "core-js": "^3.6.5",
+    "deep-object-diff": "^1.1.0",
+    "deepmerge": "^4.2.2",
+    "jszip": "^3.5.0",
+    "markdown-it": "^14.0.0",
+    "path-that-svg": "^1.2.4",
+    "qrcode": "^1.4.4",
+    "tailwindcss": "^4.1.8",
+    "three": "^0.178.0",
+    "three-csg-ts": "^3.2.0",
+    "vcards-js": "^2.10.0",
+    "vue": "^2.7.16",
+    "vue-i18n": "^8.28.2",
+    "vue-qrcode-reader": "^3.2.1"
+  },
+  "devDependencies": {
+    "@babel/runtime": "^7.27.4",
+    "@vitejs/plugin-vue2": "^2.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.20.1",
+    "vite": "^5.1.4",
+    "vite-plugin-node-polyfills": "^0.23.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions"
+  ],
+  "packageManager": "npm@11.5.1"
+}

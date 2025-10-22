@@ -1,0 +1,19 @@
+{
+  "order_uuid": "53881a6c-ebd0-4a93-b662-45e910bec18f",
+  "stand_id": 1,
+  "stand_name": "기본 거치대 (70mm)",
+  "qr_url": "https://example.com",
+  "customization": {
+    "plate_width": 70,
+    "plate_height": 140,
+    "plate_depth": 2,
+    "qr_size": 50,
+    "qr_depth": 2,
+    "qr_y_offset": 10
+  },
+  "customer": {
+    "email": "lsh678902@gmail.com",
+    "name": "승훈 이",
+    "address": null
+  }
+}

@@ -1,0 +1,230 @@
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models.order import Order
+from app.models.stand import Stand
+from app.schemas.order import OrderResponse
+from app.services import storage
+from app.config import settings
+from app.auth import get_current_user_id, get_current_user_email, get_admin_user
+import json
+import uuid
+import os
+
+router = APIRouter()
+
+
+@router.post("/", response_model=OrderResponse)
+async def create_order(
+    stand_id: int = Form(...),
+    qr_url: str = Form(...),
+    customization: str = Form(...),  # JSON string
+    customer_email: str = Form(...),
+    customer_name: str = Form(...),
+    customer_address: str = Form(None),
+    stl_file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    주문 생성
+
+    1. 거치대 확인
+    2. STL 파일 저장
+    3. DB에 주문 저장
+    4. 다운로드 URL 반환 (결제 기능 미구현으로 임시)
+    """
+    # 1. 거치대 확인
+    stand = db.query(Stand).filter(Stand.id == stand_id, Stand.is_active == True).first()
+    if not stand:
+        raise HTTPException(status_code=404, detail="Stand not found")
+
+    # 2. customization JSON 파싱
+    try:
+        customization_data = json.loads(customization)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid customization JSON")
+
+    # 3. 주문 UUID 생성
+    order_uuid = str(uuid.uuid4())
+
+    # 4. STL 파일 저장
+    try:
+        file_path = await storage.save_order_stl(order_uuid, stl_file)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"File save error: {str(e)}")
+
+    # 5. 주문 정보 JSON 저장
+    order_info = {
+        "order_uuid": order_uuid,
+        "stand_id": stand_id,
+        "stand_name": stand.name,
+        "qr_url": qr_url,
+        "customization": customization_data,
+        "customer": {
+            "email": customer_email,
+            "name": customer_name,
+            "address": customer_address
+        }
+    }
+    await storage.save_order_info(order_uuid, order_info)
+
+    # 6. DB에 주문 생성
+    new_order = Order(
+        order_uuid=order_uuid,
+        stand_id=stand_id,
+        qr_url=qr_url,
+        customization=customization_data,
+        user_id=user_id,  # Clerk User ID
+        customer_email=customer_email,
+        customer_name=customer_name,
+        customer_address=customer_address,
+        status="paid",  # 결제 기능 미구현으로 바로 paid 상태
+        stl_file_path=file_path
+    )
+    db.add(new_order)
+    db.commit()
+    db.refresh(new_order)
+
+    # 7. 주문 완료 응답 (payment_url은 더 이상 사용하지 않음)
+    return {
+        "order_uuid": order_uuid,
+        "payment_url": ""  # 빈 문자열로 변경
+    }
+
+
+@router.get("/list")
+async def get_orders(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """
+    주문 목록 조회 (어드민용)
+    개발 환경: 인증 없이 접근 가능 (프로덕션 배포 전 인증 추가 필요)
+    """
+    orders = db.query(Order).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
+
+    # Stand 정보 포함하여 반환
+    result = []
+    for order in orders:
+        stand = db.query(Stand).filter(Stand.id == order.stand_id).first()
+        result.append({
+            "id": order.id,
+            "order_uuid": order.order_uuid,
+            "stand_id": order.stand_id,
+            "stand_name": stand.name if stand else "Unknown",
+            "qr_url": order.qr_url,
+            "customer_email": order.customer_email,
+            "customer_name": order.customer_name,
+            "status": order.status,
+            "created_at": order.created_at.isoformat() if order.created_at else None,
+        })
+
+    return result
+
+
+# PATCH route must come before DELETE because it has a more specific path (/status suffix)
+@router.patch("/{order_uuid}/status")
+async def update_order_status(
+    order_uuid: str,
+    status: str,
+    db: Session = Depends(get_db)
+):
+    """
+    주문 상태 업데이트
+    개발 환경: 인증 없이 접근 가능 (프로덕션 배포 전 인증 추가 필요)
+    status: pending, paid, completed, failed 중 하나
+    """
+    # 유효한 상태 값 확인
+    valid_statuses = ["pending", "paid", "completed", "failed"]
+    if status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+        )
+
+    # 주문 조회
+    order = db.query(Order).filter(Order.order_uuid == order_uuid).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # 상태 업데이트
+    order.status = status
+    db.commit()
+    db.refresh(order)
+
+    return {
+        "message": "Order status updated successfully",
+        "order_uuid": order_uuid,
+        "status": status
+    }
+
+
+# DELETE route must come before GET because DELETE is more specific in HTTP method
+@router.delete("/{order_uuid}")
+async def delete_order(
+    order_uuid: str,
+    db: Session = Depends(get_db)
+):
+    """
+    주문 삭제
+    개발 환경: 인증 없이 접근 가능 (프로덕션 배포 전 인증 추가 필요)
+    STL 파일과 주문 데이터를 모두 삭제합니다.
+    """
+    # 주문 조회
+    order = db.query(Order).filter(Order.order_uuid == order_uuid).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # STL 파일 삭제
+    if order.stl_file_path and os.path.exists(order.stl_file_path):
+        try:
+            os.remove(order.stl_file_path)
+        except Exception as e:
+            print(f"[WARNING] Failed to delete STL file: {e}")
+
+    # 주문 폴더 삭제 (order_info.json 포함)
+    order_dir = os.path.join(settings.storage_path, order_uuid)
+    if os.path.exists(order_dir):
+        try:
+            import shutil
+            shutil.rmtree(order_dir)
+        except Exception as e:
+            print(f"[WARNING] Failed to delete order directory: {e}")
+
+    # DB에서 주문 삭제
+    db.delete(order)
+    db.commit()
+
+    return {"message": "Order deleted successfully", "order_uuid": order_uuid}
+
+
+# GET route for individual order - must come LAST because it's the most generic
+@router.get("/{order_uuid}")
+async def get_order(order_uuid: str, db: Session = Depends(get_db)):
+    """
+    주문 상세 조회
+    """
+    order = db.query(Order).filter(Order.order_uuid == order_uuid).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    stand = db.query(Stand).filter(Stand.id == order.stand_id).first()
+
+    return {
+        "id": order.id,
+        "order_uuid": order.order_uuid,
+        "stand_id": order.stand_id,
+        "stand_name": stand.name if stand else "Unknown",
+        "qr_url": order.qr_url,
+        "customization": order.customization,
+        "customer_email": order.customer_email,
+        "customer_name": order.customer_name,
+        "customer_address": order.customer_address,
+        "status": order.status,
+        "payment_id": order.payment_id,
+        "stl_file_path": order.stl_file_path,
+        "created_at": order.created_at.isoformat() if order.created_at else None,
+        "updated_at": order.updated_at.isoformat() if order.updated_at else None,
+    }
