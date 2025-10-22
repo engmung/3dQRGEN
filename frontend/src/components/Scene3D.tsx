@@ -1,0 +1,54 @@
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
+import { QRPlate } from './QRPlate';
+import type { QRPlateRef } from './QRPlate';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+
+export interface Scene3DRef {
+  exportSTL: () => void;
+  createOrderAndDownload: () => Promise<void>;
+}
+
+export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
+  const qrPlateRef = useRef<QRPlateRef>(null);
+
+  useImperativeHandle(ref, () => ({
+    exportSTL: () => {
+      qrPlateRef.current?.exportSTL();
+    },
+    createOrderAndDownload: async () => {
+      await qrPlateRef.current?.createOrderAndDownload();
+    }
+  }));
+
+  return (
+    <Canvas camera={{ position: [200, 150, 200], fov: 50 }} shadows>
+      {/* 조명 */}
+      <ambientLight intensity={0.6} />
+      <directionalLight
+        position={[100, 100, 50]}
+        intensity={0.8}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={500}
+        shadow-camera-left={-200}
+        shadow-camera-right={200}
+        shadow-camera-top={200}
+        shadow-camera-bottom={-200}
+      />
+      <directionalLight position={[-100, -100, -50]} intensity={0.3} />
+
+      {/* QR 판 */}
+      <QRPlate ref={qrPlateRef} />
+
+      {/* 컨트롤 */}
+      <OrbitControls
+        enableDamping
+        dampingFactor={0.05}
+        minDistance={50}
+        maxDistance={500}
+      />
+    </Canvas>
+  );
+});
