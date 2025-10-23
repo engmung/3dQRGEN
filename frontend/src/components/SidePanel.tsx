@@ -145,17 +145,29 @@ export function SidePanel({ onExportOBJ }: SidePanelProps) {
             style={inputStyle}
           />
         </div>
+      </div>
+
+      {/* 색상 설정 */}
+      <div style={sectionStyle}>
+        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>색상 설정</h3>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>두께 (mm)</label>
+          <label style={labelStyle}>판 색상</label>
           <input
-            type="number"
-            value={store.plateDepth}
-            onChange={(e) => store.setPlateDepth(Number(e.target.value))}
-            min="1"
-            max="20"
-            step="0.5"
-            style={inputStyle}
+            type="color"
+            value={store.plateColor}
+            onChange={(e) => store.setPlateColor(e.target.value)}
+            style={{ ...inputStyle, height: '40px' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>QR 코드 색상</label>
+          <input
+            type="color"
+            value={store.qrColor}
+            onChange={(e) => store.setQrColor(e.target.value)}
+            style={{ ...inputStyle, height: '40px' }}
           />
         </div>
       </div>

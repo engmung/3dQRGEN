@@ -71,6 +71,12 @@ interface DesignStore {
   setQrSize: (size: number) => void;
   setQrDepth: (depth: number) => void;
   setQrYOffset: (offset: number) => void;
+
+  // 색상 설정
+  plateColor: string;
+  qrColor: string;
+  setPlateColor: (color: string) => void;
+  setQrColor: (color: string) => void;
 }
 
 export const useDesignStore = create<DesignStore>((set) => ({
@@ -101,6 +107,8 @@ export const useDesignStore = create<DesignStore>((set) => ({
   qrSize: 50,            // QR 크기
   qrDepth: 2,            // QR 블록 높이
   qrYOffset: 10,         // 판 상단에서 10mm 아래
+  plateColor: '#ffffff', // 흰색
+  qrColor: '#000000',    // 검은색
 
   // Setters
   setStandAngle: (angle) => set({ standAngle: angle }),
@@ -141,4 +149,6 @@ export const useDesignStore = create<DesignStore>((set) => ({
   setQrSize: (size) => set({ qrSize: size }),
   setQrDepth: (depth) => set({ qrDepth: depth }),
   setQrYOffset: (offset) => set({ qrYOffset: offset }),
+  setPlateColor: (color) => set({ plateColor: color }),
+  setQrColor: (color) => set({ qrColor: color }),
 }));
