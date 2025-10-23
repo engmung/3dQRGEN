@@ -77,6 +77,10 @@ interface DesignStore {
   qrColor: string;
   setPlateColor: (color: string) => void;
   setQrColor: (color: string) => void;
+
+  // 상단 아치 설정
+  topArchRadius: number; // 0 = 평평, 값이 클수록 둥글게
+  setTopArchRadius: (radius: number) => void;
 }
 
 export const useDesignStore = create<DesignStore>((set) => ({
@@ -109,6 +113,7 @@ export const useDesignStore = create<DesignStore>((set) => ({
   qrYOffset: 10,         // 판 상단에서 10mm 아래
   plateColor: '#ffffff', // 흰색
   qrColor: '#000000',    // 검은색
+  topArchRadius: 0,      // 상단 아치 (0 = 평평)
 
   // Setters
   setStandAngle: (angle) => set({ standAngle: angle }),
@@ -151,4 +156,5 @@ export const useDesignStore = create<DesignStore>((set) => ({
   setQrYOffset: (offset) => set({ qrYOffset: offset }),
   setPlateColor: (color) => set({ plateColor: color }),
   setQrColor: (color) => set({ qrColor: color }),
+  setTopArchRadius: (radius) => set({ topArchRadius: radius }),
 }));
