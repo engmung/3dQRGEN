@@ -1,28 +1,20 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { QRPlate } from './QRPlate';
-import type { QRPlateRef } from './QRPlate';
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { QRPlateInstance } from './QRPlateInstance';
+import { useDesignStore } from '../store/useDesignStore';
 
-export interface Scene3DRef {
-  exportOBJ: () => void;
-  createOrderAndDownload: (onReady: (plateObjBlob: Blob, plateMtlBlob: Blob, standObjBlob: Blob, standMtlBlob: Blob, price: number) => void) => void;
-}
-
-export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
-  const qrPlateRef = useRef<QRPlateRef>(null);
-
-  useImperativeHandle(ref, () => ({
-    exportOBJ: () => {
-      qrPlateRef.current?.exportOBJ();
-    },
-    createOrderAndDownload: (onReady: (plateObjBlob: Blob, plateMtlBlob: Blob, standObjBlob: Blob, standMtlBlob: Blob, price: number) => void) => {
-      qrPlateRef.current?.createOrderAndDownload(onReady);
-    }
-  }));
+export const Scene3D = () => {
+  const plates = useDesignStore((state) => state.plates);
+  const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
+  const selectPlate = useDesignStore((state) => state.selectPlate);
 
   return (
-    <Canvas camera={{ position: [200, 150, 200], fov: 50 }} shadows gl={{ antialias: true }}>
+    <Canvas
+      camera={{ position: [200, 150, 200], fov: 50 }}
+      shadows
+      gl={{ antialias: true }}
+      onPointerMissed={() => selectPlate(null)} // 빈 공간 클릭 시 선택 해제
+    >
       {/* 조명 */}
       <ambientLight intensity={2.0} />
       <directionalLight
@@ -40,8 +32,14 @@ export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
       <directionalLight position={[-100, -100, -50]} intensity={1.2} />
       <directionalLight position={[0, 200, 0]} intensity={1.0} />
 
-      {/* QR 판 */}
-      <QRPlate ref={qrPlateRef} />
+      {/* 여러 QR 판 렌더링 */}
+      {plates.map(plate => (
+        <QRPlateInstance
+          key={plate.id}
+          config={plate}
+          isSelected={plate.id === selectedPlateId}
+        />
+      ))}
 
       {/* 컨트롤 */}
       <OrbitControls
@@ -52,4 +50,4 @@ export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
       />
     </Canvas>
   );
-});
+};
