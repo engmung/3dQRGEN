@@ -28,14 +28,17 @@ async def create_order(
     customer_address: str = Form(...),  # 상세 주소
     delivery_message: str = Form(""),  # 배송 메시지 (선택사항)
     price: float = Form(...),  # 주문 가격
-    stl_file: UploadFile = File(...),
+    plate_obj_file: UploadFile = File(...),  # QR 판 OBJ 파일
+    plate_mtl_file: UploadFile = File(...),  # QR 판 MTL 파일
+    stand_obj_file: UploadFile = File(...),  # 거치대 OBJ 파일
+    stand_mtl_file: UploadFile = File(...),  # 거치대 MTL 파일
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id)
 ):
     """
     주문 생성
 
-    1. STL 파일 저장
+    1. OBJ+MTL 파일 저장
     2. DB에 주문 저장
     3. 다운로드 URL 반환 (결제 기능 미구현으로 임시)
     """
@@ -48,9 +51,12 @@ async def create_order(
     # 2. 주문 UUID 생성
     order_uuid = str(uuid.uuid4())
 
-    # 3. STL 파일 저장
+    # 3. OBJ+MTL 파일 저장
     try:
-        file_path = await storage.save_order_stl(order_uuid, stl_file)
+        plate_obj_path = await storage.save_order_stl(order_uuid, plate_obj_file, "qr_plate.obj")
+        plate_mtl_path = await storage.save_order_stl(order_uuid, plate_mtl_file, "qr_plate.mtl")
+        stand_obj_path = await storage.save_order_stl(order_uuid, stand_obj_file, "stand.obj")
+        stand_mtl_path = await storage.save_order_stl(order_uuid, stand_mtl_file, "stand.mtl")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File save error: {str(e)}")
 
@@ -89,7 +95,7 @@ async def create_order(
         delivery_message=delivery_message,
         price=price,
         status="pending",  # 입금 대기 상태로 시작
-        stl_file_path=file_path
+        stl_file_path=plate_obj_path  # QR 판 OBJ 경로 저장 (MTL 및 거치대 파일은 같은 폴더에 있음)
     )
     db.add(new_order)
     db.commit()

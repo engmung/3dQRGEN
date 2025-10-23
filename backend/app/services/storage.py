@@ -6,13 +6,14 @@ from fastapi import UploadFile
 from app.config import settings
 
 
-async def save_order_stl(order_uuid: str, file: UploadFile) -> str:
+async def save_order_stl(order_uuid: str, file: UploadFile, filename: str = "qr_plate.obj") -> str:
     """
-    STL 파일 저장
+    3D 모델 파일 저장 (OBJ 형식)
 
     Args:
         order_uuid: 주문 UUID
-        file: 업로드된 STL 파일
+        file: 업로드된 OBJ 파일
+        filename: 저장할 파일명 (기본값: qr_plate.obj)
 
     Returns:
         저장된 파일 경로
@@ -22,7 +23,7 @@ async def save_order_stl(order_uuid: str, file: UploadFile) -> str:
     os.makedirs(order_dir, exist_ok=True)
 
     # 파일 경로
-    file_path = os.path.join(order_dir, "qr_plate.stl")
+    file_path = os.path.join(order_dir, filename)
 
     # 파일 저장
     async with aiofiles.open(file_path, "wb") as f:
@@ -51,15 +52,15 @@ async def save_order_info(order_uuid: str, order_data: dict):
 
 def get_order_stl_path(order_uuid: str) -> str:
     """
-    주문의 STL 파일 경로 반환
+    주문의 OBJ 파일 경로 반환
 
     Args:
         order_uuid: 주문 UUID
 
     Returns:
-        STL 파일 경로
+        OBJ 파일 경로
     """
-    return os.path.join(settings.storage_path, order_uuid, "qr_plate.stl")
+    return os.path.join(settings.storage_path, order_uuid, "qr_plate.obj")
 
 
 def check_file_exists(file_path: str) -> bool:

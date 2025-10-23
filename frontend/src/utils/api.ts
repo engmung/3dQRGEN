@@ -68,7 +68,7 @@ export async function fetchStands(): Promise<Stand[]> {
 }
 
 /**
- * 주문 생성 (STL 파일 업로드)
+ * 주문 생성 (OBJ+MTL 파일 업로드)
  */
 export async function createOrder(
   standId: number,
@@ -82,7 +82,10 @@ export async function createOrder(
   customerAddress: string,
   deliveryMessage: string,
   price: number,
-  stlBlob: Blob
+  plateObjBlob: Blob,
+  plateMtlBlob: Blob,
+  standObjBlob: Blob,
+  standMtlBlob: Blob
 ): Promise<OrderResponse> {
   const formData = new FormData();
   formData.append('stand_id', standId.toString());
@@ -96,7 +99,10 @@ export async function createOrder(
   formData.append('customer_address', customerAddress);
   formData.append('delivery_message', deliveryMessage);
   formData.append('price', price.toString());
-  formData.append('stl_file', stlBlob, 'qr_plate.stl');
+  formData.append('plate_obj_file', plateObjBlob, 'qr_plate.obj');
+  formData.append('plate_mtl_file', plateMtlBlob, 'qr_plate.mtl');
+  formData.append('stand_obj_file', standObjBlob, 'stand.obj');
+  formData.append('stand_mtl_file', standMtlBlob, 'stand.mtl');
 
   // Clerk JWT 토큰 가져오기
   const token = await getAuthToken();
@@ -128,7 +134,10 @@ export async function createOrder(
     formData2.append('customer_address', customerAddress);
     formData2.append('delivery_message', deliveryMessage);
     formData2.append('price', price.toString());
-    formData2.append('stl_file', stlBlob, 'qr_plate.stl');
+    formData2.append('plate_obj_file', plateObjBlob, 'qr_plate.obj');
+    formData2.append('plate_mtl_file', plateMtlBlob, 'qr_plate.mtl');
+    formData2.append('stand_obj_file', standObjBlob, 'stand.obj');
+    formData2.append('stand_mtl_file', standMtlBlob, 'stand.mtl');
 
     response = await fetch(`${API_BASE_URL}/api/orders/`, {
       method: 'POST',

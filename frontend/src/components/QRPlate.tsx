@@ -4,19 +4,20 @@ import { generateQRBitmap } from '../utils/qrUtils';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-import { exportToSTL, exportToSTLBlob } from '../utils/stlExporter';
+import { exportToOBJ, exportToOBJBlob } from '../utils/objExporter';
 import { calculatePrice } from '../utils/pricing';
 
 // mm to Three.js units (1mm = 1 unit)
 const MM_TO_UNITS = 1;
 
 export interface QRPlateRef {
-  exportSTL: () => void;
-  createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => void;
+  exportOBJ: () => void;
+  createOrderAndDownload: (onReady: (plateObjBlob: Blob, plateMtlBlob: Blob, standObjBlob: Blob, standMtlBlob: Blob, price: number) => void) => void;
 }
 
 export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
-  const plateGroupRef = useRef<THREE.Group>(null); // QR 판 + QR 블록 + 거치대 (STL 변환용)
+  const qrPlateGroupRef = useRef<THREE.Group>(null); // QR 판 + QR 블록만
+  const standMeshRef = useRef<THREE.Mesh>(null); // 거치대만
   const qrUrl = useDesignStore((state) => state.qrUrl);
   const plateWidth = useDesignStore((state) => state.plateWidth);
   const plateHeight = useDesignStore((state) => state.plateHeight);
@@ -168,20 +169,20 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   // QR을 판 상단에 배치 (Y축 양수 방향)
   const qrYPosition = plateHeightUnits / 2 - qrSizeUnits / 2 - qrYOffsetUnits;
 
-  // Export STL 및 주문 생성 함수를 부모 컴포넌트에 노출
+  // Export OBJ 및 주문 생성 함수를 부모 컴포넌트에 노출
   useImperativeHandle(ref, () => ({
-    exportSTL: () => {
-      if (plateGroupRef.current) {
+    exportOBJ: () => {
+      if (qrPlateGroupRef.current && standMeshRef.current) {
         const timestamp = new Date().getTime();
-        const filename = `qr-plate-${timestamp}.stl`;
-        exportToSTL(plateGroupRef.current, filename);
+        exportToOBJ(qrPlateGroupRef.current, `qr-plate-${timestamp}`);
+        exportToOBJ(standMeshRef.current, `stand-${timestamp}`);
       } else {
-        console.error('Plate group ref is not available');
+        console.error('Refs are not available');
       }
     },
-    createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => {
-      if (!plateGroupRef.current) {
-        console.error('Plate group ref is not available');
+    createOrderAndDownload: (onReady: (plateObjBlob: Blob, plateMtlBlob: Blob, standObjBlob: Blob, standMtlBlob: Blob, price: number) => void) => {
+      if (!qrPlateGroupRef.current || !standMeshRef.current) {
+        console.error('Refs are not available');
         return;
       }
 
@@ -195,11 +196,17 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
         standAngle,
       });
 
-      // STL Blob 생성 (QR 판 + QR 블록만)
-      const stlBlob = exportToSTLBlob(plateGroupRef.current);
+      // OBJ+MTL Blob 생성 (QR 판 + QR 블록, 거치대 따로)
+      // QR 판: 현재 기울어진 각도를 역으로 계산하여 완전히 눕히기
+      const qrPlateRotation = qrPlateRotationX + getDefaultRotationForAngle(standAngle);
+      const flattenRotation = -qrPlateRotation - Math.PI / 2; // 기존 회전 제거 + 90도 눕히기
 
-      // 콜백으로 blob과 price 전달
-      onReady(stlBlob, orderPrice);
+      const { objBlob: plateObjBlob, mtlBlob: plateMtlBlob } = exportToOBJBlob(qrPlateGroupRef.current, 'qr_plate', flattenRotation);
+      // 거치대: 그대로 (프론트에 보이는 대로)
+      const { objBlob: standObjBlob, mtlBlob: standMtlBlob } = exportToOBJBlob(standMeshRef.current, 'stand');
+
+      // 콜백으로 4개의 blob과 price 전달
+      onReady(plateObjBlob, plateMtlBlob, standObjBlob, standMtlBlob, orderPrice);
     }
   }));
 
@@ -212,10 +219,11 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   if (!qrUrl || !qrGeometry) {
     // URL 없거나 로딩 중일 때 기본 판만 표시
     return (
-      <group ref={plateGroupRef}>
+      <group>
         {/* L자 거치대 (STL 파일) */}
         {standGeometry && (
           <mesh
+            ref={standMeshRef}
             geometry={standGeometry}
             position={[standPositionX, standPositionY, standPositionZ]}
             rotation={[standRotationX + (-Math.PI / 2), standRotationY, standRotationZ + (Math.PI / 2)]}
@@ -229,6 +237,7 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
 
         {/* QR 판 */}
         <group
+          ref={qrPlateGroupRef}
           position={[
             qrPlatePositionX,
             qrPlatePositionY + getDefaultPositionForAngle(standAngle).y,
@@ -246,10 +255,11 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   }
 
   return (
-    <group ref={plateGroupRef}>
+    <group>
       {/* L자 거치대 (STL 파일) */}
       {standGeometry && (
         <mesh
+          ref={standMeshRef}
           geometry={standGeometry}
           position={[standPositionX, standPositionY, standPositionZ]}
           rotation={[standRotationX + (-Math.PI / 2), standRotationY, standRotationZ + (Math.PI / 2)]}
@@ -263,6 +273,7 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
 
       {/* QR 판 + QR 블록 */}
       <group
+        ref={qrPlateGroupRef}
         position={[
           qrPlatePositionX,
           qrPlatePositionY + getDefaultPositionForAngle(standAngle).y,

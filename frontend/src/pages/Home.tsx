@@ -19,21 +19,27 @@ export function Home() {
   const qrYOffset = useDesignStore((state) => state.qrYOffset);
 
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [stlBlobForOrder, setStlBlobForOrder] = useState<Blob | null>(null);
+  const [plateObjBlobForOrder, setPlateObjBlobForOrder] = useState<Blob | null>(null);
+  const [plateMtlBlobForOrder, setPlateMtlBlobForOrder] = useState<Blob | null>(null);
+  const [standObjBlobForOrder, setStandObjBlobForOrder] = useState<Blob | null>(null);
+  const [standMtlBlobForOrder, setStandMtlBlobForOrder] = useState<Blob | null>(null);
   const [orderPrice, setOrderPrice] = useState(0);
 
-  const handleExportSTL = () => {
-    // STL Blob과 가격을 받아서 AddressForm 표시
-    scene3DRef.current?.createOrderAndDownload((blob, price) => {
-      setStlBlobForOrder(blob);
+  const handleExportOBJ = () => {
+    // OBJ+MTL Blob과 가격을 받아서 AddressForm 표시
+    scene3DRef.current?.createOrderAndDownload((plateObjBlob, plateMtlBlob, standObjBlob, standMtlBlob, price) => {
+      setPlateObjBlobForOrder(plateObjBlob);
+      setPlateMtlBlobForOrder(plateMtlBlob);
+      setStandObjBlobForOrder(standObjBlob);
+      setStandMtlBlobForOrder(standMtlBlob);
       setOrderPrice(price);
       setShowAddressForm(true);
     });
   };
 
   const handleAddressSubmit = async (formData: AddressFormData) => {
-    if (!stlBlobForOrder) {
-      alert('STL 파일 생성에 실패했습니다.');
+    if (!plateObjBlobForOrder || !plateMtlBlobForOrder || !standObjBlobForOrder || !standMtlBlobForOrder) {
+      alert('OBJ 파일 생성에 실패했습니다.');
       return;
     }
 
@@ -62,7 +68,10 @@ export function Home() {
         `${formData.address} ${formData.detailAddress}`,
         formData.deliveryMessage,
         orderPrice,
-        stlBlobForOrder
+        plateObjBlobForOrder,
+        plateMtlBlobForOrder,
+        standObjBlobForOrder,
+        standMtlBlobForOrder
       );
 
       console.log('Order created:', response);
@@ -80,7 +89,10 @@ export function Home() {
 
       // 폼 닫기
       setShowAddressForm(false);
-      setStlBlobForOrder(null);
+      setPlateObjBlobForOrder(null);
+      setPlateMtlBlobForOrder(null);
+      setStandObjBlobForOrder(null);
+      setStandMtlBlobForOrder(null);
     } catch (error) {
       console.error('Failed to create order:', error);
       alert('주문 생성에 실패했습니다. 다시 시도해주세요.');
@@ -92,7 +104,7 @@ export function Home() {
       <div style={{ flex: 1, height: '100%' }}>
         <Scene3D ref={scene3DRef} />
       </div>
-      <SidePanel onExportSTL={handleExportSTL} />
+      <SidePanel onExportOBJ={handleExportOBJ} />
 
       {/* AddressForm 모달 - Canvas 밖에서 렌더링 */}
       {showAddressForm && (
