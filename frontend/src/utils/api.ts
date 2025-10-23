@@ -46,15 +46,21 @@ export interface OrderListItem {
   qr_url: string;
   customer_email: string;
   customer_name: string;
+  customer_phone?: string;
+  customer_postal_code?: string;
+  customer_address?: string;
+  delivery_message?: string;
+  price?: number;
   status: string;
   created_at: string | null;
+  stl_file_path?: string;
 }
 
 /**
  * 거치대 목록 조회
  */
 export async function fetchStands(): Promise<Stand[]> {
-  const response = await fetch(`${API_BASE_URL}/api/stands`);
+  const response = await fetch(`${API_BASE_URL}/api/stands/`);
   if (!response.ok) {
     throw new Error('Failed to fetch stands');
   }
@@ -66,20 +72,30 @@ export async function fetchStands(): Promise<Stand[]> {
  */
 export async function createOrder(
   standId: number,
+  standName: string,
   qrUrl: string,
   customization: object,
   customerEmail: string,
   customerName: string,
+  customerPhone: string,
+  customerPostalCode: string,
   customerAddress: string,
+  deliveryMessage: string,
+  price: number,
   stlBlob: Blob
 ): Promise<OrderResponse> {
   const formData = new FormData();
   formData.append('stand_id', standId.toString());
+  formData.append('stand_name', standName);
   formData.append('qr_url', qrUrl);
   formData.append('customization', JSON.stringify(customization));
   formData.append('customer_email', customerEmail);
   formData.append('customer_name', customerName);
+  formData.append('customer_phone', customerPhone);
+  formData.append('customer_postal_code', customerPostalCode);
   formData.append('customer_address', customerAddress);
+  formData.append('delivery_message', deliveryMessage);
+  formData.append('price', price.toString());
   formData.append('stl_file', stlBlob, 'qr_plate.stl');
 
   // Clerk JWT 토큰 가져오기
@@ -89,7 +105,7 @@ export async function createOrder(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${API_BASE_URL}/api/orders`, {
+  let response = await fetch(`${API_BASE_URL}/api/orders/`, {
     method: 'POST',
     headers,
     body: formData,
@@ -102,14 +118,19 @@ export async function createOrder(
 
     const formData2 = new FormData();
     formData2.append('stand_id', standId.toString());
+    formData2.append('stand_name', standName);
     formData2.append('qr_url', qrUrl);
     formData2.append('customization', JSON.stringify(customization));
     formData2.append('customer_email', customerEmail);
     formData2.append('customer_name', customerName);
+    formData2.append('customer_phone', customerPhone);
+    formData2.append('customer_postal_code', customerPostalCode);
     formData2.append('customer_address', customerAddress);
+    formData2.append('delivery_message', deliveryMessage);
+    formData2.append('price', price.toString());
     formData2.append('stl_file', stlBlob, 'qr_plate.stl');
 
-    response = await fetch(`${API_BASE_URL}/api/orders`, {
+    response = await fetch(`${API_BASE_URL}/api/orders/`, {
       method: 'POST',
       headers,
       body: formData2,
@@ -128,6 +149,35 @@ export async function createOrder(
  */
 export function getDownloadUrl(orderUuid: string): string {
   return `${API_BASE_URL}/api/downloads/${orderUuid}`;
+}
+
+/**
+ * 내 주문 목록 조회 (로그인한 사용자)
+ */
+export async function fetchMyOrders(token?: string | null): Promise<OrderListItem[]> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let response = await fetch(`${API_BASE_URL}/api/orders/my-orders`, {
+    headers,
+  });
+
+  // 첫 요청이 403이면 한 번 더 재시도 (JWKS 캐시 로딩 문제)
+  if (response.status === 403) {
+    console.log('First fetch my-orders got 403, retrying once...');
+    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms 대기
+
+    response = await fetch(`${API_BASE_URL}/api/orders/my-orders`, {
+      headers,
+    });
+  }
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch my orders');
+  }
+  return response.json();
 }
 
 /**
@@ -196,5 +246,25 @@ export async function updateOrderStatus(orderUuid: string, status: string, token
 
   if (!response.ok) {
     throw new Error('Failed to update order status');
+  }
+}
+
+/**
+ * 내 주문 취소 (고객용, pending 상태만 가능)
+ */
+export async function cancelMyOrder(orderUuid: string, token?: string | null): Promise<void> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/orders/${orderUuid}/cancel`, {
+    method: 'PATCH',
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to cancel order' }));
+    throw new Error(error.detail || 'Failed to cancel order');
   }
 }

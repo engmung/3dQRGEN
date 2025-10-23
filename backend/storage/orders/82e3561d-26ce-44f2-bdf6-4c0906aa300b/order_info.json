@@ -1,0 +1,22 @@
+{
+  "order_uuid": "82e3561d-26ce-44f2-bdf6-4c0906aa300b",
+  "stand_id": 1,
+  "stand_name": "기본 거치대 (70mm)",
+  "qr_url": "https://example.com",
+  "customization": {
+    "plate_width": 70,
+    "plate_height": 140,
+    "plate_depth": 2,
+    "qr_size": 50,
+    "qr_depth": 2,
+    "qr_y_offset": 10
+  },
+  "customer": {
+    "email": "lsh678902@gmail.com",
+    "name": "승훈 이",
+    "phone": "010-3747-9884",
+    "postal_code": "04074",
+    "address": "서울 마포구 와우산로5길 36 (상수동) 305호"
+  },
+  "price": 12800.0
+}

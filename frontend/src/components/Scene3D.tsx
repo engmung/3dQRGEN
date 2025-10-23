@@ -6,7 +6,7 @@ import { forwardRef, useImperativeHandle, useRef } from 'react';
 
 export interface Scene3DRef {
   exportSTL: () => void;
-  createOrderAndDownload: () => Promise<void>;
+  createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => void;
 }
 
 export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
@@ -16,8 +16,8 @@ export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
     exportSTL: () => {
       qrPlateRef.current?.exportSTL();
     },
-    createOrderAndDownload: async () => {
-      await qrPlateRef.current?.createOrderAndDownload();
+    createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => {
+      qrPlateRef.current?.createOrderAndDownload(onReady);
     }
   }));
 

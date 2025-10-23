@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { fetchOrders, getDownloadUrl, deleteOrder, updateOrderStatus, type OrderListItem } from '../utils/api';
+import { formatPrice } from '../utils/pricing';
 
 const ADMIN_EMAILS = ['lsh678902@gmail.com'];
 
@@ -54,6 +55,21 @@ export function Admin() {
     }
   };
 
+  const handleConfirmPayment = async (orderUuid: string) => {
+    if (!confirm('입금을 확인했습니까?')) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      await updateOrderStatus(orderUuid, 'paid', token);
+      alert('입금 확인되었습니다.');
+      await loadOrders(); // 목록 새로고침
+    } catch (err: any) {
+      alert('상태 업데이트 실패: ' + err.message);
+    }
+  };
+
   const handleCompleteOrder = async (orderUuid: string) => {
     if (!confirm('이 주문을 제작 완료로 표시하시겠습니까?')) {
       return;
@@ -63,6 +79,21 @@ export function Admin() {
       const token = await getToken();
       await updateOrderStatus(orderUuid, 'completed', token);
       alert('주문이 제작 완료로 표시되었습니다.');
+      await loadOrders(); // 목록 새로고침
+    } catch (err: any) {
+      alert('상태 업데이트 실패: ' + err.message);
+    }
+  };
+
+  const handleCancelOrder = async (orderUuid: string) => {
+    if (!confirm('이 주문을 취소하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      await updateOrderStatus(orderUuid, 'failed', token);
+      alert('주문이 취소되었습니다.');
       await loadOrders(); // 목록 새로고침
     } catch (err: any) {
       alert('상태 업데이트 실패: ' + err.message);
@@ -226,10 +257,13 @@ export function Admin() {
                 <th style={headerStyle}>거치대</th>
                 <th style={headerStyle}>QR URL</th>
                 <th style={headerStyle}>고객명</th>
-                <th style={headerStyle}>이메일</th>
+                <th style={headerStyle}>전화번호</th>
+                <th style={headerStyle}>우편번호</th>
+                <th style={headerStyle}>주소</th>
+                <th style={headerStyle}>금액</th>
                 <th style={headerStyle}>상태</th>
                 <th style={headerStyle}>주문일시</th>
-                <th style={headerStyle}>STL 다운로드</th>
+                <th style={headerStyle}>STL</th>
                 <th style={headerStyle}>작업</th>
               </tr>
             </thead>
@@ -261,7 +295,14 @@ export function Admin() {
                     </a>
                   </td>
                   <td style={cellStyle}>{order.customer_name}</td>
-                  <td style={cellStyle}>{order.customer_email}</td>
+                  <td style={cellStyle}>{order.customer_phone || '-'}</td>
+                  <td style={cellStyle}>{order.customer_postal_code || '-'}</td>
+                  <td style={{ ...cellStyle, maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {order.customer_address || '-'}
+                  </td>
+                  <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 'bold', color: '#007bff' }}>
+                    {order.price ? formatPrice(order.price) : '-'}
+                  </td>
                   <td style={cellStyle}>
                     <span style={{
                       padding: '4px 8px',
@@ -292,7 +333,23 @@ export function Admin() {
                     </a>
                   </td>
                   <td style={cellStyle}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {order.status === 'pending' && (
+                        <button
+                          onClick={() => handleConfirmPayment(order.order_uuid)}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '12px',
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          💰 입금 확인
+                        </button>
+                      )}
                       {order.status === 'paid' && (
                         <button
                           onClick={() => handleCompleteOrder(order.order_uuid)}
@@ -306,7 +363,23 @@ export function Admin() {
                             cursor: 'pointer'
                           }}
                         >
-                          ✅ 완료
+                          ✅ 제작 완료
+                        </button>
+                      )}
+                      {(order.status === 'pending' || order.status === 'paid') && (
+                        <button
+                          onClick={() => handleCancelOrder(order.order_uuid)}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '12px',
+                            backgroundColor: '#ff9800',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ❌ 취소
                         </button>
                       )}
                       <button

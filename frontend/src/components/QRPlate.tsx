@@ -1,24 +1,22 @@
 import { useMemo, useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { useUser } from '@clerk/clerk-react';
 import { useDesignStore } from '../store/useDesignStore';
 import { generateQRBitmap } from '../utils/qrUtils';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { exportToSTL, exportToSTLBlob } from '../utils/stlExporter';
-import { createOrder } from '../utils/api';
+import { calculatePrice } from '../utils/pricing';
 
 // mm to Three.js units (1mm = 1 unit)
 const MM_TO_UNITS = 1;
 
 export interface QRPlateRef {
   exportSTL: () => void;
-  createOrderAndDownload: () => Promise<void>;
+  createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => void;
 }
 
 export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const { user } = useUser();
-  const standId = useDesignStore((state) => state.standId);
+  const plateGroupRef = useRef<THREE.Group>(null); // QR 판 + QR 블록 + 거치대 (STL 변환용)
   const qrUrl = useDesignStore((state) => state.qrUrl);
   const plateWidth = useDesignStore((state) => state.plateWidth);
   const plateHeight = useDesignStore((state) => state.plateHeight);
@@ -27,8 +25,52 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   const qrDepth = useDesignStore((state) => state.qrDepth);
   const qrYOffset = useDesignStore((state) => state.qrYOffset);
 
-  const [qrBitmap, setQrBitmap] = useState<{ data: boolean[][], size: number } | null>(null);
+  // 거치대 STL 관련
+  const standAngle = useDesignStore((state) => state.standAngle);
+  const standPositionX = useDesignStore((state) => state.standPositionX);
+  const standPositionY = useDesignStore((state) => state.standPositionY);
+  const standPositionZ = useDesignStore((state) => state.standPositionZ);
+  const standRotationX = useDesignStore((state) => state.standRotationX);
+  const standRotationY = useDesignStore((state) => state.standRotationY);
+  const standRotationZ = useDesignStore((state) => state.standRotationZ);
+  const standScale = useDesignStore((state) => state.standScale);
 
+  // QR 판 디버그 위치/회전
+  const qrPlatePositionX = useDesignStore((state) => state.qrPlatePositionX);
+  const qrPlatePositionY = useDesignStore((state) => state.qrPlatePositionY);
+  const qrPlatePositionZ = useDesignStore((state) => state.qrPlatePositionZ);
+  const qrPlateRotationX = useDesignStore((state) => state.qrPlateRotationX);
+  const qrPlateRotationY = useDesignStore((state) => state.qrPlateRotationY);
+  const qrPlateRotationZ = useDesignStore((state) => state.qrPlateRotationZ);
+
+  const [qrBitmap, setQrBitmap] = useState<{ data: boolean[][], size: number } | null>(null);
+  const [standGeometry, setStandGeometry] = useState<THREE.BufferGeometry | null>(null);
+
+  // 각도별 기본 회전값 (라디안)
+  const getDefaultRotationForAngle = (angle: number): number => {
+    const angleRotations: { [key: number]: number } = {
+      90: 0,
+      95: -5 * Math.PI / 180,
+      100: -10 * Math.PI / 180,
+      105: -15 * Math.PI / 180,
+      110: -20 * Math.PI / 180,
+    };
+    return angleRotations[angle] || 0;
+  };
+
+  // 각도별 기본 위치값 (바닥면 기준)
+  const getDefaultPositionForAngle = (angle: number): { y: number; z: number } => {
+    const anglePositions: { [key: number]: { y: number; z: number } } = {
+      90: { y: -10, z: 26 },
+      95: { y: -10, z: 26.2 },
+      100: { y: -10, z: 26.2 },
+      105: { y: -10, z: 25.9 },
+      110: { y: -10, z: 25.5 },
+    };
+    return anglePositions[angle] || { y: -10, z: 26.2 };
+  };
+
+  // QR Bitmap 생성
   useEffect(() => {
     if (!qrUrl) {
       setQrBitmap(null);
@@ -39,6 +81,45 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
       .then(bitmap => setQrBitmap(bitmap))
       .catch(err => console.error('QR bitmap generation error:', err));
   }, [qrUrl]);
+
+  // STL 파일 로드
+  useEffect(() => {
+    const loader = new STLLoader();
+    const stlPath = `/stands/${standAngle}.stl`;
+
+    loader.load(
+      stlPath,
+      (geometry) => {
+        // Geometry를 중심으로 정렬 (bounding box 기준)
+        geometry.computeBoundingBox();
+        const bbox = geometry.boundingBox!;
+
+        // 중심점 계산
+        const centerX = (bbox.max.x + bbox.min.x) / 2;
+        const centerY = (bbox.max.y + bbox.min.y) / 2;
+        const centerZ = (bbox.max.z + bbox.min.z) / 2;
+
+        // 원점으로 이동
+        geometry.translate(-centerX, -centerY, -centerZ);
+
+        console.log('STL Loaded:', {
+          original: { min: bbox.min, max: bbox.max },
+          center: { x: centerX, y: centerY, z: centerZ },
+          size: {
+            x: bbox.max.x - bbox.min.x,
+            y: bbox.max.y - bbox.min.y,
+            z: bbox.max.z - bbox.min.z
+          }
+        });
+
+        setStandGeometry(geometry);
+      },
+      undefined,
+      (error) => {
+        console.error(`Failed to load STL: ${stlPath}`, error);
+      }
+    );
+  }, [standAngle]);
 
   // QR 코드 3D 블록 생성
   const qrGeometry = useMemo(() => {
@@ -90,115 +171,117 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   // Export STL 및 주문 생성 함수를 부모 컴포넌트에 노출
   useImperativeHandle(ref, () => ({
     exportSTL: () => {
-      if (groupRef.current) {
+      if (plateGroupRef.current) {
         const timestamp = new Date().getTime();
         const filename = `qr-plate-${timestamp}.stl`;
-        exportToSTL(groupRef.current, filename);
+        exportToSTL(plateGroupRef.current, filename);
       } else {
-        console.error('Group ref is not available');
+        console.error('Plate group ref is not available');
       }
     },
-    createOrderAndDownload: async () => {
-      if (!groupRef.current) {
-        console.error('Group ref is not available');
+    createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => {
+      if (!plateGroupRef.current) {
+        console.error('Plate group ref is not available');
         return;
       }
 
-      try {
-        // STL Blob 생성
-        const stlBlob = exportToSTLBlob(groupRef.current);
+      // 가격 계산
+      const orderPrice = calculatePrice({
+        plateWidth,
+        plateHeight,
+        plateDepth,
+        qrSize,
+        qrDepth,
+        standAngle,
+      });
 
-        // Clerk에서 사용자 정보 추출
-        const userEmail = user?.primaryEmailAddress?.emailAddress || 'unknown@example.com';
-        const userName = user?.fullName || user?.firstName || '익명 사용자';
+      // STL Blob 생성 (QR 판 + QR 블록만)
+      const stlBlob = exportToSTLBlob(plateGroupRef.current);
 
-        // 주문 생성 (백엔드로 전송)
-        const response = await createOrder(
-          standId,
-          qrUrl,
-          {
-            plate_width: plateWidth,
-            plate_height: plateHeight,
-            plate_depth: plateDepth,
-            qr_size: qrSize,
-            qr_depth: qrDepth,
-            qr_y_offset: qrYOffset,
-          },
-          userEmail,
-          userName,
-          '',  // 주소는 나중에 별도로 입력받을 수 있음
-          stlBlob
-        );
-
-        console.log('Order created:', response);
-
-        // 주문 완료 알림
-        alert(`주문이 완료되었습니다!\n주문 번호: ${response.order_uuid}`);
-      } catch (error) {
-        console.error('Failed to create order:', error);
-        alert('주문 생성에 실패했습니다. 콘솔을 확인하세요.');
-      }
+      // 콜백으로 blob과 price 전달
+      onReady(stlBlob, orderPrice);
     }
   }));
 
-  // 거치대 크기 계산 (판 너비보다 5mm 더 큼 - standId 기반)
-  const standWidth = plateWidth + (standId - 1) * 5;
-  const standWidthUnits = standWidth * MM_TO_UNITS;
-  const standDepth = 15; // 거치대 두께 (mm)
-  const standDepthUnits = standDepth * MM_TO_UNITS;
-  const standBackHeight = 50; // 거치대 뒷면 높이 (mm)
-  const standBackHeightUnits = standBackHeight * MM_TO_UNITS;
+  // 거치대 스케일 계산 (70mm 기준)
+  const standWidthScale = plateWidthUnits / 70;
+
+  // QR 블록 위치 계산 (바닥면 기준)
+  const qrLocalY = plateHeightUnits - qrSizeUnits / 2 - qrYOffsetUnits;
 
   if (!qrUrl || !qrGeometry) {
     // URL 없거나 로딩 중일 때 기본 판만 표시
     return (
-      <group ref={groupRef}>
-        {/* 거치대 베이스 (바닥) */}
-        <mesh position={[0, -plateHeightUnits / 2 - standDepthUnits / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[standWidthUnits, standDepthUnits, 3]} />
-          <meshStandardMaterial color="#808080" />
-        </mesh>
+      <group ref={plateGroupRef}>
+        {/* L자 거치대 (STL 파일) */}
+        {standGeometry && (
+          <mesh
+            geometry={standGeometry}
+            position={[standPositionX, standPositionY, standPositionZ]}
+            rotation={[standRotationX + (-Math.PI / 2), standRotationY, standRotationZ + (Math.PI / 2)]}
+            scale={[standScale, standWidthScale * standScale, standScale]}
+            castShadow
+            receiveShadow
+          >
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+        )}
 
-        {/* 거치대 백 (뒷면) */}
-        <mesh position={[0, -plateHeightUnits / 2 + standBackHeightUnits / 2, -1.5]} castShadow receiveShadow>
-          <boxGeometry args={[standWidthUnits, standBackHeightUnits, 3]} />
-          <meshStandardMaterial color="#808080" />
-        </mesh>
-
-        {/* 베이스 판 (회전: X축 90도로 눕힘) */}
-        <mesh rotation={[Math.PI / 2, 0, 0]} castShadow={false} receiveShadow>
-          <boxGeometry args={[plateWidthUnits, plateDepthUnits, plateHeightUnits]} />
-          <meshStandardMaterial color="#ffffff" />
-        </mesh>
+        {/* QR 판 */}
+        <group
+          position={[
+            qrPlatePositionX,
+            qrPlatePositionY + getDefaultPositionForAngle(standAngle).y,
+            qrPlatePositionZ + getDefaultPositionForAngle(standAngle).z
+          ]}
+          rotation={[qrPlateRotationX + getDefaultRotationForAngle(standAngle), qrPlateRotationY, qrPlateRotationZ]}
+        >
+          <mesh position={[0, plateHeightUnits / 2, 0]} castShadow={false} receiveShadow>
+            <boxGeometry args={[plateWidthUnits, plateHeightUnits, plateDepthUnits]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+        </group>
       </group>
     );
   }
 
   return (
-    <group ref={groupRef}>
-      {/* 거치대 베이스 (바닥) */}
-      <mesh position={[0, -plateHeightUnits / 2 - standDepthUnits / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[standWidthUnits, standDepthUnits, 3]} />
-        <meshStandardMaterial color="#808080" />
-      </mesh>
-
-      {/* 거치대 백 (뒷면) */}
-      <mesh position={[0, -plateHeightUnits / 2 + standBackHeightUnits / 2, -1.5]} castShadow receiveShadow>
-        <boxGeometry args={[standWidthUnits, standBackHeightUnits, 3]} />
-        <meshStandardMaterial color="#808080" />
-      </mesh>
-
-      {/* 베이스 판 (회전: X축 90도로 눕힘) */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow={false} receiveShadow>
-        <boxGeometry args={[plateWidthUnits, plateDepthUnits, plateHeightUnits]} />
-        <meshStandardMaterial color="#ffffff" />
-      </mesh>
-
-      {/* QR 블록들 - 판 상단에 배치 */}
-      <group position={[0, qrYPosition, plateDepthUnits / 2]}>
-        <mesh geometry={qrGeometry} castShadow receiveShadow={false}>
-          <meshStandardMaterial color="#000000" />
+    <group ref={plateGroupRef}>
+      {/* L자 거치대 (STL 파일) */}
+      {standGeometry && (
+        <mesh
+          geometry={standGeometry}
+          position={[standPositionX, standPositionY, standPositionZ]}
+          rotation={[standRotationX + (-Math.PI / 2), standRotationY, standRotationZ + (Math.PI / 2)]}
+          scale={[standScale, standWidthScale * standScale, standScale]}
+          castShadow
+          receiveShadow
+        >
+          <meshStandardMaterial color="#ffffff" />
         </mesh>
+      )}
+
+      {/* QR 판 + QR 블록 */}
+      <group
+        position={[
+          qrPlatePositionX,
+          qrPlatePositionY + getDefaultPositionForAngle(standAngle).y,
+          qrPlatePositionZ + getDefaultPositionForAngle(standAngle).z
+        ]}
+        rotation={[qrPlateRotationX + getDefaultRotationForAngle(standAngle), qrPlateRotationY, qrPlateRotationZ]}
+      >
+        {/* QR 판 */}
+        <mesh position={[0, plateHeightUnits / 2, 0]} castShadow={false} receiveShadow>
+          <boxGeometry args={[plateWidthUnits, plateHeightUnits, plateDepthUnits]} />
+          <meshStandardMaterial color="#ffffff" />
+        </mesh>
+
+        {/* QR 블록들 - 판 표면에 배치 */}
+        <group position={[0, qrLocalY, plateDepthUnits / 2]}>
+          <mesh geometry={qrGeometry} castShadow receiveShadow={false}>
+            <meshStandardMaterial color="#000000" />
+          </mesh>
+        </group>
       </group>
     </group>
   );

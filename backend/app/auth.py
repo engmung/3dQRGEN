@@ -28,11 +28,9 @@ def get_jwks() -> Dict[str, Any]:
     # 캐시가 유효하면 캐시 반환
     if _jwks_cache and _jwks_cache_time:
         if now - _jwks_cache_time < JWKS_CACHE_DURATION:
-            print(f"[DEBUG get_jwks] Using cached JWKS (age: {now - _jwks_cache_time})")
             return _jwks_cache
 
     # JWKS 새로 가져오기
-    print(f"[DEBUG get_jwks] Fetching fresh JWKS from {settings.clerk_jwks_url}")
     try:
         response = requests.get(settings.clerk_jwks_url, timeout=5)
         response.raise_for_status()
@@ -42,13 +40,10 @@ def get_jwks() -> Dict[str, Any]:
         _jwks_cache = jwks
         _jwks_cache_time = now
 
-        print(f"[DEBUG get_jwks] JWKS fetched successfully, keys count: {len(jwks.get('keys', []))}")
         return jwks
     except Exception as e:
-        print(f"[ERROR get_jwks] Failed to fetch JWKS: {e}")
         # 캐시가 있으면 만료되어도 사용
         if _jwks_cache:
-            print("[WARN get_jwks] Using stale cache due to fetch failure")
             return _jwks_cache
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -69,13 +64,10 @@ def verify_clerk_jwt(token: str) -> Dict[str, Any]:
     Raises:
         HTTPException: JWT 검증 실패시
     """
-    print(f"[DEBUG verify_clerk_jwt] Verifying token (length: {len(token)})")
-
     try:
         # 1. JWT 헤더에서 kid (Key ID) 추출
         unverified_header = jwt.get_unverified_header(token)
         kid = unverified_header.get("kid")
-        print(f"[DEBUG verify_clerk_jwt] JWT kid: {kid}")
 
         if not kid:
             raise HTTPException(
@@ -92,14 +84,10 @@ def verify_clerk_jwt(token: str) -> Dict[str, Any]:
                 break
 
         if not key_data:
-            print(f"[ERROR verify_clerk_jwt] No matching key for kid={kid}")
-            print(f"[DEBUG verify_clerk_jwt] Available kids: {[k.get('kid') for k in jwks.get('keys', [])]}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"No matching key found for kid={kid}"
             )
-
-        print(f"[DEBUG verify_clerk_jwt] Found matching key for kid={kid}")
 
         # 3. JWK를 공개키로 변환
         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key_data)
@@ -119,26 +107,19 @@ def verify_clerk_jwt(token: str) -> Dict[str, Any]:
             leeway=30  # 30초 여유 (시간 동기화 문제 해결)
         )
 
-        print(f"[DEBUG verify_clerk_jwt] JWT verified successfully")
-        print(f"[DEBUG verify_clerk_jwt] User ID (sub): {decoded.get('sub')}")
-        print(f"[DEBUG verify_clerk_jwt] JWT claims: {list(decoded.keys())}")
-
         return decoded
 
     except jwt.ExpiredSignatureError:
-        print("[ERROR verify_clerk_jwt] JWT token has expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="JWT token has expired"
         )
     except jwt.InvalidTokenError as e:
-        print(f"[ERROR verify_clerk_jwt] Invalid JWT token: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid JWT token: {str(e)}"
         )
     except Exception as e:
-        print(f"[ERROR verify_clerk_jwt] Unexpected error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"JWT verification failed: {str(e)}"
@@ -155,11 +136,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[
     Returns:
         디코딩된 JWT 페이로드
     """
-    print(f"[DEBUG get_current_user] Called")
-    print(f"[DEBUG get_current_user] Authorization header: {authorization[:50] if authorization else 'None'}...")
-
     if not authorization:
-        print("[ERROR get_current_user] No Authorization header")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated - missing Authorization header"
@@ -167,7 +144,6 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[
 
     # Bearer 접두사 제거
     if not authorization.startswith("Bearer "):
-        print("[ERROR get_current_user] Invalid Authorization header format")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Authorization header format"
@@ -225,18 +201,13 @@ async def get_admin_user(authorization: Optional[str] = Header(None)) -> Dict[st
     현재 로그인한 사용자가 관리자인지 확인합니다.
     관리자가 아니면 403 Forbidden 에러를 발생시킵니다.
     """
-    print(f"[DEBUG get_admin_user] Called")
-
     # JWT 검증 및 디코딩
     decoded = await get_current_user(authorization)
 
     # User ID로 admin 체크 (JWT "sub" 클레임)
     user_id = decoded.get("sub")
-    print(f"[DEBUG get_admin_user] User ID: {user_id}")
-    print(f"[DEBUG get_admin_user] Admin user IDs: {settings.admin_user_ids_list}")
 
     if not user_id:
-        print("[ERROR get_admin_user] No user ID in token")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User ID not found in token"
@@ -244,21 +215,15 @@ async def get_admin_user(authorization: Optional[str] = Header(None)) -> Dict[st
 
     # User ID 기반 admin 체크 (우선순위)
     if settings.admin_user_ids_list and user_id in settings.admin_user_ids_list:
-        print(f"[OK get_admin_user] Admin check PASSED for user_id: {user_id}")
         return decoded
 
     # 이메일 기반 admin 체크 (fallback, JWT에 email이 있는 경우만)
     email = decoded.get("email")
     if email:
-        print(f"[DEBUG get_admin_user] Email from token: {email}")
-        print(f"[DEBUG get_admin_user] Admin emails: {settings.admin_emails_list}")
-
         if email in settings.admin_emails_list:
-            print(f"[OK get_admin_user] Admin check PASSED for email: {email}")
             return decoded
 
     # User ID도 이메일도 admin 목록에 없음
-    print(f"[ERROR get_admin_user] User {user_id} (email: {email}) NOT in admin list!")
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=f"Admin access required. Your user ID: {user_id}"

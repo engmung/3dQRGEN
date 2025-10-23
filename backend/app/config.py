@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # Public URL
     public_url: str = "http://localhost:8000"
 
+    # Telegram
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = False

@@ -2,7 +2,6 @@ import { useDesignStore } from '../store/useDesignStore';
 import { useRef, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import QRCode from 'qrcode';
-import { fetchStands } from '../utils/api';
 
 const inputStyle = {
   width: '100%',
@@ -34,13 +33,6 @@ export function SidePanel({ onExportSTL }: SidePanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { isSignedIn } = useUser();
 
-  // 거치대 목록 가져오기
-  useEffect(() => {
-    fetchStands()
-      .then(stands => store.setStands(stands))
-      .catch(err => console.error('Failed to fetch stands:', err));
-  }, [store]);
-
   // QR 미리보기
   useEffect(() => {
     if (store.qrUrl && canvasRef.current) {
@@ -62,23 +54,75 @@ export function SidePanel({ onExportSTL }: SidePanelProps) {
     }}>
       <h2 style={{ marginTop: 0, marginBottom: '20px' }}>커스터마이징</h2>
 
-      {/* 거치대 선택 */}
+      {/* 거치대 설정 */}
       <div style={sectionStyle}>
-        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>거치대 선택</h3>
+        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>거치대 설정</h3>
+
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>거치대 타입</label>
+          <label style={labelStyle}>거치대 각도</label>
           <select
-            value={store.standId}
-            onChange={(e) => store.setStandId(Number(e.target.value))}
+            value={store.standAngle}
+            onChange={(e) => store.setStandAngle(Number(e.target.value))}
             style={inputStyle}
           >
-            {store.stands.map(stand => (
-              <option key={stand.id} value={stand.id}>
-                {stand.name} - {stand.price.toLocaleString()}원
-              </option>
-            ))}
+            <option value={90}>90° 거치대</option>
+            <option value={95}>95° 거치대</option>
+            <option value={100}>100° 거치대 (추천)</option>
+            <option value={105}>105° 거치대</option>
+            <option value={110}>110° 거치대</option>
           </select>
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+            판 너비에 맞춰 자동 조절됩니다
+          </div>
         </div>
+      </div>
+
+      {/* 디버그: QR 판 위치 조절 */}
+      <div style={sectionStyle}>
+        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>🛠️ 디버그: QR 판 위치</h3>
+
+        <div style={{ marginBottom: '10px' }}>
+          <label style={labelStyle}>Position Y</label>
+          <input
+            type="range"
+            value={store.qrPlatePositionY}
+            onChange={(e) => store.setQrPlatePositionY(Number(e.target.value))}
+            min="-50"
+            max="100"
+            step="0.5"
+            style={{ width: '100%' }}
+          />
+          <div style={{ fontSize: '12px', color: '#666' }}>{store.qrPlatePositionY.toFixed(1)} mm</div>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>Position Z</label>
+          <input
+            type="range"
+            value={store.qrPlatePositionZ}
+            onChange={(e) => store.setQrPlatePositionZ(Number(e.target.value))}
+            min="-50"
+            max="100"
+            step="0.5"
+            style={{ width: '100%' }}
+          />
+          <div style={{ fontSize: '12px', color: '#666' }}>{store.qrPlatePositionZ.toFixed(1)} mm</div>
+        </div>
+
+        <button
+          onClick={() => store.resetQrPlateTransform()}
+          style={{
+            width: '100%',
+            padding: '8px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          🔄 리셋
+        </button>
       </div>
 
       {/* QR URL 입력 */}
