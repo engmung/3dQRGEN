@@ -24,10 +24,10 @@ export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
   return (
     <Canvas camera={{ position: [200, 150, 200], fov: 50 }} shadows>
       {/* 조명 */}
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.8} />
       <directionalLight
         position={[100, 100, 50]}
-        intensity={0.8}
+        intensity={1.2}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -37,7 +37,7 @@ export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
         shadow-camera-top={200}
         shadow-camera-bottom={-200}
       />
-      <directionalLight position={[-100, -100, -50]} intensity={0.3} />
+      <directionalLight position={[-100, -100, -50]} intensity={0.5} />
 
       {/* QR 판 */}
       <QRPlate ref={qrPlateRef} />

@@ -25,6 +25,8 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   const qrSize = useDesignStore((state) => state.qrSize);
   const qrDepth = useDesignStore((state) => state.qrDepth);
   const qrYOffset = useDesignStore((state) => state.qrYOffset);
+  const plateColor = useDesignStore((state) => state.plateColor);
+  const qrColor = useDesignStore((state) => state.qrColor);
 
   // 거치대 STL 관련
   const standAngle = useDesignStore((state) => state.standAngle);
@@ -231,7 +233,7 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={plateColor} />
           </mesh>
         )}
 
@@ -245,9 +247,9 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
           ]}
           rotation={[qrPlateRotationX + getDefaultRotationForAngle(standAngle), qrPlateRotationY, qrPlateRotationZ]}
         >
-          <mesh position={[0, plateHeightUnits / 2, 0]} castShadow={false} receiveShadow>
+          <mesh position={[0, plateHeightUnits / 2, 0]} castShadow receiveShadow>
             <boxGeometry args={[plateWidthUnits, plateHeightUnits, plateDepthUnits]} />
-            <meshStandardMaterial color="#ffffff" />
+            <meshStandardMaterial color={plateColor} />
           </mesh>
         </group>
       </group>
@@ -267,7 +269,7 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
           castShadow
           receiveShadow
         >
-          <meshStandardMaterial color="#ffffff" />
+          <meshStandardMaterial color={plateColor} />
         </mesh>
       )}
 
@@ -282,15 +284,15 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
         rotation={[qrPlateRotationX + getDefaultRotationForAngle(standAngle), qrPlateRotationY, qrPlateRotationZ]}
       >
         {/* QR 판 */}
-        <mesh position={[0, plateHeightUnits / 2, 0]} castShadow={false} receiveShadow>
+        <mesh position={[0, plateHeightUnits / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[plateWidthUnits, plateHeightUnits, plateDepthUnits]} />
-          <meshStandardMaterial color="#ffffff" />
+          <meshStandardMaterial color={plateColor} />
         </mesh>
 
         {/* QR 블록들 - 판 표면에 배치 */}
         <group position={[0, qrLocalY, plateDepthUnits / 2]}>
           <mesh geometry={qrGeometry} castShadow receiveShadow={false}>
-            <meshStandardMaterial color="#000000" />
+            <meshStandardMaterial color={qrColor} />
           </mesh>
         </group>
       </group>
