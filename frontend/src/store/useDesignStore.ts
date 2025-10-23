@@ -15,146 +15,160 @@ const STANDS: Stand[] = [
   { id: 5, name: "커스텀 거치대", price: 25000 },
 ];
 
-interface DesignStore {
-  // 거치대 (STL 파일 기반)
-  standAngle: number; // 각도 (90, 95, 100, 105, 110)
-  setStandAngle: (angle: number) => void;
+// 개별 QR 판 설정
+export interface QRPlateConfig {
+  id: string;
 
-  // 거치대 디버그 위치/회전/스케일
-  standPositionX: number;
-  standPositionY: number;
-  standPositionZ: number;
-  standRotationX: number; // 라디안
-  standRotationY: number;
-  standRotationZ: number;
-  standScale: number;
-  setStandPositionX: (x: number) => void;
-  setStandPositionY: (y: number) => void;
-  setStandPositionZ: (z: number) => void;
-  setStandRotationX: (x: number) => void;
-  setStandRotationY: (y: number) => void;
-  setStandRotationZ: (z: number) => void;
-  setStandScale: (scale: number) => void;
-  resetStandTransform: () => void;
-
-  // QR 판 디버그 위치/회전
-  qrPlatePositionX: number;
-  qrPlatePositionY: number;
-  qrPlatePositionZ: number;
-  qrPlateRotationX: number;
-  qrPlateRotationY: number;
-  qrPlateRotationZ: number;
-  setQrPlatePositionX: (x: number) => void;
-  setQrPlatePositionY: (y: number) => void;
-  setQrPlatePositionZ: (z: number) => void;
-  setQrPlateRotationX: (x: number) => void;
-  setQrPlateRotationY: (y: number) => void;
-  setQrPlateRotationZ: (z: number) => void;
-  resetQrPlateTransform: () => void;
-
-  // QR URL
+  // QR 설정
   qrUrl: string;
-  setQrUrl: (url: string) => void;
 
   // 판 크기 (mm)
   plateWidth: number;
   plateHeight: number;
   plateDepth: number;
-  setPlateWidth: (width: number) => void;
-  setPlateHeight: (height: number) => void;
-  setPlateDepth: (depth: number) => void;
 
-  // QR 설정 (mm)
+  // QR 상세 설정 (mm)
   qrSize: number;
   qrDepth: number;
   qrYOffset: number; // 판 상단에서 QR까지의 거리
-  setQrSize: (size: number) => void;
-  setQrDepth: (depth: number) => void;
-  setQrYOffset: (offset: number) => void;
 
-  // 색상 설정
+  // 거치대
+  standAngle: 90 | 95 | 100 | 105 | 110;
+
+  // 색상
   plateColor: string;
   qrColor: string;
-  setPlateColor: (color: string) => void;
-  setQrColor: (color: string) => void;
 
-  // 상단 아치 설정
-  topArchRadius: number; // 0 = 평평, 값이 클수록 둥글게
-  setTopArchRadius: (radius: number) => void;
+  // 상단 아치
+  topArchRadius: number; // 0 = 평평
+
+  // 3D 씬 내 위치
+  positionX: number;
+  positionY: number;
+  positionZ: number;
 }
 
-export const useDesignStore = create<DesignStore>((set) => ({
-  // 기본값
-  standAngle: 100,       // 100° 거치대 기본
+interface DesignStore {
+  // 멀티 플레이트 관리
+  plates: QRPlateConfig[];
+  selectedPlateId: string | null;
 
-  // 거치대 디버그 위치/회전/스케일 (초기값 0)
-  standPositionX: 0,
-  standPositionY: 0,
-  standPositionZ: 0,
-  standRotationX: 0,
-  standRotationY: 0,
-  standRotationZ: 0,
-  standScale: 1.0,
+  // 전역 색상 (새 판 추가 시 기본값)
+  globalPlateColor: string;
+  globalQrColor: string;
 
-  // QR 판 디버그 위치/회전 (초기값 0)
-  qrPlatePositionX: 0,
-  qrPlatePositionY: 0,
-  qrPlatePositionZ: 0,
-  qrPlateRotationX: 0,
-  qrPlateRotationY: 0,
-  qrPlateRotationZ: 0,
+  // Plate CRUD
+  addPlate: () => void;
+  removePlate: (id: string) => void;
+  updatePlate: (id: string, updates: Partial<QRPlateConfig>) => void;
+  selectPlate: (id: string | null) => void;
 
+  // 전역 색상 설정
+  setGlobalPlateColor: (color: string) => void;
+  setGlobalQrColor: (color: string) => void;
+
+  // 선택된 판의 색상 변경 (전역 + 개별)
+  updateSelectedPlateColor: (color: string) => void;
+  updateSelectedQrColor: (color: string) => void;
+}
+
+// 기본 QR 판 설정 생성
+const createDefaultPlate = (
+  id: string,
+  plateColor: string,
+  qrColor: string,
+  index: number = 0
+): QRPlateConfig => ({
+  id,
   qrUrl: 'https://example.com',
-  plateWidth: 70,        // 핸드폰 너비
-  plateHeight: 100,      // 핸드폰 높이
-  plateDepth: 2,         // 판 두께
-  qrSize: 50,            // QR 크기
-  qrDepth: 2,            // QR 블록 높이
-  qrYOffset: 10,         // 판 상단에서 10mm 아래
-  plateColor: '#ffffff', // 흰색
-  qrColor: '#000000',    // 검은색
-  topArchRadius: 0,      // 상단 아치 (0 = 평평)
+  plateWidth: 70,
+  plateHeight: 100,
+  plateDepth: 2,
+  qrSize: 50,
+  qrDepth: 2,
+  qrYOffset: 10,
+  standAngle: 100,
+  plateColor,
+  qrColor,
+  topArchRadius: 0,
+  // 새 판은 X축으로 간격을 두고 배치
+  positionX: index * 120,
+  positionY: 0,
+  positionZ: 0,
+});
 
-  // Setters
-  setStandAngle: (angle) => set({ standAngle: angle }),
-  setStandPositionX: (x) => set({ standPositionX: x }),
-  setStandPositionY: (y) => set({ standPositionY: y }),
-  setStandPositionZ: (z) => set({ standPositionZ: z }),
-  setStandRotationX: (x) => set({ standRotationX: x }),
-  setStandRotationY: (y) => set({ standRotationY: y }),
-  setStandRotationZ: (z) => set({ standRotationZ: z }),
-  setStandScale: (scale) => set({ standScale: scale }),
-  resetStandTransform: () => set({
-    standPositionX: 0,
-    standPositionY: 0,
-    standPositionZ: 0,
-    standRotationX: 0,
-    standRotationY: 0,
-    standRotationZ: 0,
-    standScale: 1.0,
-  }),
-  setQrPlatePositionX: (x) => set({ qrPlatePositionX: x }),
-  setQrPlatePositionY: (y) => set({ qrPlatePositionY: y }),
-  setQrPlatePositionZ: (z) => set({ qrPlatePositionZ: z }),
-  setQrPlateRotationX: (x) => set({ qrPlateRotationX: x }),
-  setQrPlateRotationY: (y) => set({ qrPlateRotationY: y }),
-  setQrPlateRotationZ: (z) => set({ qrPlateRotationZ: z }),
-  resetQrPlateTransform: () => set({
-    qrPlatePositionX: 0,
-    qrPlatePositionY: 0,
-    qrPlatePositionZ: 0,
-    qrPlateRotationX: 0,
-    qrPlateRotationY: 0,
-    qrPlateRotationZ: 0,
-  }),
-  setQrUrl: (url) => set({ qrUrl: url }),
-  setPlateWidth: (width) => set({ plateWidth: width }),
-  setPlateHeight: (height) => set({ plateHeight: height }),
-  setPlateDepth: (depth) => set({ plateDepth: depth }),
-  setQrSize: (size) => set({ qrSize: size }),
-  setQrDepth: (depth) => set({ qrDepth: depth }),
-  setQrYOffset: (offset) => set({ qrYOffset: offset }),
-  setPlateColor: (color) => set({ plateColor: color }),
-  setQrColor: (color) => set({ qrColor: color }),
-  setTopArchRadius: (radius) => set({ topArchRadius: radius }),
-}));
+export const useDesignStore = create<DesignStore>((set, get) => {
+  const initialPlateId = crypto.randomUUID();
+
+  return {
+    // 초기값: 1개 판 (자동 선택)
+    plates: [createDefaultPlate(initialPlateId, '#ffffff', '#000000', 0)],
+    selectedPlateId: initialPlateId,
+
+    globalPlateColor: '#ffffff',
+    globalQrColor: '#000000',
+
+  // 새 판 추가
+  addPlate: () => {
+    const { plates, globalPlateColor, globalQrColor } = get();
+    const newPlate = createDefaultPlate(
+      crypto.randomUUID(),
+      globalPlateColor,
+      globalQrColor,
+      plates.length
+    );
+    set({ plates: [...plates, newPlate], selectedPlateId: newPlate.id });
+  },
+
+  // 판 삭제
+  removePlate: (id: string) => {
+    const { plates, selectedPlateId } = get();
+    const filtered = plates.filter(p => p.id !== id);
+
+    // 삭제된 판이 선택되어 있었다면 선택 해제
+    const newSelectedId = selectedPlateId === id ? null : selectedPlateId;
+
+    set({ plates: filtered, selectedPlateId: newSelectedId });
+  },
+
+  // 판 업데이트
+  updatePlate: (id: string, updates: Partial<QRPlateConfig>) => {
+    const { plates } = get();
+    const updated = plates.map(p =>
+      p.id === id ? { ...p, ...updates } : p
+    );
+    set({ plates: updated });
+  },
+
+  // 판 선택
+  selectPlate: (id: string | null) => {
+    set({ selectedPlateId: id });
+  },
+
+  // 전역 색상 설정
+  setGlobalPlateColor: (color: string) => {
+    set({ globalPlateColor: color });
+  },
+
+  setGlobalQrColor: (color: string) => {
+    set({ globalQrColor: color });
+  },
+
+  // 선택된 판의 색상 변경 (전역 + 개별)
+  updateSelectedPlateColor: (color: string) => {
+    const { selectedPlateId, updatePlate } = get();
+    set({ globalPlateColor: color });
+    if (selectedPlateId) {
+      updatePlate(selectedPlateId, { plateColor: color });
+    }
+  },
+
+  updateSelectedQrColor: (color: string) => {
+    const { selectedPlateId, updatePlate } = get();
+    set({ globalQrColor: color });
+    if (selectedPlateId) {
+      updatePlate(selectedPlateId, { qrColor: color });
+    }
+  },
+};
+});
