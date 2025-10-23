@@ -89,6 +89,12 @@ export function SidePanel({ onExportOBJ }: SidePanelProps) {
               if (store.topArchRadius > maxArch) {
                 store.setTopArchRadius(maxArch);
               }
+
+              // 판 상단에서 거리 제한 체크
+              const maxYOffset = Math.max(0, store.plateHeight - store.qrSize - 10);
+              if (store.qrYOffset > maxYOffset) {
+                store.setQrYOffset(maxYOffset);
+              }
             }}
             min="20.0"
             max="160.0"
