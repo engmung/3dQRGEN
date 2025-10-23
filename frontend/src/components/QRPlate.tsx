@@ -7,6 +7,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { RoundedBox } from '@react-three/drei';
 import { exportToOBJ, exportToOBJBlob } from '../utils/objExporter';
 import { calculatePrice } from '../utils/pricing';
+import { extendStandMiddle, getGeometryDepth } from '../utils/geometryUtils';
 
 // mm to Three.js units (1mm = 1 unit)
 const MM_TO_UNITS = 1;
@@ -50,6 +51,8 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
 
   const [qrBitmap, setQrBitmap] = useState<{ data: boolean[][], size: number } | null>(null);
   const [standGeometry, setStandGeometry] = useState<THREE.BufferGeometry | null>(null);
+  const [modifiedStandGeometry, setModifiedStandGeometry] = useState<THREE.BufferGeometry | null>(null);
+  const [baseStandDepth, setBaseStandDepth] = useState<number>(80); // 기본값 80mm
 
   // 각도별 기본 회전값 (라디안)
   const getDefaultRotationForAngle = (angle: number): number => {
@@ -107,6 +110,10 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
         // 원점으로 이동
         geometry.translate(-centerX, -centerY, -centerZ);
 
+        // Z축 깊이 측정
+        const { depth } = getGeometryDepth(geometry);
+        setBaseStandDepth(depth);
+
         console.log('STL Loaded:', {
           original: { min: bbox.min, max: bbox.max },
           center: { x: centerX, y: centerY, z: centerZ },
@@ -114,7 +121,8 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
             x: bbox.max.x - bbox.min.x,
             y: bbox.max.y - bbox.min.y,
             z: bbox.max.z - bbox.min.z
-          }
+          },
+          baseDepth: depth
         });
 
         setStandGeometry(geometry);
@@ -125,6 +133,52 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
       }
     );
   }, [standAngle]);
+
+  // 필요한 거치대 연장량 계산
+  const calculateRequiredExtension = useMemo(() => {
+    const angle = getDefaultRotationForAngle(standAngle);
+
+    // QR 판 최상단 위치 (회전 전, 바닥면 기준)
+    const qrTopY = plateHeight - qrYOffset + qrSize / 2;
+    const qrTopZ = plateDepth / 2 + qrDepth / 2;
+
+    // 회전 후 Z 좌표 계산 (판이 뒤로 기울어짐)
+    // X축 기준 회전: Z' = Z*cos(angle) + Y*sin(angle)
+    const rotatedZ = qrTopZ * Math.cos(angle) + qrTopY * Math.sin(Math.abs(angle));
+
+    // 필요한 연장량 (안전 마진 10mm 추가)
+    const required = Math.max(0, rotatedZ - baseStandDepth + 10);
+
+    console.log('Extension calculation:', {
+      standAngle,
+      angleRadians: angle,
+      qrTopY,
+      qrTopZ,
+      rotatedZ,
+      baseStandDepth,
+      requiredExtension: required
+    });
+
+    return required;
+  }, [standAngle, plateHeight, plateDepth, qrYOffset, qrSize, qrDepth, baseStandDepth]);
+
+  // 거치대 geometry 자동 연장
+  useEffect(() => {
+    if (!standGeometry) {
+      setModifiedStandGeometry(null);
+      return;
+    }
+
+    const extensionUnits = calculateRequiredExtension * MM_TO_UNITS;
+
+    if (extensionUnits > 0) {
+      console.log(`Extending stand by ${calculateRequiredExtension.toFixed(2)}mm`);
+      const extended = extendStandMiddle(standGeometry, extensionUnits);
+      setModifiedStandGeometry(extended);
+    } else {
+      setModifiedStandGeometry(standGeometry);
+    }
+  }, [standGeometry, calculateRequiredExtension]);
 
   // QR 코드 3D 블록 생성
   const qrGeometry = useMemo(() => {
@@ -275,10 +329,10 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
     return (
       <group>
         {/* L자 거치대 (STL 파일) */}
-        {standGeometry && (
+        {modifiedStandGeometry && (
           <mesh
             ref={standMeshRef}
-            geometry={standGeometry}
+            geometry={modifiedStandGeometry}
             position={[standPositionX, standPositionY, standPositionZ]}
             rotation={[standRotationX + (-Math.PI / 2), standRotationY, standRotationZ + (Math.PI / 2)]}
             scale={[standScale, standWidthScale * standScale, standScale]}
@@ -310,10 +364,10 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   return (
     <group>
       {/* L자 거치대 (STL 파일) */}
-      {standGeometry && (
+      {modifiedStandGeometry && (
         <mesh
           ref={standMeshRef}
-          geometry={standGeometry}
+          geometry={modifiedStandGeometry}
           position={[standPositionX, standPositionY, standPositionZ]}
           rotation={[standRotationX + (-Math.PI / 2), standRotationY, standRotationZ + (Math.PI / 2)]}
           scale={[standScale, standWidthScale * standScale, standScale]}
