@@ -65,6 +65,67 @@ export function SidePanel({ onExportOBJ }: SidePanelProps) {
         </div>
       </div>
 
+      {/* 판 설정 */}
+      <div style={sectionStyle}>
+        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>판 크기</h3>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>너비 (mm): {store.plateWidth.toFixed(1)}</label>
+          <input
+            type="range"
+            value={store.plateWidth}
+            onChange={(e) => {
+              const newWidth = Number(e.target.value);
+              store.setPlateWidth(newWidth);
+
+              // QR 크기 제한 체크
+              const maxQRSize = Math.min(newWidth, store.plateHeight);
+              if (store.qrSize > maxQRSize) {
+                store.setQrSize(maxQRSize);
+              }
+
+              // 아치 곡률 제한 체크
+              const maxArch = Math.min(50, newWidth / 2 - 1);
+              if (store.topArchRadius > maxArch) {
+                store.setTopArchRadius(maxArch);
+              }
+            }}
+            min="20.0"
+            max="160.0"
+            step="0.2"
+            style={{ ...inputStyle, height: '30px' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>높이 (mm): {store.plateHeight.toFixed(1)}</label>
+          <input
+            type="range"
+            value={store.plateHeight}
+            onChange={(e) => {
+              const newHeight = Number(e.target.value);
+              store.setPlateHeight(newHeight);
+
+              // QR 크기 제한 체크
+              const maxQRSize = Math.min(store.plateWidth, newHeight);
+              if (store.qrSize > maxQRSize) {
+                store.setQrSize(maxQRSize);
+              }
+
+              // 판 상단에서 거리 제한 체크
+              const maxYOffset = Math.max(0, newHeight - store.qrSize - 10);
+              if (store.qrYOffset > maxYOffset) {
+                store.setQrYOffset(maxYOffset);
+              }
+            }}
+            min="20.0"
+            max="160.0"
+            step="0.2"
+            style={{ ...inputStyle, height: '30px' }}
+          />
+        </div>
+      </div>
+
       {/* QR URL 입력 */}
       <div style={sectionStyle}>
         <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>QR 코드</h3>
@@ -80,69 +141,63 @@ export function SidePanel({ onExportOBJ }: SidePanelProps) {
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>QR 크기 (mm)</label>
+          <label style={labelStyle}>QR 크기 (mm): {store.qrSize.toFixed(1)}</label>
           <input
-            type="number"
+            type="range"
             value={store.qrSize}
-            onChange={(e) => store.setQrSize(Number(e.target.value))}
-            min="10"
-            max="200"
-            style={inputStyle}
+            onChange={(e) => {
+              const newQRSize = Number(e.target.value);
+              store.setQrSize(newQRSize);
+
+              // 판 상단에서 거리 제한 체크
+              const maxYOffset = Math.max(0, store.plateHeight - newQRSize - 10);
+              if (store.qrYOffset > maxYOffset) {
+                store.setQrYOffset(maxYOffset);
+              }
+            }}
+            min="10.0"
+            max={Math.min(store.plateWidth, store.plateHeight)}
+            step="0.2"
+            style={{ ...inputStyle, height: '30px' }}
           />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>QR 두께 (mm)</label>
+          <label style={labelStyle}>QR 두께 (mm): {store.qrDepth.toFixed(1)}</label>
           <input
-            type="number"
+            type="range"
             value={store.qrDepth}
             onChange={(e) => store.setQrDepth(Number(e.target.value))}
-            min="0.5"
-            max="10"
-            step="0.5"
-            style={inputStyle}
+            min="0.6"
+            max="5.0"
+            step="0.2"
+            style={{ ...inputStyle, height: '30px' }}
           />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>판 상단에서 거리 (mm)</label>
+          <label style={labelStyle}>판 상단에서 거리 (mm): {store.qrYOffset.toFixed(1)}</label>
           <input
-            type="number"
+            type="range"
             value={store.qrYOffset}
             onChange={(e) => store.setQrYOffset(Number(e.target.value))}
-            min="0"
-            max="100"
-            step="1"
-            style={inputStyle}
-          />
-        </div>
-      </div>
-
-      {/* 판 설정 */}
-      <div style={sectionStyle}>
-        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>판 크기</h3>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>너비 (mm)</label>
-          <input
-            type="number"
-            value={store.plateWidth}
-            onChange={(e) => store.setPlateWidth(Number(e.target.value))}
-            min="20"
-            max="300"
-            style={inputStyle}
+            min="0.0"
+            max={Math.max(0, store.plateHeight - store.qrSize - 10)}
+            step="0.2"
+            style={{ ...inputStyle, height: '30px' }}
           />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>높이 (mm)</label>
+          <label style={labelStyle}>상단 아치 곡률 (mm): {store.topArchRadius.toFixed(1)}</label>
           <input
-            type="number"
-            value={store.plateHeight}
-            onChange={(e) => store.setPlateHeight(Number(e.target.value))}
-            min="20"
-            max="300"
-            style={inputStyle}
+            type="range"
+            value={store.topArchRadius}
+            onChange={(e) => store.setTopArchRadius(Number(e.target.value))}
+            min="0.0"
+            max={Math.min(50, store.plateWidth / 2 - 1)}
+            step="0.2"
+            style={{ ...inputStyle, height: '30px' }}
           />
         </div>
       </div>

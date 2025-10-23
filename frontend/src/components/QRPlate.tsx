@@ -4,6 +4,7 @@ import { generateQRBitmap } from '../utils/qrUtils';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { RoundedBox } from '@react-three/drei';
 import { exportToOBJ, exportToOBJBlob } from '../utils/objExporter';
 import { calculatePrice } from '../utils/pricing';
 
@@ -27,6 +28,7 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   const qrYOffset = useDesignStore((state) => state.qrYOffset);
   const plateColor = useDesignStore((state) => state.plateColor);
   const qrColor = useDesignStore((state) => state.qrColor);
+  const topArchRadius = useDesignStore((state) => state.topArchRadius);
 
   // 거치대 STL 관련
   const standAngle = useDesignStore((state) => state.standAngle);
@@ -218,6 +220,56 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
   // QR 블록 위치 계산 (바닥면 기준)
   const qrLocalY = plateHeightUnits - qrSizeUnits / 2 - qrYOffsetUnits;
 
+  // 상단 모서리만 둥근 판 생성
+  const plateGeometry = useMemo(() => {
+    const shape = new THREE.Shape();
+    const w = plateWidthUnits / 2;
+    const h = plateHeightUnits;
+    const r = topArchRadius; // 상단 모서리 반경
+
+    // 바닥 왼쪽부터 시작 (시계 반대방향)
+    shape.moveTo(-w, 0);
+
+    // 왼쪽 변 (바닥 → 상단)
+    shape.lineTo(-w, h - r);
+
+    // 왼쪽 상단 모서리 (둥글게 또는 각지게)
+    if (r > 0) {
+      shape.quadraticCurveTo(-w, h, -w + r, h);
+    } else {
+      shape.lineTo(-w, h);
+    }
+
+    // 상단 변 (왼쪽 → 오른쪽)
+    shape.lineTo(w - r, h);
+
+    // 오른쪽 상단 모서리
+    if (r > 0) {
+      shape.quadraticCurveTo(w, h, w, h - r);
+    } else {
+      shape.lineTo(w, h);
+    }
+
+    // 오른쪽 변 (상단 → 바닥)
+    shape.lineTo(w, 0);
+
+    // 바닥 변 (오른쪽 → 왼쪽)
+    shape.lineTo(-w, 0);
+
+    const extrudeSettings = {
+      depth: plateDepthUnits,
+      bevelEnabled: false,
+      curveSegments: 32, // 세그먼트 증가로 부드럽게
+    };
+
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+    // 중심 조정 (Z축 중심으로, Y축은 바닥 기준)
+    geometry.translate(0, 0, -plateDepthUnits / 2);
+
+    return geometry;
+  }, [plateWidthUnits, plateHeightUnits, plateDepthUnits, topArchRadius]);
+
   if (!qrUrl || !qrGeometry) {
     // URL 없거나 로딩 중일 때 기본 판만 표시
     return (
@@ -247,8 +299,7 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
           ]}
           rotation={[qrPlateRotationX + getDefaultRotationForAngle(standAngle), qrPlateRotationY, qrPlateRotationZ]}
         >
-          <mesh position={[0, plateHeightUnits / 2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[plateWidthUnits, plateHeightUnits, plateDepthUnits]} />
+          <mesh geometry={plateGeometry} position={[0, 0, 0]} castShadow receiveShadow>
             <meshStandardMaterial color={plateColor} />
           </mesh>
         </group>
@@ -284,8 +335,7 @@ export const QRPlate = forwardRef<QRPlateRef>((props, ref) => {
         rotation={[qrPlateRotationX + getDefaultRotationForAngle(standAngle), qrPlateRotationY, qrPlateRotationZ]}
       >
         {/* QR 판 */}
-        <mesh position={[0, plateHeightUnits / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[plateWidthUnits, plateHeightUnits, plateDepthUnits]} />
+        <mesh geometry={plateGeometry} position={[0, 0, 0]} castShadow receiveShadow>
           <meshStandardMaterial color={plateColor} />
         </mesh>
 
