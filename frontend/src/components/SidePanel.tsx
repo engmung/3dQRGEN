@@ -1,7 +1,5 @@
 import { useDesignStore } from '../store/useDesignStore';
-import { useRef, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import QRCode from 'qrcode';
 
 const inputStyle = {
   width: '100%',
@@ -25,22 +23,12 @@ const sectionStyle = {
 };
 
 interface SidePanelProps {
-  onExportSTL: () => void;
+  onExportOBJ: () => void;
 }
 
-export function SidePanel({ onExportSTL }: SidePanelProps) {
+export function SidePanel({ onExportOBJ }: SidePanelProps) {
   const store = useDesignStore();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { isSignedIn } = useUser();
-
-  // QR 미리보기
-  useEffect(() => {
-    if (store.qrUrl && canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, store.qrUrl, { width: 200, margin: 2 }, (error) => {
-        if (error) console.error('QR Error:', error);
-      });
-    }
-  }, [store.qrUrl]);
 
   return (
     <div style={{
@@ -75,54 +63,6 @@ export function SidePanel({ onExportSTL }: SidePanelProps) {
             판 너비에 맞춰 자동 조절됩니다
           </div>
         </div>
-      </div>
-
-      {/* 디버그: QR 판 위치 조절 */}
-      <div style={sectionStyle}>
-        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>🛠️ 디버그: QR 판 위치</h3>
-
-        <div style={{ marginBottom: '10px' }}>
-          <label style={labelStyle}>Position Y</label>
-          <input
-            type="range"
-            value={store.qrPlatePositionY}
-            onChange={(e) => store.setQrPlatePositionY(Number(e.target.value))}
-            min="-50"
-            max="100"
-            step="0.5"
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: '12px', color: '#666' }}>{store.qrPlatePositionY.toFixed(1)} mm</div>
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>Position Z</label>
-          <input
-            type="range"
-            value={store.qrPlatePositionZ}
-            onChange={(e) => store.setQrPlatePositionZ(Number(e.target.value))}
-            min="-50"
-            max="100"
-            step="0.5"
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: '12px', color: '#666' }}>{store.qrPlatePositionZ.toFixed(1)} mm</div>
-        </div>
-
-        <button
-          onClick={() => store.resetQrPlateTransform()}
-          style={{
-            width: '100%',
-            padding: '8px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          🔄 리셋
-        </button>
       </div>
 
       {/* QR URL 입력 */}
@@ -220,7 +160,7 @@ export function SidePanel({ onExportSTL }: SidePanelProps) {
         </div>
       </div>
 
-      {/* STL Export */}
+      {/* OBJ Export */}
       <div style={{ marginBottom: '25px' }}>
         <button
           onClick={() => {
@@ -228,7 +168,7 @@ export function SidePanel({ onExportSTL }: SidePanelProps) {
               alert('주문하려면 먼저 로그인해주세요.');
               return;
             }
-            onExportSTL();
+            onExportOBJ();
           }}
           disabled={!store.qrUrl || !isSignedIn}
           style={{
@@ -265,15 +205,6 @@ export function SidePanel({ onExportSTL }: SidePanelProps) {
         </div>
       </div>
 
-      {/* 디버그 미리보기 */}
-      {store.qrUrl && (
-        <div style={{ marginTop: '20px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#888' }}>
-            디버그: QR 미리보기
-          </div>
-          <canvas ref={canvasRef} style={{ border: '1px solid #ccc', width: '100%' }} />
-        </div>
-      )}
     </div>
   );
 }

@@ -5,18 +5,18 @@ import type { QRPlateRef } from './QRPlate';
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 
 export interface Scene3DRef {
-  exportSTL: () => void;
-  createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => void;
+  exportOBJ: () => void;
+  createOrderAndDownload: (onReady: (plateObjBlob: Blob, plateMtlBlob: Blob, standObjBlob: Blob, standMtlBlob: Blob, price: number) => void) => void;
 }
 
 export const Scene3D = forwardRef<Scene3DRef>((props, ref) => {
   const qrPlateRef = useRef<QRPlateRef>(null);
 
   useImperativeHandle(ref, () => ({
-    exportSTL: () => {
-      qrPlateRef.current?.exportSTL();
+    exportOBJ: () => {
+      qrPlateRef.current?.exportOBJ();
     },
-    createOrderAndDownload: (onReady: (blob: Blob, price: number) => void) => {
+    createOrderAndDownload: (onReady: (plateObjBlob: Blob, plateMtlBlob: Blob, standObjBlob: Blob, standMtlBlob: Blob, price: number) => void) => {
       qrPlateRef.current?.createOrderAndDownload(onReady);
     }
   }));
