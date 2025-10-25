@@ -5,8 +5,26 @@ import { QRPlateInstance } from './QRPlateInstance';
 import { GLBBaseParts } from './GLBBaseParts';
 import { useDesignStore } from '../store/useDesignStore';
 import type { GLBRegions } from '../utils/glbLoader';
+import * as THREE from 'three';
 
-export const Scene3D = () => {
+interface Scene3DProps {
+  onGltfsLoaded?: (gltfs: { back: any; brige: any; front: any; pin: any }) => void;
+  onQRGeometriesReady?: (geometries: {
+    qr: THREE.BufferGeometry | null;
+    text: THREE.BufferGeometry | null;
+    image: THREE.BufferGeometry | null;
+    qrPosition: THREE.Vector3;
+    qrQuaternion: THREE.Quaternion;
+    textPosition: THREE.Vector3 | null;
+    textQuaternion: THREE.Quaternion | null;
+    imagePosition: THREE.Vector3 | null;
+    imageQuaternion: THREE.Quaternion | null;
+    qrColor: string;
+    zScale: number;
+  }) => void;
+}
+
+export const Scene3D = ({ onGltfsLoaded, onQRGeometriesReady }: Scene3DProps = {}) => {
   const plates = useDesignStore((state) => state.plates);
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
   const selectPlate = useDesignStore((state) => state.selectPlate);
@@ -42,11 +60,12 @@ export const Scene3D = () => {
         <GLBBaseParts
           plateColor={plates[0].plateColor}
           onRegionsLoaded={(regions) => setGlbRegions(regions)}
+          onGltfsLoaded={onGltfsLoaded}
         />
       )}
 
       {/* 여러 QR 판 렌더링 */}
-      {glbRegions && plates.map(plate => (
+      {glbRegions && plates.map((plate, index) => (
         <QRPlateInstance
           key={plate.id}
           config={plate}
@@ -54,6 +73,7 @@ export const Scene3D = () => {
           qrRegion={glbRegions.QR}
           textRegion={glbRegions.TEXT}
           imageRegion={glbRegions.IMAGE}
+          onGeometriesReady={index === 0 ? onQRGeometriesReady : undefined}
         />
       ))}
 

@@ -39,16 +39,16 @@ export function EditPanel() {
     <div
       style={{
         position: 'fixed',
-        right: 0,
-        top: 0,
+        left: 0,
+        top: '60px', // 헤더 높이만큼 아래에서 시작
         width: '360px',
-        height: '100vh',
+        height: 'calc(100vh - 60px)', // 헤더 높이를 뺀 높이
         backgroundColor: '#f5f5f5',
-        borderLeft: '1px solid #ddd',
+        borderRight: '1px solid #ddd',
         boxSizing: 'border-box',
         overflowY: 'auto',
         padding: '20px',
-        boxShadow: '-4px 0 12px rgba(0, 0, 0, 0.1)',
+        boxShadow: '4px 0 12px rgba(0, 0, 0, 0.1)',
         animation: 'slideIn 0.3s ease-out',
         zIndex: 50,
       }}

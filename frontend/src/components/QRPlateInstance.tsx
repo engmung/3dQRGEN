@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { generateQRBitmap } from "../utils/qrUtils";
 import { imageToContours, type ImageContours } from "../utils/imageUtils";
 import * as THREE from "three";
@@ -14,6 +14,19 @@ interface QRPlateInstanceProps {
   qrRegion: VertexGroup | null;
   textRegion: VertexGroup | null;
   imageRegion: VertexGroup | null;
+  onGeometriesReady?: (geometries: {
+    qr: THREE.BufferGeometry | null;
+    text: THREE.BufferGeometry | null;
+    image: THREE.BufferGeometry | null;
+    qrPosition: THREE.Vector3;
+    qrQuaternion: THREE.Quaternion;
+    textPosition: THREE.Vector3 | null;
+    textQuaternion: THREE.Quaternion | null;
+    imagePosition: THREE.Vector3 | null;
+    imageQuaternion: THREE.Quaternion | null;
+    qrColor: string;
+    zScale: number;
+  }) => void;
 }
 
 export const QRPlateInstance = ({
@@ -22,6 +35,7 @@ export const QRPlateInstance = ({
   qrRegion,
   textRegion,
   imageRegion,
+  onGeometriesReady,
 }: QRPlateInstanceProps) => {
   const selectPlate = useDesignStore((state) => state.selectPlate);
 
@@ -107,6 +121,7 @@ export const QRPlateInstance = ({
       isCancelled = true;
     };
   }, [config.imageFile]);
+
 
   // QR 코드 3D 블록 생성 (입체)
   // 기본 두께 1mm로 생성하고, 나중에 scale로 조절
@@ -219,6 +234,27 @@ export const QRPlateInstance = ({
     selectPlate(config.id);
   };
 
+  // Geometry 데이터를 부모로 전달
+  // ⚠️ IMPORTANT: 반드시 early return 전에 배치 (Hook 순서 유지)
+  // 하지만 위치/회전 계산은 early return 이후에 있으므로 ref 사용
+  const geometryDataRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (onGeometriesReady && geometryDataRef.current) {
+      onGeometriesReady(geometryDataRef.current);
+    }
+  }, [
+    onGeometriesReady,
+    baseGeometry,
+    textGeometry,
+    imageGeometry,
+    qrRegion,
+    config.qrColor,
+    config.text,
+    config.imageFile,
+    config.qrUrl,
+  ]);
+
   // QR 영역이 없으면 렌더링 안 함
   if (!qrRegion || !baseGeometry) {
     return null;
@@ -282,32 +318,10 @@ export const QRPlateInstance = ({
       .crossVectors(textRegion.upVector, textRegion.normal)
       .normalize();
 
-    // 제약 계산 (텍스트용)
-    const textHalfHeight = config.textSize / 2; // 근사치
-    const PLATE_WIDTH = 60;
-
-    let clampedTextHeightOffset = config.textHeightOffset;
-    let clampedTextHorizontalOffset = config.textHorizontalOffset;
-
-    // 높이 제한
-    if (textRegion.topBoundary !== null && textRegion.bottomBoundary !== null) {
-      const maxOffset = textRegion.topBoundary - textHalfHeight;
-      const minOffset = textRegion.bottomBoundary + textHalfHeight;
-      clampedTextHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.textHeightOffset));
-    }
-
-    // 좌우 제한 (텍스트는 동적 계산 어려우므로 넉넉하게)
-    const maxTextHorizontalOffset = PLATE_WIDTH / 2;
-    const minTextHorizontalOffset = -PLATE_WIDTH / 2;
-    clampedTextHorizontalOffset = Math.max(
-      minTextHorizontalOffset,
-      Math.min(maxTextHorizontalOffset, config.textHorizontalOffset)
-    );
-
-    // 텍스트 위치 계산
+    // 텍스트 위치 계산 (제한 없음)
     textPosition = textRegion.center.clone()
-      .add(textRegion.upVector.clone().multiplyScalar(clampedTextHeightOffset))
-      .add(textRightVector.multiplyScalar(clampedTextHorizontalOffset));
+      .add(textRegion.upVector.clone().multiplyScalar(config.textHeightOffset))
+      .add(textRightVector.multiplyScalar(config.textHorizontalOffset));
   }
 
   // 이미지 위치/회전 계산 (imageRegion이 있을 때만)
@@ -326,33 +340,26 @@ export const QRPlateInstance = ({
       .crossVectors(imageRegion.upVector, imageRegion.normal)
       .normalize();
 
-    // 제약 계산 (이미지용)
-    const imageHalfSize = config.imageSize / 2;
-    const PLATE_WIDTH = 60;
-
-    let clampedImageHeightOffset = config.imageHeightOffset;
-    let clampedImageHorizontalOffset = config.imageHorizontalOffset;
-
-    // 높이 제한
-    if (imageRegion.topBoundary !== null && imageRegion.bottomBoundary !== null) {
-      const maxOffset = imageRegion.topBoundary - imageHalfSize;
-      const minOffset = imageRegion.bottomBoundary + imageHalfSize;
-      clampedImageHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.imageHeightOffset));
-    }
-
-    // 좌우 제한
-    const maxImageHorizontalOffset = (PLATE_WIDTH - config.imageSize) / 2;
-    const minImageHorizontalOffset = -(PLATE_WIDTH - config.imageSize) / 2;
-    clampedImageHorizontalOffset = Math.max(
-      minImageHorizontalOffset,
-      Math.min(maxImageHorizontalOffset, config.imageHorizontalOffset)
-    );
-
-    // 이미지 위치 계산
+    // 이미지 위치 계산 (제한 없음)
     imagePosition = imageRegion.center.clone()
-      .add(imageRegion.upVector.clone().multiplyScalar(clampedImageHeightOffset))
-      .add(imageRightVector.multiplyScalar(clampedImageHorizontalOffset));
+      .add(imageRegion.upVector.clone().multiplyScalar(config.imageHeightOffset))
+      .add(imageRightVector.multiplyScalar(config.imageHorizontalOffset));
   }
+
+  // Geometry 데이터를 ref에 저장 (useEffect에서 사용)
+  geometryDataRef.current = {
+    qr: baseGeometry,
+    text: textGeometry,
+    image: imageGeometry,
+    qrPosition,
+    qrQuaternion,
+    textPosition,
+    textQuaternion,
+    imagePosition,
+    imageQuaternion,
+    qrColor: config.qrColor,
+    zScale,
+  };
 
   return (
     <group position={[config.positionX, config.positionY, config.positionZ]}>
