@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { CollectedMesh } from './meshCollector';
+import { alignToGround } from './meshCollector';
 
 /**
  * THREE.js Object3D를 OBJ Blob으로 변환 (MTL 메테리얼 포함)
@@ -37,17 +38,16 @@ export function exportToOBJBlob(object3D: THREE.Object3D, filename: string = 'mo
     }
 
     // 바운딩 박스 계산하여 바닥면 정렬
-    const tempGroup = new THREE.Group();
-    meshes.forEach(({ geometry }) => {
-      const mesh = new THREE.Mesh(geometry);
-      tempGroup.add(mesh);
-    });
-    const box = new THREE.Box3().setFromObject(tempGroup);
-    const offsetY = -box.min.y;
+    const alignedMeshes = alignToGround(
+      meshes.map((m) => ({ ...m, partName: 'default' }))
+    );
+
+    // alignToGround는 이미 Y 오프셋을 적용했으므로 offsetY는 0
+    const offsetY = 0;
 
     // 사용된 모든 색상 수집
     const colorMap = new Map<string, THREE.Color>();
-    meshes.forEach(({ material }) => {
+    alignedMeshes.forEach(({ material }) => {
       let mat = Array.isArray(material) ? material[0] : material;
       if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshBasicMaterial) {
         const hexString = mat.color.getHexString();
@@ -63,7 +63,7 @@ export function exportToOBJBlob(object3D: THREE.Object3D, filename: string = 'mo
 
     let vertexOffset = 1;
 
-    meshes.forEach(({ geometry, material }) => {
+    alignedMeshes.forEach(({ geometry, material }) => {
       // 메테리얼 색상 감지
       let materialName = 'default';
       let mat = Array.isArray(material) ? material[0] : material;
@@ -240,17 +240,16 @@ export function exportGLBPartsToOBJ(
     }
 
     // 바운딩 박스 계산하여 바닥면 정렬
-    const tempGroup = new THREE.Group();
-    allMeshes.forEach(({ geometry }) => {
-      const mesh = new THREE.Mesh(geometry);
-      tempGroup.add(mesh);
-    });
-    const box = new THREE.Box3().setFromObject(tempGroup);
-    const offsetY = -box.min.y;
+    const alignedMeshes = alignToGround(
+      allMeshes.map((m) => ({ ...m, partName: 'default' }))
+    );
+
+    // alignToGround는 이미 Y 오프셋을 적용했으므로 offsetY는 0
+    const offsetY = 0;
 
     // 사용된 모든 색상 수집
     const colorMap = new Map<string, THREE.Color>();
-    allMeshes.forEach(({ material }) => {
+    alignedMeshes.forEach(({ material }) => {
       let mat = Array.isArray(material) ? material[0] : material;
       if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshBasicMaterial) {
         const hexString = mat.color.getHexString();
@@ -266,7 +265,7 @@ export function exportGLBPartsToOBJ(
 
     let vertexOffset = 1;
 
-    allMeshes.forEach(({ geometry, material }) => {
+    alignedMeshes.forEach(({ geometry, material }) => {
       // 메테리얼 색상 감지
       let materialName = 'default';
       let mat = Array.isArray(material) ? material[0] : material;
