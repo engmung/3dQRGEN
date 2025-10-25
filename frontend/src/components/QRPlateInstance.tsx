@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { generateQRBitmap } from "../utils/qrUtils";
-import { imageToContours, type ImageContours } from "../utils/imageUtils";
+import { imageToContours, type ImageContours } from "../utils/imageUtils/index";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
