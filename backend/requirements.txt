@@ -4,7 +4,6 @@ uvicorn[standard]==0.24.0
 
 # Database
 sqlalchemy==2.0.23
-alembic==1.12.1
 
 # Validation
 pydantic==2.5.0
@@ -21,10 +20,9 @@ httpx==0.25.1
 PyJWT==2.8.0
 cryptography==41.0.7
 requests==2.31.0
-passlib[bcrypt]==1.7.4
 
-# Email
-aiosmtplib==3.0.1
+# Telegram
+python-telegram-bot==20.7
 
 # Utils
 python-dotenv==1.0.0

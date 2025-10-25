@@ -18,7 +18,6 @@ export function Admin() {
   const loadOrders = async () => {
     try {
       const token = await getToken();
-      console.log('JWT Token:', token ? `${token.substring(0, 20)}...` : 'NULL');
       const data = await fetchOrders(token);
       setOrders(data);
       setLoading(false);

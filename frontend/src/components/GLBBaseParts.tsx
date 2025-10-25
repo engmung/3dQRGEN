@@ -26,7 +26,6 @@ export const GLBBaseParts = ({ plateColor, onRegionsLoaded, onGltfsLoaded }: GLB
 
     loadGLBRegions('/models/BASE1_parts/front.glb')
       .then((regions) => {
-        console.log('GLB Regions extracted from front.glb:', regions);
         onRegionsLoaded(regions);
         setRegionsExtracted(true);
       })
@@ -54,7 +53,6 @@ export const GLBBaseParts = ({ plateColor, onRegionsLoaded, onGltfsLoaded }: GLB
   useEffect(() => {
     if (gltfsProvided || !onGltfsLoaded) return;
 
-    // console.log('[GLBBaseParts] Sending GLTFs to parent...');
     onGltfsLoaded({
       back: backGltf,
       brige: brigeGltf,

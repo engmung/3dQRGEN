@@ -29,7 +29,10 @@
       "Bash(pip show:*)",
       "Bash(git rm:*)",
       "Bash(npm run build:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(dir:*)",
+      "Bash(sqlite3:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

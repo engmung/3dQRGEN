@@ -10,6 +10,9 @@ from app.auth import get_current_user_id, get_current_user_email, get_admin_user
 import json
 import uuid
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -293,7 +296,7 @@ async def delete_order(
         try:
             os.remove(order.stl_file_path)
         except Exception as e:
-            print(f"[WARNING] Failed to delete STL file: {e}")
+            logger.warning(f"Failed to delete STL file: {e}")
 
     # 주문 폴더 삭제 (order_info.json 포함)
     order_dir = os.path.join(settings.storage_path, order_uuid)
@@ -302,7 +305,7 @@ async def delete_order(
             import shutil
             shutil.rmtree(order_dir)
         except Exception as e:
-            print(f"[WARNING] Failed to delete order directory: {e}")
+            logger.warning(f"Failed to delete order directory: {e}")
 
     # DB에서 주문 삭제
     db.delete(order)

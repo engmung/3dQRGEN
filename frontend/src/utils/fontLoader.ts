@@ -40,8 +40,6 @@ export async function loadFont(fontKey: FontKey, retries: number = 3): Promise<F
     // 재시도 로직
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        console.log(`[Font Loader] Loading ${fontInfo.label} (attempt ${attempt}/${retries})...`);
-
         // TTF 파일 로드
         const fontData = await ttfLoader.loadAsync(`/fonts/${fontInfo.file}`);
 
@@ -53,8 +51,6 @@ export async function loadFont(fontKey: FontKey, retries: number = 3): Promise<F
 
         // 로딩 Promise 제거
         fontLoadingPromises.delete(fontKey);
-
-        console.log(`✅ Font loaded: ${fontInfo.label}`);
 
         return font;
       } catch (error) {
@@ -90,6 +86,4 @@ export async function preloadAllFonts(): Promise<void> {
       console.warn(`Failed to preload font ${key}:`, err);
     }))
   );
-
-  console.log('All fonts preloaded');
 }

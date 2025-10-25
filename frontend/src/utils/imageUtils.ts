@@ -322,13 +322,9 @@ export async function imageToContours(
           data.push(row);
         }
 
-        console.log('Image data array created:', { width: canvasWidth, height: canvasHeight });
-
         // Marching Squares로 윤곽선 추출
         // isoLines 함수는 threshold 값을 경계로 하는 윤곽선들을 반환
         const contours = MarchingSquares.isoLines(data, 0.5);
-
-        console.log('Marching Squares result:', { contourCount: contours.length });
 
         // 모든 윤곽선을 CCW로 정규화 (THREE.js 요구사항)
         const normalizedContours = contours.map(contour => ensureCCW(contour));
@@ -338,8 +334,6 @@ export async function imageToContours(
         const nestingLevels = normalizedContours.map((_, i) =>
           calculateNestingLevel(i, normalizedContours)
         );
-
-        console.log('Nesting levels:', nestingLevels);
 
         // 2. 윤곽선을 { 원본 인덱스, 윤곽선, 레벨, 면적 } 구조로 변환
         interface ContourData {
@@ -358,11 +352,9 @@ export async function imageToContours(
 
         // 3. 짝수 레벨(0, 2, 4...) = 실제 도형들 추출
         const shapeContours = contourDataList.filter(c => c.level % 2 === 0);
-        console.log(`Found ${shapeContours.length} shapes (even levels)`);
 
         // 4. 홀수 레벨(1, 3, 5...) = 홀들 추출
         const holeContours = contourDataList.filter(c => c.level % 2 === 1);
-        console.log(`Found ${holeContours.length} holes (odd levels)`);
 
         // 5. 각 Shape에 대해 해당하는 홀들 찾아서 매핑
         const shapes: THREE.Shape[] = [];
@@ -443,15 +435,11 @@ export async function imageToContours(
 
               holePath.closePath();
               shape.holes.push(holePath);
-
-              console.log(`Added hole (level ${holeData.level}) to shape (level ${shapeData.level})`);
             }
           }
 
           shapes.push(shape);
         }
-
-        console.log(`Created ${shapes.length} THREE.Shape objects with Even-Odd Rule`);
 
         resolve({
           shapes,
