@@ -1,73 +1,48 @@
-# React + TypeScript + Vite
+# 3D QR 플랫폼 Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Three.js 기반 3D QR 코드 생성 플랫폼의 프론트엔드
 
-Currently, two official plugins are available:
+## 기술 스택
+- React 19 + TypeScript
+- Three.js (R3F, Drei)
+- Zustand (상태 관리)
+- Clerk (인증)
+- Vite (빌드 도구)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 개발 환경 설정
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. 환경 변수 설정
+`.env.local` 파일 생성:
+```env
+VITE_CLERK_PUBLISHABLE_KEY=your_clerk_key_here
+VITE_API_BASE_URL=http://localhost:8000
+VITE_DEV_MODE=false
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. 의존성 설치 및 실행
+```bash
+npm install
+npm run dev
 ```
+
+브라우저에서 http://localhost:5173 접속
+
+## 주요 기능
+- 3D QR 코드 생성 (GLB 기반)
+- 3D 텍스트 추가 (Pretendard 폰트)
+- 3D 이미지 변환 (Marching Squares)
+- STL 거치대 (5가지 각도)
+- OBJ Export
+
+## 프로젝트 구조
+```
+src/
+├── components/     3D 컴포넌트 (QRPlate, Scene3D 등)
+├── pages/          페이지 (Home, Admin, MyOrders)
+├── utils/          유틸리티 (imageUtils, objExporter, api)
+└── store/          Zustand 스토어
+```
+
+## 전체 프로젝트 정보
+- [PROJECT_STATUS.md](../PROJECT_STATUS.md) - 전체 프로젝트 현황
+- [KNOWN_ISSUES.md](../KNOWN_ISSUES.md) - 알려진 이슈
