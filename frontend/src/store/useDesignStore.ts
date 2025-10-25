@@ -11,9 +11,16 @@ export interface QRPlateConfig {
   qrHeightOffset: number;  // QR 높이 오프셋 (upVector 방향, mm)
   qrHorizontalOffset: number; // QR 좌우 오프셋 (rightVector 방향, mm)
 
+  // 텍스트 설정
+  text: string;                    // 텍스트 내용
+  textFont: string;                // 폰트명
+  textSize: number;                // 텍스트 크기 (mm)
+  textHeightOffset: number;        // 텍스트 높이 오프셋 (upVector 방향, mm)
+  textHorizontalOffset: number;    // 텍스트 좌우 오프셋 (rightVector 방향, mm)
+
   // 색상
   plateColor: string;
-  qrColor: string;
+  qrColor: string; // QR과 텍스트 공용
 
   // 3D 씬 내 위치
   positionX: number;
@@ -58,8 +65,13 @@ const createDefaultPlate = (
   qrThickness: 2,          // 기본 2mm
   qrHeightOffset: 2.9,     // 기본 2.9mm (upVector 방향 오프셋)
   qrHorizontalOffset: 0,   // 기본 0mm (rightVector 방향 오프셋)
+  text: '',                // 기본 빈 텍스트
+  textFont: 'Pretendard-Regular', // 기본 폰트
+  textSize: 10,            // 기본 10mm
+  textHeightOffset: 0,     // 기본 0mm
+  textHorizontalOffset: 0, // 기본 0mm
   plateColor,
-  qrColor,
+  qrColor, // QR과 텍스트 색상 공용
   // 새 판은 X축으로 간격을 두고 배치
   positionX: index * 120,
   positionY: 0,
