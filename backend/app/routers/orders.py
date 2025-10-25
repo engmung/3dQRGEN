@@ -17,6 +17,26 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def serialize_order(order) -> dict:
+    """주문 객체를 API 응답 딕셔너리로 변환"""
+    return {
+        "id": order.id,
+        "order_uuid": order.order_uuid,
+        "stand_id": order.stand_id,
+        "stand_name": order.stand_name,
+        "qr_url": order.qr_url,
+        "customer_email": order.customer_email,
+        "customer_name": order.customer_name,
+        "customer_phone": order.customer_phone,
+        "customer_postal_code": order.customer_postal_code,
+        "customer_address": order.customer_address,
+        "delivery_message": order.delivery_message,
+        "price": order.price,
+        "status": order.status,
+        "created_at": order.created_at.isoformat() if order.created_at else None,
+    }
+
+
 @router.post("/", response_model=OrderResponse)
 async def create_order(
     background_tasks: BackgroundTasks,
@@ -136,24 +156,7 @@ async def get_my_orders(
     """
     orders = db.query(Order).filter(Order.user_id == user_id).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
-    result = []
-    for order in orders:
-        result.append({
-            "id": order.id,
-            "order_uuid": order.order_uuid,
-            "stand_id": order.stand_id,
-            "stand_name": order.stand_name,
-            "qr_url": order.qr_url,
-            "customer_email": order.customer_email,
-            "customer_name": order.customer_name,
-            "customer_phone": order.customer_phone,
-            "customer_postal_code": order.customer_postal_code,
-            "customer_address": order.customer_address,
-            "delivery_message": order.delivery_message,
-            "price": order.price,
-            "status": order.status,
-            "created_at": order.created_at.isoformat() if order.created_at else None,
-        })
+    result = [serialize_order(order) for order in orders]
 
     return result
 
@@ -170,24 +173,7 @@ async def get_orders(
     """
     orders = db.query(Order).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
-    result = []
-    for order in orders:
-        result.append({
-            "id": order.id,
-            "order_uuid": order.order_uuid,
-            "stand_id": order.stand_id,
-            "stand_name": order.stand_name,
-            "qr_url": order.qr_url,
-            "customer_email": order.customer_email,
-            "customer_name": order.customer_name,
-            "customer_phone": order.customer_phone,
-            "customer_postal_code": order.customer_postal_code,
-            "customer_address": order.customer_address,
-            "delivery_message": order.delivery_message,
-            "price": order.price,
-            "status": order.status,
-            "created_at": order.created_at.isoformat() if order.created_at else None,
-        })
+    result = [serialize_order(order) for order in orders]
 
     return result
 

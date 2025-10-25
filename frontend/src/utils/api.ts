@@ -2,6 +2,8 @@
  * 백엔드 API 클라이언트
  */
 
+import { fetchWithRetry } from './fetchWithRetry';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 /**
@@ -111,40 +113,15 @@ export async function createOrder(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${API_BASE_URL}/api/orders/`, {
-    method: 'POST',
-    headers,
-    body: formData,
-  });
-
-  // 첫 요청이 403이면 한 번 더 재시도 (JWKS 캐시 로딩 문제)
-  if (response.status === 403) {
-    console.log('First order request got 403, retrying once...');
-    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms 대기
-
-    const formData2 = new FormData();
-    formData2.append('stand_id', standId.toString());
-    formData2.append('stand_name', standName);
-    formData2.append('qr_url', qrUrl);
-    formData2.append('customization', JSON.stringify(customization));
-    formData2.append('customer_email', customerEmail);
-    formData2.append('customer_name', customerName);
-    formData2.append('customer_phone', customerPhone);
-    formData2.append('customer_postal_code', customerPostalCode);
-    formData2.append('customer_address', customerAddress);
-    formData2.append('delivery_message', deliveryMessage);
-    formData2.append('price', price.toString());
-    formData2.append('plate_obj_file', plateObjBlob, 'qr_plate.obj');
-    formData2.append('plate_mtl_file', plateMtlBlob, 'qr_plate.mtl');
-    formData2.append('stand_obj_file', standObjBlob, 'stand.obj');
-    formData2.append('stand_mtl_file', standMtlBlob, 'stand.mtl');
-
-    response = await fetch(`${API_BASE_URL}/api/orders/`, {
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/orders/`, {
       method: 'POST',
       headers,
-      body: formData2,
-    });
-  }
+      body: formData,
+    }),
+    1,  // 1회 재시도
+    500 // 500ms 대기
+  );
 
   if (!response.ok) {
     throw new Error('Failed to create order');
@@ -169,19 +146,12 @@ export async function fetchMyOrders(token?: string | null): Promise<OrderListIte
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${API_BASE_URL}/api/orders/my-orders`, {
-    headers,
-  });
-
-  // 첫 요청이 403이면 한 번 더 재시도 (JWKS 캐시 로딩 문제)
-  if (response.status === 403) {
-    console.log('First fetch my-orders got 403, retrying once...');
-    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms 대기
-
-    response = await fetch(`${API_BASE_URL}/api/orders/my-orders`, {
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/orders/my-orders`, {
+      method: 'GET',
       headers,
-    });
-  }
+    })
+  );
 
   if (!response.ok) {
     throw new Error('Failed to fetch my orders');
@@ -198,19 +168,12 @@ export async function fetchOrders(token?: string | null): Promise<OrderListItem[
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${API_BASE_URL}/api/orders/list`, {
-    headers,
-  });
-
-  // 첫 요청이 403이면 한 번 더 재시도 (JWKS 캐시 로딩 문제)
-  if (response.status === 403) {
-    console.log('First fetch orders got 403, retrying once...');
-    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms 대기
-
-    response = await fetch(`${API_BASE_URL}/api/orders/list`, {
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/orders/list`, {
+      method: 'GET',
       headers,
-    });
-  }
+    })
+  );
 
   if (!response.ok) {
     throw new Error('Failed to fetch orders');

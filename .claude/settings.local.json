@@ -33,7 +33,10 @@
       "Bash(dir:*)",
       "Bash(sqlite3:*)",
       "Bash(npm uninstall:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
