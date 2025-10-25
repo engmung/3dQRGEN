@@ -16,9 +16,11 @@ import { useOBJPreviewStore } from '../store/objPreviewStore';
 import { useDesignStore } from '../store/useDesignStore';
 import * as THREE from 'three';
 
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
+
 export function Home() {
   const [gltfs, setGltfs] = useState<{ back: any; brige: any; front: any; pin: any } | null>(null);
-  const [showTransformPanel, setShowTransformPanel] = useState(false); // 기본값 false로 변경 (숨김)
+  const [showTransformPanel, setShowTransformPanel] = useState(DEV_MODE); // 환경변수로 제어
   const [showOBJPreview, setShowOBJPreview] = useState(true); // OBJ Preview 표시 여부
   const [qrGeometries, setQrGeometries] = useState<{
     qr: THREE.BufferGeometry | null;
@@ -167,7 +169,7 @@ export function Home() {
       )}
 
       {/* Transform 컨트롤 패널 (하단) */}
-      {showTransformPanel && <OBJTransformPanel />}
+      {DEV_MODE && showTransformPanel && <OBJTransformPanel />}
     </div>
   );
 }
