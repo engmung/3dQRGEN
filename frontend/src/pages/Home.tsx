@@ -33,13 +33,6 @@ export function Home() {
     qrColor: string;
   } | null>(null);
 
-  // 디버깅: gltfs가 로드되면 로그 출력
-  // useEffect(() => {
-  //   if (gltfs) {
-  //     console.log('[Home] GLTFs loaded successfully:', Object.keys(gltfs));
-  //   }
-  // }, [gltfs]);
-
   // OBJ Preview Store
   const backTransform = useOBJPreviewStore((state) => state.backTransform);
   const brigeTransform = useOBJPreviewStore((state) => state.brigeTransform);
@@ -95,8 +88,6 @@ export function Home() {
 
       // 4. Export
       exportCollectedMeshesToOBJ(allMeshes, '3d_qr_export');
-
-      console.log('OBJ export completed!');
     } catch (error) {
       console.error('OBJ export failed:', error);
       alert('OBJ export에 실패했습니다.');
@@ -177,27 +168,6 @@ export function Home() {
 
       {/* Transform 컨트롤 패널 (하단) */}
       {showTransformPanel && <OBJTransformPanel />}
-
-      {/* 패널 토글 버튼 - 주석 처리 (나중에 필요할 수 있음) */}
-      {/* <button
-        onClick={() => setShowTransformPanel(!showTransformPanel)}
-        style={{
-          position: 'fixed',
-          bottom: showTransformPanel ? 'calc(50vh - 40px)' : '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          padding: '8px 16px',
-          background: '#333',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px 4px 0 0',
-          cursor: 'pointer',
-          fontSize: '12px',
-          zIndex: 201,
-        }}
-      >
-        {showTransformPanel ? '▼ Hide Controls' : '▲ Show Controls'}
-      </button> */}
     </div>
   );
 }

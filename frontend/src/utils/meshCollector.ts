@@ -49,12 +49,6 @@ export function collectGLBMeshes(
       geo.applyMatrix4(rotMatrix);
       geo.applyMatrix4(debugMatrix);
 
-      // 메테리얼 디버깅
-      // const mat = Array.isArray(child.material) ? child.material[0] : child.material;
-      // if (mat instanceof THREE.MeshStandardMaterial) {
-      //   console.log(`[collectGLBMeshes] ${partName} material color:`, mat.color.getHexString());
-      // }
-
       meshes.push({
         geometry: geo,
         material: child.material,
@@ -91,8 +85,6 @@ export function collectQRGeometries(
     const geo = qrGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
 
-    // console.log('[collectQRGeometries] QR material color:', qrColor, material.color.getHexString());
-
     // QR의 world transform 적용
     const qrMatrix = new THREE.Matrix4().compose(
       qrPosition,
@@ -112,8 +104,6 @@ export function collectQRGeometries(
     const geo = textGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
 
-    // console.log('[collectQRGeometries] Text material color:', qrColor, material.color.getHexString());
-
     const textMatrix = new THREE.Matrix4().compose(
       textPosition,
       textQuaternion,
@@ -131,8 +121,6 @@ export function collectQRGeometries(
   if (imageGeometry && imagePosition && imageQuaternion) {
     const geo = imageGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
-
-    // console.log('[collectQRGeometries] Image material color:', qrColor, material.color.getHexString());
 
     const imageMatrix = new THREE.Matrix4().compose(
       imagePosition,
