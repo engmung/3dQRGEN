@@ -7,6 +7,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "sqlite:///./data/qr_platform.db"
+    database_echo: bool = False  # 추가: 개발 환경에서만 True
 
     # Lemon Squeezy
     lemon_squeezy_api_key: str = ""

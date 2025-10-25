@@ -7,7 +7,7 @@ from app.config import settings
 engine = create_engine(
     settings.database_url,
     connect_args={"check_same_thread": False},  # SQLite용 설정
-    echo=True  # SQL 쿼리 로깅 (개발 시 유용)
+    echo=settings.database_echo  # SQL 쿼리 로깅 (환경변수로 제어)
 )
 
 # 세션 팩토리
