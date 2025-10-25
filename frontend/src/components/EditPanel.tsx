@@ -235,6 +235,73 @@ export function EditPanel() {
         </div>
       </div>
 
+      {/* 이미지 설정 */}
+      <div style={sectionStyle}>
+        <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>이미지 설정</h3>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>이미지 업로드</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                updatePlate(selectedPlate.id, { imageFile: file });
+              }
+            }}
+            style={inputStyle}
+          />
+          {selectedPlate.imageFile && (
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              파일: {selectedPlate.imageFile.name}
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>이미지 크기 (mm): {selectedPlate.imageSize.toFixed(1)}</label>
+          <input
+            type="range"
+            value={selectedPlate.imageSize}
+            onChange={(e) => updatePlate(selectedPlate.id, { imageSize: Number(e.target.value) })}
+            min="10"
+            max="80"
+            step="0.5"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>이미지 높이 (mm): {selectedPlate.imageHeightOffset.toFixed(1)}</label>
+          <input
+            type="range"
+            value={selectedPlate.imageHeightOffset}
+            onChange={(e) => updatePlate(selectedPlate.id, { imageHeightOffset: Number(e.target.value) })}
+            min="-50"
+            max="70"
+            step="0.1"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>이미지 좌우 (mm): {selectedPlate.imageHorizontalOffset.toFixed(1)}</label>
+          <input
+            type="range"
+            value={selectedPlate.imageHorizontalOffset}
+            onChange={(e) => updatePlate(selectedPlate.id, { imageHorizontalOffset: Number(e.target.value) })}
+            min={-(60 - selectedPlate.imageSize) / 2}
+            max={(60 - selectedPlate.imageSize) / 2}
+            step="0.1"
+            style={{ width: '100%' }}
+          />
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+            범위: {(-(60 - selectedPlate.imageSize) / 2).toFixed(1)} ~ {((60 - selectedPlate.imageSize) / 2).toFixed(1)}mm
+          </div>
+        </div>
+      </div>
+
       {/* 색상 설정 */}
       <div style={sectionStyle}>
         <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>색상</h3>
@@ -250,7 +317,7 @@ export function EditPanel() {
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>QR/텍스트 색상</label>
+          <label style={labelStyle}>QR/텍스트/이미지 색상</label>
           <input
             type="color"
             value={selectedPlate.qrColor}

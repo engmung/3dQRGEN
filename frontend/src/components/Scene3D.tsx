@@ -53,6 +53,7 @@ export const Scene3D = () => {
           isSelected={plate.id === selectedPlateId}
           qrRegion={glbRegions.QR}
           textRegion={glbRegions.TEXT}
+          imageRegion={glbRegions.IMAGE}
         />
       ))}
 
