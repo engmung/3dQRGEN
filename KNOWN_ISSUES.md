@@ -1,5 +1,13 @@
 # 알려진 이슈 및 해결 방법
 
+> **최근 업데이트 (2025-01-25)**: Phase 1-4 코드 정리 완료
+> - 미사용 파일 삭제 (geometryUtils.ts, stlExporter.ts 등)
+> - 중복 코드 제거 (fetchWithRetry, alignToGround, serialize_order 공통화)
+> - imageUtils 모듈화 (5개 파일로 분리)
+> - 자세한 내용은 git log 참조
+
+---
+
 ## 1. 폰트 로딩 실패 (개발 환경)
 
 ### 증상
