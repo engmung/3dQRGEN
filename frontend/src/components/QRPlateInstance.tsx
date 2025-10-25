@@ -2,19 +2,23 @@ import { useMemo, useState, useEffect } from "react";
 import { generateQRBitmap } from "../utils/qrUtils";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { useDesignStore, type QRPlateConfig } from "../store/useDesignStore";
 import type { VertexGroup } from "../utils/glbLoader";
+import { loadFont, type FontKey } from "../utils/fontLoader";
 
 interface QRPlateInstanceProps {
   config: QRPlateConfig;
   isSelected: boolean;
   qrRegion: VertexGroup | null;
+  textRegion: VertexGroup | null;
 }
 
 export const QRPlateInstance = ({
   config,
   isSelected,
   qrRegion,
+  textRegion,
 }: QRPlateInstanceProps) => {
   const selectPlate = useDesignStore((state) => state.selectPlate);
 
@@ -23,6 +27,7 @@ export const QRPlateInstance = ({
     size: number;
   } | null>(null);
   const [hovered, setHovered] = useState(false);
+  const [textGeometry, setTextGeometry] = useState<THREE.BufferGeometry | null>(null);
 
   // QR Bitmap 생성
   useEffect(() => {
@@ -35,6 +40,45 @@ export const QRPlateInstance = ({
       .then((bitmap) => setQrBitmap(bitmap))
       .catch((err) => console.error("QR bitmap generation error:", err));
   }, [config.qrUrl]);
+
+  // 텍스트 Geometry 생성 (비동기 폰트 로딩)
+  useEffect(() => {
+    if (!config.text || config.text.trim() === '') {
+      setTextGeometry(null);
+      return;
+    }
+
+    let isCancelled = false;
+
+    loadFont(config.textFont as FontKey)
+      .then((font) => {
+        if (isCancelled) return;
+
+        const geometry = new TextGeometry(config.text, {
+          font: font,
+          size: config.textSize,
+          depth: config.qrThickness, // QR 두께와 공유!
+          curveSegments: 12,
+          bevelEnabled: false,
+        });
+
+        // 중앙 정렬
+        geometry.computeBoundingBox();
+        const bbox = geometry.boundingBox!;
+        const centerOffsetX = -(bbox.max.x - bbox.min.x) / 2;
+        geometry.translate(centerOffsetX, 0, 0);
+
+        setTextGeometry(geometry);
+      })
+      .catch((err) => {
+        console.error("Text geometry generation error:", err);
+        setTextGeometry(null);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [config.text, config.textFont, config.textSize, config.qrThickness]);
 
   // QR 코드 3D 블록 생성 (입체)
   // 기본 두께 1mm로 생성하고, 나중에 scale로 조절
@@ -157,6 +201,51 @@ export const QRPlateInstance = ({
     .add(qrRegion.upVector.clone().multiplyScalar(clampedHeightOffset))
     .add(rightVector.multiplyScalar(clampedHorizontalOffset));
 
+  // 텍스트 위치/회전 계산 (textRegion이 있을 때만)
+  let textPosition: THREE.Vector3 | null = null;
+  let textQuaternion: THREE.Quaternion | null = null;
+  let textRightVector: THREE.Vector3 | null = null;
+
+  if (textRegion && textGeometry) {
+    // Quaternion 계산
+    textQuaternion = getQuaternionFromNormalAndUp(
+      textRegion.normal,
+      textRegion.upVector
+    );
+
+    // Right 벡터 계산
+    textRightVector = new THREE.Vector3()
+      .crossVectors(textRegion.upVector, textRegion.normal)
+      .normalize();
+
+    // 제약 계산 (텍스트용)
+    const textHalfHeight = config.textSize / 2; // 근사치
+    const PLATE_WIDTH = 60;
+
+    let clampedTextHeightOffset = config.textHeightOffset;
+    let clampedTextHorizontalOffset = config.textHorizontalOffset;
+
+    // 높이 제한
+    if (textRegion.topBoundary !== null && textRegion.bottomBoundary !== null) {
+      const maxOffset = textRegion.topBoundary - textHalfHeight;
+      const minOffset = textRegion.bottomBoundary + textHalfHeight;
+      clampedTextHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.textHeightOffset));
+    }
+
+    // 좌우 제한 (텍스트는 동적 계산 어려우므로 넉넉하게)
+    const maxTextHorizontalOffset = PLATE_WIDTH / 2;
+    const minTextHorizontalOffset = -PLATE_WIDTH / 2;
+    clampedTextHorizontalOffset = Math.max(
+      minTextHorizontalOffset,
+      Math.min(maxTextHorizontalOffset, config.textHorizontalOffset)
+    );
+
+    // 텍스트 위치 계산
+    textPosition = textRegion.center.clone()
+      .add(textRegion.upVector.clone().multiplyScalar(clampedTextHeightOffset))
+      .add(textRightVector.multiplyScalar(clampedTextHorizontalOffset));
+  }
+
   return (
     <group position={[config.positionX, config.positionY, config.positionZ]}>
       {/* 선택 표시 원형 띠 (바닥) */}
@@ -189,6 +278,26 @@ export const QRPlateInstance = ({
           emissiveIntensity={hovered ? 0.2 : 0}
         />
       </mesh>
+
+      {/* 3D 텍스트 */}
+      {textGeometry && textPosition && textQuaternion && (
+        <mesh
+          geometry={textGeometry}
+          position={textPosition}
+          quaternion={textQuaternion}
+          onClick={handleClick}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          castShadow
+          receiveShadow={false}
+        >
+          <meshStandardMaterial
+            color={config.qrColor}
+            emissive={hovered ? "#666666" : "#000000"}
+            emissiveIntensity={hovered ? 0.2 : 0}
+          />
+        </mesh>
+      )}
     </group>
   );
 };

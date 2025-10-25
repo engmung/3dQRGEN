@@ -1,4 +1,5 @@
 import { useDesignStore } from '../store/useDesignStore';
+import { AVAILABLE_FONTS, type FontKey } from '../utils/fontLoader';
 
 const inputStyle = {
   width: '100%',
@@ -164,6 +165,76 @@ export function EditPanel() {
         </div>
       </div>
 
+      {/* 텍스트 설정 */}
+      <div style={sectionStyle}>
+        <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>텍스트 설정</h3>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>텍스트 내용</label>
+          <input
+            type="text"
+            value={selectedPlate.text}
+            onChange={(e) => updatePlate(selectedPlate.id, { text: e.target.value })}
+            placeholder="텍스트 입력 (선택사항)"
+            style={inputStyle}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>폰트</label>
+          <select
+            value={selectedPlate.textFont}
+            onChange={(e) => updatePlate(selectedPlate.id, { textFont: e.target.value })}
+            style={inputStyle}
+          >
+            {Object.entries(AVAILABLE_FONTS).map(([key, info]) => (
+              <option key={key} value={key}>
+                {info.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>텍스트 크기 (mm): {selectedPlate.textSize.toFixed(1)}</label>
+          <input
+            type="range"
+            value={selectedPlate.textSize}
+            onChange={(e) => updatePlate(selectedPlate.id, { textSize: Number(e.target.value) })}
+            min="5"
+            max="30"
+            step="0.5"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>텍스트 높이 (mm): {selectedPlate.textHeightOffset.toFixed(1)}</label>
+          <input
+            type="range"
+            value={selectedPlate.textHeightOffset}
+            onChange={(e) => updatePlate(selectedPlate.id, { textHeightOffset: Number(e.target.value) })}
+            min="-50"
+            max="70"
+            step="0.1"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>텍스트 좌우 (mm): {selectedPlate.textHorizontalOffset.toFixed(1)}</label>
+          <input
+            type="range"
+            value={selectedPlate.textHorizontalOffset}
+            onChange={(e) => updatePlate(selectedPlate.id, { textHorizontalOffset: Number(e.target.value) })}
+            min="-30"
+            max="30"
+            step="0.1"
+            style={{ width: '100%' }}
+          />
+        </div>
+      </div>
+
       {/* 색상 설정 */}
       <div style={sectionStyle}>
         <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>색상</h3>
@@ -179,7 +250,7 @@ export function EditPanel() {
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>QR 색상</label>
+          <label style={labelStyle}>QR/텍스트 색상</label>
           <input
             type="color"
             value={selectedPlate.qrColor}
