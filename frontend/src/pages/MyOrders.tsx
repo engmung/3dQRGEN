@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { fetchMyOrders, getDownloadUrl, cancelMyOrder, type OrderListItem } from '../utils/api';
+import { fetchMyOrders, cancelMyOrder, type OrderListItem } from '../utils/api';
 import { formatPrice } from '../utils/pricing';
 
 export const MyOrders = () => {
