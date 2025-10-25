@@ -47,12 +47,18 @@ export const ColorPalette = () => {
           style={{
             width: '40px',
             height: '40px',
+            minWidth: '40px',
+            minHeight: '40px',
             borderRadius: '50%',
             background: selectedPlate.plateColor,
             border: '3px solid #ddd',
             cursor: 'pointer',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             transition: 'transform 0.2s',
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
           onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
@@ -106,12 +112,18 @@ export const ColorPalette = () => {
           style={{
             width: '40px',
             height: '40px',
+            minWidth: '40px',
+            minHeight: '40px',
             borderRadius: '50%',
             background: selectedPlate.qrColor,
             border: '3px solid #ddd',
             cursor: 'pointer',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             transition: 'transform 0.2s',
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
           onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
