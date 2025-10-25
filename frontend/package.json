@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.53.2",
+    "@jscad/io": "^2.4.12",
+    "@jscad/modeling": "^2.12.6",
+    "@jscad/stl-serializer": "^2.1.21",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
     "qrcode": "^1.5.4",

@@ -1,0 +1,23 @@
+{
+  "order_uuid": "91effe61-8580-4b50-a392-87b1e362ad60",
+  "stand_id": 1,
+  "stand_name": "L자 거치대",
+  "qr_url": "https://example.com",
+  "customization": {
+    "plate_width": 110.6,
+    "plate_height": 135,
+    "plate_depth": 2,
+    "qr_size": 79.6,
+    "qr_depth": 3,
+    "qr_y_offset": 15.2
+  },
+  "customer": {
+    "email": "lsh678902@gmail.com",
+    "name": "승훈 이",
+    "phone": "010-7777-7777",
+    "postal_code": "04066",
+    "address": "서울 마포구 와우산로 94 (상수동, 홍익대학교) 홍익대학교",
+    "delivery_message": "테스트입니다."
+  },
+  "price": 19900.0
+}
