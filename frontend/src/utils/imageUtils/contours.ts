@@ -186,6 +186,9 @@ export async function imageToContours(
                 )
               );
 
+              // 홀의 winding order를 CW로 변환 (측면 노멀이 바깥쪽을 향하도록)
+              holePoints.reverse();
+
               holePath.moveTo(holePoints[0].x, holePoints[0].y);
 
               if (holePoints.length >= 4) {
