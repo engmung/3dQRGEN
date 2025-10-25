@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { QRPlateInstance } from './QRPlateInstance';
+import { GLBBaseParts } from './GLBBaseParts';
 import { useDesignStore } from '../store/useDesignStore';
+import type { GLBRegions } from '../utils/glbLoader';
 
 export const Scene3D = () => {
   const plates = useDesignStore((state) => state.plates);
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
   const selectPlate = useDesignStore((state) => state.selectPlate);
+
+  const [glbRegions, setGlbRegions] = useState<GLBRegions | null>(null);
 
   return (
     <Canvas
@@ -32,12 +37,21 @@ export const Scene3D = () => {
       <directionalLight position={[-100, -100, -50]} intensity={1.2} />
       <directionalLight position={[0, 200, 0]} intensity={1.0} />
 
+      {/* GLB 파츠 모델 - 영역 추출 + 렌더링 */}
+      {plates.length > 0 && (
+        <GLBBaseParts
+          plateColor={plates[0].plateColor}
+          onRegionsLoaded={(regions) => setGlbRegions(regions)}
+        />
+      )}
+
       {/* 여러 QR 판 렌더링 */}
-      {plates.map(plate => (
+      {glbRegions && plates.map(plate => (
         <QRPlateInstance
           key={plate.id}
           config={plate}
           isSelected={plate.id === selectedPlateId}
+          qrRegion={glbRegions.QR}
         />
       ))}
 

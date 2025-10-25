@@ -104,178 +104,87 @@ export function EditPanel() {
         </div>
       </div>
 
-      {/* 거치대 각도 */}
-      <div style={sectionStyle}>
-        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>거치대 각도</h3>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {[90, 95, 100, 105, 110].map(angle => (
-            <button
-              key={angle}
-              onClick={() => updatePlate(selectedPlate.id, { standAngle: angle as any })}
-              style={{
-                padding: '8px 16px',
-                border: selectedPlate.standAngle === angle ? '2px solid #4CAF50' : '1px solid #ccc',
-                borderRadius: '4px',
-                background: selectedPlate.standAngle === angle ? '#e8f5e9' : 'white',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: selectedPlate.standAngle === angle ? 'bold' : 'normal',
-              }}
-            >
-              {angle}°
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 판 크기 */}
-      <div style={sectionStyle}>
-        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>판 크기</h3>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>너비 (mm): {selectedPlate.plateWidth.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.plateWidth}
-            onChange={(e) => {
-              const newWidth = Number(e.target.value);
-              const updates: any = { plateWidth: newWidth };
-
-              // QR 크기 제한 체크
-              const maxQRSize = Math.min(newWidth, selectedPlate.plateHeight);
-              if (selectedPlate.qrSize > maxQRSize) {
-                updates.qrSize = maxQRSize;
-              }
-
-              // 아치 곡률 제한 체크
-              const maxArch = Math.min(50, newWidth / 2 - 1);
-              if (selectedPlate.topArchRadius > maxArch) {
-                updates.topArchRadius = maxArch;
-              }
-
-              // 판 상단에서 거리 제한 체크
-              const maxYOffset = Math.max(0, selectedPlate.plateHeight - (updates.qrSize || selectedPlate.qrSize) - 10);
-              if (selectedPlate.qrYOffset > maxYOffset) {
-                updates.qrYOffset = maxYOffset;
-              }
-
-              updatePlate(selectedPlate.id, updates);
-            }}
-            min="20.0"
-            max="160.0"
-            step="0.2"
-            style={{ ...inputStyle, height: '30px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>높이 (mm): {selectedPlate.plateHeight.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.plateHeight}
-            onChange={(e) => {
-              const newHeight = Number(e.target.value);
-              const updates: any = { plateHeight: newHeight };
-
-              // QR 크기 제한 체크
-              const maxQRSize = Math.min(selectedPlate.plateWidth, newHeight);
-              if (selectedPlate.qrSize > maxQRSize) {
-                updates.qrSize = maxQRSize;
-              }
-
-              // 판 상단에서 거리 제한 체크
-              const maxYOffset = Math.max(0, newHeight - (updates.qrSize || selectedPlate.qrSize) - 10);
-              if (selectedPlate.qrYOffset > maxYOffset) {
-                updates.qrYOffset = maxYOffset;
-              }
-
-              updatePlate(selectedPlate.id, updates);
-            }}
-            min="20.0"
-            max="160.0"
-            step="0.2"
-            style={{ ...inputStyle, height: '30px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>깊이 (mm): {selectedPlate.plateDepth.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.plateDepth}
-            onChange={(e) => updatePlate(selectedPlate.id, { plateDepth: Number(e.target.value) })}
-            min="0.6"
-            max="10.0"
-            step="0.2"
-            style={{ ...inputStyle, height: '30px' }}
-          />
-        </div>
-      </div>
-
       {/* QR 설정 */}
       <div style={sectionStyle}>
-        <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>QR 설정</h3>
+        <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>QR 설정</h3>
 
         <div style={{ marginBottom: '15px' }}>
           <label style={labelStyle}>QR 크기 (mm): {selectedPlate.qrSize.toFixed(1)}</label>
           <input
             type="range"
             value={selectedPlate.qrSize}
-            onChange={(e) => {
-              const newQRSize = Number(e.target.value);
-              const updates: any = { qrSize: newQRSize };
-
-              // 판 상단에서 거리 제한 체크
-              const maxYOffset = Math.max(0, selectedPlate.plateHeight - newQRSize - 10);
-              if (selectedPlate.qrYOffset > maxYOffset) {
-                updates.qrYOffset = maxYOffset;
-              }
-
-              updatePlate(selectedPlate.id, updates);
-            }}
-            min="10.0"
-            max={Math.min(selectedPlate.plateWidth, selectedPlate.plateHeight)}
-            step="0.2"
-            style={{ ...inputStyle, height: '30px' }}
+            onChange={(e) => updatePlate(selectedPlate.id, { qrSize: Number(e.target.value) })}
+            min="20"
+            max="60"
+            step="1"
+            style={{ width: '100%' }}
           />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>QR 두께 (mm): {selectedPlate.qrDepth.toFixed(1)}</label>
+          <label style={labelStyle}>QR 두께 (mm): {selectedPlate.qrThickness.toFixed(1)}</label>
           <input
             type="range"
-            value={selectedPlate.qrDepth}
-            onChange={(e) => updatePlate(selectedPlate.id, { qrDepth: Number(e.target.value) })}
-            min="0.6"
-            max="10.0"
-            step="0.2"
-            style={{ ...inputStyle, height: '30px' }}
+            value={selectedPlate.qrThickness}
+            onChange={(e) => updatePlate(selectedPlate.id, { qrThickness: Number(e.target.value) })}
+            min="1"
+            max="3"
+            step="0.1"
+            style={{ width: '100%' }}
           />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>판 상단에서 거리 (mm): {selectedPlate.qrYOffset.toFixed(1)}</label>
+          <label style={labelStyle}>QR 높이 (mm): {selectedPlate.qrHeightOffset.toFixed(1)}</label>
           <input
             type="range"
-            value={selectedPlate.qrYOffset}
-            onChange={(e) => updatePlate(selectedPlate.id, { qrYOffset: Number(e.target.value) })}
-            min="0.0"
-            max={Math.max(0, selectedPlate.plateHeight - selectedPlate.qrSize - 10)}
-            step="0.2"
-            style={{ ...inputStyle, height: '30px' }}
+            value={selectedPlate.qrHeightOffset}
+            onChange={(e) => updatePlate(selectedPlate.id, { qrHeightOffset: Number(e.target.value) })}
+            min="-50"
+            max="30"
+            step="0.1"
+            style={{ width: '100%' }}
           />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>상단 아치 곡률 (mm): {selectedPlate.topArchRadius.toFixed(1)}</label>
+          <label style={labelStyle}>QR 좌우 (mm): {selectedPlate.qrHorizontalOffset.toFixed(1)}</label>
           <input
             type="range"
-            value={selectedPlate.topArchRadius}
-            onChange={(e) => updatePlate(selectedPlate.id, { topArchRadius: Number(e.target.value) })}
-            min="0.0"
-            max={Math.min(50, selectedPlate.plateWidth / 2 - 1)}
-            step="0.2"
-            style={{ ...inputStyle, height: '30px' }}
+            value={selectedPlate.qrHorizontalOffset}
+            onChange={(e) => updatePlate(selectedPlate.id, { qrHorizontalOffset: Number(e.target.value) })}
+            min={-(60 - selectedPlate.qrSize) / 2}
+            max={(60 - selectedPlate.qrSize) / 2}
+            step="0.1"
+            style={{ width: '100%' }}
+          />
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+            범위: {(-(60 - selectedPlate.qrSize) / 2).toFixed(1)} ~ {((60 - selectedPlate.qrSize) / 2).toFixed(1)}mm
+          </div>
+        </div>
+      </div>
+
+      {/* 색상 설정 */}
+      <div style={sectionStyle}>
+        <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>색상</h3>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>판 색상</label>
+          <input
+            type="color"
+            value={selectedPlate.plateColor}
+            onChange={(e) => updatePlate(selectedPlate.id, { plateColor: e.target.value })}
+            style={{ ...inputStyle, height: '40px', cursor: 'pointer' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={labelStyle}>QR 색상</label>
+          <input
+            type="color"
+            value={selectedPlate.qrColor}
+            onChange={(e) => updatePlate(selectedPlate.id, { qrColor: e.target.value })}
+            style={{ ...inputStyle, height: '40px', cursor: 'pointer' }}
           />
         </div>
       </div>

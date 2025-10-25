@@ -2,20 +2,19 @@ import { useMemo, useState, useEffect } from "react";
 import { generateQRBitmap } from "../utils/qrUtils";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { useDesignStore, type QRPlateConfig } from "../store/useDesignStore";
-
-// mm to Three.js units (1mm = 1 unit)
-const MM_TO_UNITS = 1;
+import type { VertexGroup } from "../utils/glbLoader";
 
 interface QRPlateInstanceProps {
   config: QRPlateConfig;
   isSelected: boolean;
+  qrRegion: VertexGroup | null;
 }
 
 export const QRPlateInstance = ({
   config,
   isSelected,
+  qrRegion,
 }: QRPlateInstanceProps) => {
   const selectPlate = useDesignStore((state) => state.selectPlate);
 
@@ -23,35 +22,7 @@ export const QRPlateInstance = ({
     data: boolean[][];
     size: number;
   } | null>(null);
-  const [standGeometry, setStandGeometry] =
-    useState<THREE.BufferGeometry | null>(null);
   const [hovered, setHovered] = useState(false);
-
-  // 각도별 기본 회전값 (라디안)
-  const getDefaultRotationForAngle = (angle: number): number => {
-    const angleRotations: { [key: number]: number } = {
-      90: 0,
-      95: (-5 * Math.PI) / 180,
-      100: (-10 * Math.PI) / 180,
-      105: (-15 * Math.PI) / 180,
-      110: (-20 * Math.PI) / 180,
-    };
-    return angleRotations[angle] || 0;
-  };
-
-  // 각도별 기본 위치값 (바닥면 기준)
-  const getDefaultPositionForAngle = (
-    angle: number
-  ): { y: number; z: number } => {
-    const anglePositions: { [key: number]: { y: number; z: number } } = {
-      90: { y: -10, z: 26 },
-      95: { y: -10, z: 26.2 },
-      100: { y: -10, z: 26.2 },
-      105: { y: -10, z: 25.9 },
-      110: { y: -10, z: 25.5 },
-    };
-    return anglePositions[angle] || { y: -10, z: 26.2 };
-  };
 
   // QR Bitmap 생성
   useEffect(() => {
@@ -65,56 +36,30 @@ export const QRPlateInstance = ({
       .catch((err) => console.error("QR bitmap generation error:", err));
   }, [config.qrUrl]);
 
-  // STL 파일 로드
-  useEffect(() => {
-    const loader = new STLLoader();
-    const stlPath = `/stands/${config.standAngle}.stl`;
-
-    loader.load(
-      stlPath,
-      (geometry) => {
-        geometry.computeBoundingBox();
-        const bbox = geometry.boundingBox!;
-
-        const centerX = (bbox.max.x + bbox.min.x) / 2;
-        const centerY = (bbox.max.y + bbox.min.y) / 2;
-        const centerZ = (bbox.max.z + bbox.min.z) / 2;
-
-        geometry.translate(-centerX, -centerY, -centerZ);
-
-        setStandGeometry(geometry);
-      },
-      undefined,
-      (error) => {
-        console.error(`Failed to load STL: ${stlPath}`, error);
-      }
-    );
-  }, [config.standAngle]);
-
-  // QR 코드 3D 블록 생성
-  const qrGeometry = useMemo(() => {
-    if (!qrBitmap) return null;
+  // QR 코드 3D 블록 생성 (입체)
+  // 기본 두께 1mm로 생성하고, 나중에 scale로 조절
+  const { baseGeometry, baseThickness } = useMemo(() => {
+    if (!qrBitmap) return { baseGeometry: null, baseThickness: 1 };
 
     const { data, size } = qrBitmap;
-    const qrSizeUnits = config.qrSize * MM_TO_UNITS;
-    const blockSize = qrSizeUnits / size;
-    const blockDepth = config.qrDepth * MM_TO_UNITS;
+    const qrSizeUnits = config.qrSize;
+    const blockSize = qrSizeUnits / size; // QR 크기를 픽셀 수로 나눔
+    const baseThickness = 1; // 기본 두께 1mm
     const geometries: THREE.BufferGeometry[] = [];
 
+    // 각 검은 픽셀마다 작은 박스 생성
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         if (data[y][x]) {
-          const boxGeo = new THREE.BoxGeometry(
-            blockSize,
-            blockSize,
-            blockDepth
-          );
+          // 검은 픽셀
+          const boxGeo = new THREE.BoxGeometry(blockSize, blockSize, baseThickness);
           const boxMesh = new THREE.Mesh(boxGeo);
 
+          // 중앙을 (0,0)으로 하는 좌표계
           const posX = (x - size / 2) * blockSize + blockSize / 2;
           const posY = -(y - size / 2) * blockSize - blockSize / 2;
 
-          boxMesh.position.set(posX, posY, blockDepth / 2);
+          boxMesh.position.set(posX, posY, baseThickness / 2);
           boxMesh.updateMatrix();
 
           const clonedGeo = boxGeo.clone();
@@ -124,68 +69,41 @@ export const QRPlateInstance = ({
       }
     }
 
-    if (geometries.length === 0) return null;
+    if (geometries.length === 0) return { baseGeometry: null, baseThickness };
 
-    return mergeGeometries(geometries);
-  }, [qrBitmap, config.qrSize, config.qrDepth]);
+    // 모든 박스를 하나의 지오메트리로 병합
+    return { baseGeometry: mergeGeometries(geometries), baseThickness };
+  }, [qrBitmap, config.qrSize]); // qrThickness 제거
 
-  // 판과 QR 크기 계산 (mm -> units)
-  const plateWidthUnits = config.plateWidth * MM_TO_UNITS;
-  const plateHeightUnits = config.plateHeight * MM_TO_UNITS;
-  const plateDepthUnits = config.plateDepth * MM_TO_UNITS;
+  // Z축 스케일 계산 (두께 조절)
+  const zScale = config.qrThickness / baseThickness;
 
-  // 거치대 스케일 계산 (70mm 기준)
-  const standWidthScale = plateWidthUnits / 70;
+  // 법선과 Up 벡터로부터 정확한 quaternion 계산
+  const getQuaternionFromNormalAndUp = (
+    normal: THREE.Vector3,
+    upVector: THREE.Vector3
+  ): THREE.Quaternion => {
+    // 회전 행렬 생성 (lookAt과 유사)
+    const matrix = new THREE.Matrix4();
 
-  // QR 블록 위치 계산 (바닥면 기준)
-  const qrLocalY =
-    plateHeightUnits -
-    (config.qrSize * MM_TO_UNITS) / 2 -
-    config.qrYOffset * MM_TO_UNITS;
+    // Z축 = 법선 방향 (forward)
+    const zAxis = normal.clone().normalize();
 
-  // 상단 모서리만 둥근 판 생성
-  const plateGeometry = useMemo(() => {
-    const shape = new THREE.Shape();
-    const w = plateWidthUnits / 2;
-    const h = plateHeightUnits;
-    const r = config.topArchRadius;
+    // X축 = up × forward (right)
+    const xAxis = new THREE.Vector3().crossVectors(upVector, zAxis).normalize();
 
-    shape.moveTo(-w, 0);
-    shape.lineTo(-w, h - r);
+    // Y축 = forward × right (실제 up, 보정된)
+    const yAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
 
-    if (r > 0) {
-      shape.quadraticCurveTo(-w, h, -w + r, h);
-    } else {
-      shape.lineTo(-w, h);
-    }
+    // 회전 행렬 설정
+    matrix.makeBasis(xAxis, yAxis, zAxis);
 
-    shape.lineTo(w - r, h);
+    // 행렬을 quaternion으로 변환
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromRotationMatrix(matrix);
 
-    if (r > 0) {
-      shape.quadraticCurveTo(w, h, w, h - r);
-    } else {
-      shape.lineTo(w, h);
-    }
-
-    shape.lineTo(w, 0);
-    shape.lineTo(-w, 0);
-
-    const extrudeSettings = {
-      depth: plateDepthUnits,
-      bevelEnabled: false,
-      curveSegments: 32,
-    };
-
-    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    geometry.translate(0, 0, -plateDepthUnits / 2);
-
-    return geometry;
-  }, [
-    plateWidthUnits,
-    plateHeightUnits,
-    plateDepthUnits,
-    config.topArchRadius,
-  ]);
+    return quaternion;
+  };
 
   // 클릭 이벤트 핸들러
   const handleClick = (e: any) => {
@@ -193,58 +111,51 @@ export const QRPlateInstance = ({
     selectPlate(config.id);
   };
 
-  const defaultPos = getDefaultPositionForAngle(config.standAngle);
-
-  if (!config.qrUrl || !qrGeometry) {
-    return (
-      <group position={[config.positionX, config.positionY, config.positionZ]}>
-        {/* 선택 표시 원형 띠 (바닥) */}
-        {isSelected && (
-          <mesh
-            position={[0, 0, 0]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            receiveShadow
-          >
-            <ringGeometry
-              args={[plateWidthUnits * 0.8, plateWidthUnits * 0.9, 64]}
-            />
-            <meshBasicMaterial color="#000000" transparent opacity={0.5} />
-          </mesh>
-        )}
-
-        {/* 거치대 */}
-        {standGeometry && (
-          <mesh
-            geometry={standGeometry}
-            position={[0, 18, 0]}
-            rotation={[-Math.PI / 2, 0, Math.PI / 2]}
-            scale={[1, standWidthScale, 1]}
-            castShadow
-            receiveShadow
-          >
-            <meshStandardMaterial color={config.plateColor} />
-          </mesh>
-        )}
-
-        {/* QR 판 */}
-        <group
-          position={[0, defaultPos.y + 18, defaultPos.z]}
-          rotation={[getDefaultRotationForAngle(config.standAngle), 0, 0]}
-          onClick={handleClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-        >
-          <mesh geometry={plateGeometry} castShadow receiveShadow>
-            <meshStandardMaterial
-              color={config.plateColor}
-              emissive={hovered ? "#666666" : "#000000"}
-              emissiveIntensity={hovered ? 0.2 : 0}
-            />
-          </mesh>
-        </group>
-      </group>
-    );
+  // QR 영역이 없으면 렌더링 안 함
+  if (!qrRegion || !baseGeometry) {
+    return null;
   }
+
+  // Quaternion 계산 (법선 + Up 벡터 사용)
+  const qrQuaternion = getQuaternionFromNormalAndUp(
+    qrRegion.normal,
+    qrRegion.upVector
+  );
+
+  // Right 벡터 계산 (upVector × normal)
+  const rightVector = new THREE.Vector3()
+    .crossVectors(qrRegion.upVector, qrRegion.normal)
+    .normalize();
+
+  // QR 크기를 고려한 높이/좌우 오프셋 제한
+  const qrHalfSize = config.qrSize / 2;
+  const PLATE_WIDTH = 60; // mm (판 너비)
+
+  let clampedHeightOffset = config.qrHeightOffset;
+  let clampedHorizontalOffset = config.qrHorizontalOffset;
+
+  // 높이 제한 (상단, 하단 모두 제한)
+  if (qrRegion.topBoundary !== null && qrRegion.bottomBoundary !== null) {
+    const maxOffset = qrRegion.topBoundary - qrHalfSize; // 상단: QR 상단이 경계를 넘지 않도록
+    const minOffset = qrRegion.bottomBoundary + qrHalfSize; // 하단: QR 하단이 경계를 넘지 않도록
+    clampedHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.qrHeightOffset));
+  }
+
+  // 좌우 제한 (판 너비 기준)
+  const maxHorizontalOffset = (PLATE_WIDTH - config.qrSize) / 2;
+  const minHorizontalOffset = -(PLATE_WIDTH - config.qrSize) / 2;
+  clampedHorizontalOffset = Math.max(
+    minHorizontalOffset,
+    Math.min(maxHorizontalOffset, config.qrHorizontalOffset)
+  );
+
+  // QR 위치 계산
+  // 1. 법선 방향으로 0만큼 offset (표면에 정확히 붙이기)
+  // 2. upVector 방향으로 clampedHeightOffset 만큼 offset (면을 따라 위아래 이동, 제한 적용)
+  // 3. rightVector 방향으로 clampedHorizontalOffset 만큼 offset (면을 따라 좌우 이동, 제한 적용)
+  const qrPosition = qrRegion.center.clone()
+    .add(qrRegion.upVector.clone().multiplyScalar(clampedHeightOffset))
+    .add(rightVector.multiplyScalar(clampedHorizontalOffset));
 
   return (
     <group position={[config.positionX, config.positionY, config.positionZ]}>
@@ -255,51 +166,29 @@ export const QRPlateInstance = ({
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
         >
-          <ringGeometry
-            args={[plateWidthUnits * 0.8, plateWidthUnits * 0.9, 64]}
-          />
+          <ringGeometry args={[80, 90, 64]} />
           <meshBasicMaterial color="#000000" transparent opacity={0.5} />
         </mesh>
       )}
 
-      {/* 거치대 */}
-      {standGeometry && (
-        <mesh
-          geometry={standGeometry}
-          position={[0, 18, 0]}
-          rotation={[-Math.PI / 2, 0, Math.PI / 2]}
-          scale={[1, standWidthScale, 1]}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial color={config.plateColor} />
-        </mesh>
-      )}
-
-      {/* QR 판 + QR 블록 */}
-      <group
-        position={[0, defaultPos.y + 18, defaultPos.z]}
-        rotation={[getDefaultRotationForAngle(config.standAngle), 0, 0]}
+      {/* QR 코드 3D 블록들 */}
+      <mesh
+        geometry={baseGeometry}
+        position={qrPosition}
+        quaternion={qrQuaternion}
+        scale={[1, 1, zScale]}
         onClick={handleClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
+        castShadow
+        receiveShadow={false}
       >
-        {/* QR 판 */}
-        <mesh geometry={plateGeometry} castShadow receiveShadow>
-          <meshStandardMaterial
-            color={config.plateColor}
-            emissive={hovered ? "#666666" : "#000000"}
-            emissiveIntensity={hovered ? 0.2 : 0}
-          />
-        </mesh>
-
-        {/* QR 블록들 - 판 표면에 배치 */}
-        <group position={[0, qrLocalY, plateDepthUnits / 2]}>
-          <mesh geometry={qrGeometry} castShadow receiveShadow={false}>
-            <meshStandardMaterial color={config.qrColor} />
-          </mesh>
-        </group>
-      </group>
+        <meshStandardMaterial
+          color={config.qrColor}
+          emissive={hovered ? "#666666" : "#000000"}
+          emissiveIntensity={hovered ? 0.2 : 0}
+        />
+      </mesh>
     </group>
   );
 };

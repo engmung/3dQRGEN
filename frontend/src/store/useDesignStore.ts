@@ -1,46 +1,19 @@
 import { create } from 'zustand';
 
-export interface Stand {
-  id: number;
-  name: string;
-  price: number;
-}
-
-// 하드코딩된 거치대 목록 (프론트엔드 전용)
-const STANDS: Stand[] = [
-  { id: 1, name: "베이직 거치대", price: 5000 },
-  { id: 2, name: "스탠다드 거치대", price: 8000 },
-  { id: 3, name: "프리미엄 거치대", price: 12000 },
-  { id: 4, name: "럭셔리 거치대", price: 18000 },
-  { id: 5, name: "커스텀 거치대", price: 25000 },
-];
-
 // 개별 QR 판 설정
 export interface QRPlateConfig {
   id: string;
 
   // QR 설정
   qrUrl: string;
-
-  // 판 크기 (mm)
-  plateWidth: number;
-  plateHeight: number;
-  plateDepth: number;
-
-  // QR 상세 설정 (mm)
-  qrSize: number;
-  qrDepth: number;
-  qrYOffset: number; // 판 상단에서 QR까지의 거리
-
-  // 거치대
-  standAngle: 90 | 95 | 100 | 105 | 110;
+  qrSize: number;          // QR 크기 (mm)
+  qrThickness: number;     // QR 두께 (mm)
+  qrHeightOffset: number;  // QR 높이 오프셋 (upVector 방향, mm)
+  qrHorizontalOffset: number; // QR 좌우 오프셋 (rightVector 방향, mm)
 
   // 색상
   plateColor: string;
   qrColor: string;
-
-  // 상단 아치
-  topArchRadius: number; // 0 = 평평
 
   // 3D 씬 내 위치
   positionX: number;
@@ -81,16 +54,12 @@ const createDefaultPlate = (
 ): QRPlateConfig => ({
   id,
   qrUrl: 'https://example.com',
-  plateWidth: 70,
-  plateHeight: 100,
-  plateDepth: 2,
-  qrSize: 50,
-  qrDepth: 2,
-  qrYOffset: 10,
-  standAngle: 100,
+  qrSize: 50,              // 기본 50mm
+  qrThickness: 2,          // 기본 2mm
+  qrHeightOffset: 2.9,     // 기본 2.9mm (upVector 방향 오프셋)
+  qrHorizontalOffset: 0,   // 기본 0mm (rightVector 방향 오프셋)
   plateColor,
   qrColor,
-  topArchRadius: 0,
   // 새 판은 X축으로 간격을 두고 배치
   positionX: index * 120,
   positionY: 0,

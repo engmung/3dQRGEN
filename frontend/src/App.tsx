@@ -3,7 +3,6 @@ import { Header } from './components/Header';
 import { Home } from './pages/Home';
 import { Admin } from './pages/Admin';
 import { MyOrders } from './pages/MyOrders';
-import { Designer } from './pages/Designer';
 
 function App() {
   return (
@@ -13,7 +12,6 @@ function App() {
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/designer" element={<Designer />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/my-orders" element={<MyOrders />} />
           </Routes>
