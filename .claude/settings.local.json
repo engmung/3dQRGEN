@@ -28,7 +28,8 @@
       "Bash(git commit:*)",
       "Bash(pip show:*)",
       "Bash(git rm:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

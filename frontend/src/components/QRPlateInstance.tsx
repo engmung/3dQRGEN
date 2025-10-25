@@ -180,7 +180,7 @@ export const QRPlateInstance = ({
     const extrudeSettings = {
       depth: config.qrThickness, // QR 두께와 공유
       bevelEnabled: false,
-      curveSegments: 12, // 부드러운 곡선
+      curveSegments: 12,
     };
 
     // 각 Shape를 ExtrudeGeometry로 변환
