@@ -46,7 +46,7 @@ export const GLBBaseParts = ({ plateColor, position, onRegionsLoaded, onGltfsLoa
       });
   }, [onRegionsLoaded, regionsExtracted]);
 
-  // clone된 scene에 색상 적용 (각 인스턴스마다 독립적인 material)
+  // clone된 scene에 색상 및 그림자 설정 (각 인스턴스마다 독립적인 material)
   useEffect(() => {
     [backScene, brigeScene, frontScene, pinScene].forEach((scene) => {
       scene.traverse((child) => {
@@ -55,6 +55,9 @@ export const GLBBaseParts = ({ plateColor, position, onRegionsLoaded, onGltfsLoa
           child.material = new THREE.MeshStandardMaterial({
             color: plateColor,
           });
+          // 그림자 설정
+          child.castShadow = true;
+          child.receiveShadow = true;
         }
       });
     });
