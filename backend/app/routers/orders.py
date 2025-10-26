@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, B
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.order import Order
+from app.models.pricing import PricingSetting
 from app.schemas.order import OrderResponse
 from app.services import storage
 from app.services.telegram import send_order_notification
@@ -15,6 +16,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def calculate_expected_price(customization_data: dict, pricing: PricingSetting) -> float:
+    """
+    서버 측에서 판 가격을 계산합니다.
+
+    Args:
+        customization_data: 판 설정 데이터 (textContent, images 포함)
+        pricing: 현재 가격 설정
+
+    Returns:
+        계산된 가격
+    """
+    price = pricing.base_price
+
+    # 텍스트 추가 비용
+    text_content = customization_data.get('text', '')
+    if text_content and text_content.strip():
+        price += pricing.text_price
+
+    # 이미지 추가 비용
+    images = customization_data.get('images', [])
+    if images and len(images) > 0:
+        price += pricing.image_price * len(images)
+
+    return price
 
 
 def serialize_order(order) -> dict:
@@ -69,10 +96,24 @@ async def create_order(
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid customization JSON")
 
-    # 2. 주문 UUID 생성
+    # 2. 가격 검증 (서버 측 계산과 비교)
+    pricing_settings = db.query(PricingSetting).first()
+    if not pricing_settings:
+        raise HTTPException(status_code=500, detail="Pricing settings not found")
+
+    expected_price = calculate_expected_price(customization_data, pricing_settings)
+
+    # 가격 차이 허용 범위: 1원 (부동소수점 오차 고려)
+    if abs(price - expected_price) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Price mismatch. Expected: {expected_price}, Received: {price}"
+        )
+
+    # 3. 주문 UUID 생성
     order_uuid = str(uuid.uuid4())
 
-    # 3. OBJ+MTL 파일 저장 (파일명: {email}_{timestamp}.obj/mtl)
+    # 4. OBJ+MTL 파일 저장 (파일명: {email}_{timestamp}.obj/mtl)
     try:
         obj_path, mtl_path = await storage.save_order_model(
             order_uuid,
@@ -83,7 +124,7 @@ async def create_order(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File save error: {str(e)}")
 
-    # 4. 주문 정보 JSON 저장
+    # 5. 주문 정보 JSON 저장
     order_info = {
         "order_uuid": order_uuid,
         "stand_id": stand_id,
@@ -102,7 +143,7 @@ async def create_order(
     }
     await storage.save_order_info(order_uuid, order_info)
 
-    # 5. DB에 주문 생성
+    # 6. DB에 주문 생성
     new_order = Order(
         order_uuid=order_uuid,
         stand_id=stand_id,
@@ -124,7 +165,7 @@ async def create_order(
     db.commit()
     db.refresh(new_order)
 
-    # 6. 텔레그램 알림 전송 (백그라운드 태스크로 실행)
+    # 7. 텔레그램 알림 전송 (백그라운드 태스크로 실행)
     background_tasks.add_task(
         send_order_notification,
         order_uuid=order_uuid,
@@ -137,7 +178,7 @@ async def create_order(
         price=price
     )
 
-    # 7. 주문 완료 응답 (payment_url은 더 이상 사용하지 않음)
+    # 8. 주문 완료 응답 (payment_url은 더 이상 사용하지 않음)
     return {
         "order_uuid": order_uuid,
         "payment_url": ""  # 빈 문자열로 변경

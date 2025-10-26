@@ -31,9 +31,10 @@ app.mount("/static", StaticFiles(directory=settings.static_path), name="static")
 
 
 # 라우터 등록
-from app.routers import orders, downloads
+from app.routers import orders, downloads, pricing
 app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
 app.include_router(downloads.router, prefix="/api/downloads", tags=["downloads"])
+app.include_router(pricing.router)
 
 
 @app.on_event("startup")

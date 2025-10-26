@@ -10,6 +10,7 @@ import { useOBJPreviewStore } from '../store/objPreviewStore';
 import { generateOBJFromCartItem } from '../utils/objGenerator';
 import { generateQRString } from '../utils/qrGenerator';
 import { createOrder } from '../utils/api';
+import { getPricingSettings, calculatePlatePrice } from '../utils/pricing';
 import type { AddressFormData } from '../components/AddressForm';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
@@ -78,6 +79,9 @@ export function Home() {
     const email = user.primaryEmailAddress?.emailAddress || addressData.customerEmail;
 
     try {
+      // 가격 설정 가져오기
+      const pricingSettings = await getPricingSettings();
+
       // 각 plate를 순회하며 주문 생성
       for (let i = 0; i < plates.length; i++) {
         const plate = plates[i];
@@ -113,7 +117,7 @@ export function Home() {
           qrString = generateQRString('email', plate.qrEmailData);
         }
 
-        // 3. Customization 데이터 추출
+        // 3. Customization 데이터 추출 (가격 계산용 필드 포함)
         const customization = {
           plate_width: 100,
           plate_height: 100,
@@ -121,10 +125,15 @@ export function Home() {
           qr_size: plate.qrSize,
           qr_depth: plate.qrThickness,
           qr_y_offset: plate.qrHeightOffset,
+          text: plate.text,           // 가격 계산용
+          images: plate.images,       // 가격 계산용
         };
 
-        // 4. 주문 API 호출
-        console.log(`[Order ${i + 1}/${plates.length}] Submitting order...`);
+        // 4. 가격 계산
+        const platePrice = calculatePlatePrice(plate, pricingSettings);
+
+        // 5. 주문 API 호출
+        console.log(`[Order ${i + 1}/${plates.length}] Submitting order (${platePrice}원)...`);
         await createOrder(
           1, // stand_id (GLB 기반은 고정값 1)
           'GLB Base Stand', // stand_name
@@ -136,7 +145,7 @@ export function Home() {
           addressData.postalCode, // customer_postal_code
           `${addressData.address} ${addressData.detailAddress}`, // customer_address
           addressData.deliveryMessage, // delivery_message
-          10000, // price (임시: 10,000원)
+          platePrice, // price (동적 계산)
           objBlobs.modelObjBlob,
           objBlobs.modelMtlBlob
         );
@@ -144,7 +153,7 @@ export function Home() {
         console.log(`[Order ${i + 1}/${plates.length}] Order created successfully!`);
       }
 
-      // 5. 성공 시 모달 닫기
+      // 6. 성공 시 모달 닫기
       setIsOrderModalOpen(false);
       alert(`${plates.length}개의 주문이 완료되었습니다!\n"내 주문" 메뉴에서 확인하실 수 있습니다.`);
     } catch (error) {

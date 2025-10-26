@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDesignStore } from '../store/useDesignStore';
 import type { QRType } from '../store/useDesignStore';
 import { AVAILABLE_FONTS } from '../utils/fontLoader';
 import { QRTypeSelector } from './QRTypeSelector';
 import { WiFiForm } from './forms/WiFiForm';
 import { EmailForm } from './forms/EmailForm';
+import { getPricingSettings, calculatePlatePrice, formatPrice, type PricingSettings } from '../utils/pricing';
 
 type TabType = 'qr' | 'text' | 'image';
 
@@ -30,12 +31,19 @@ const sectionStyle = {
 
 export function LeftPanel() {
   const [activeTab, setActiveTab] = useState<TabType>('qr');
+  const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
+
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
   const plates = useDesignStore((state) => state.plates);
   const updatePlate = useDesignStore((state) => state.updatePlate);
 
   const selectedPlate = plates.find(p => p.id === selectedPlateId);
   const hasPlate = !!selectedPlate;
+
+  // 가격 설정 로드
+  useEffect(() => {
+    getPricingSettings().then(setPricingSettings);
+  }, []);
 
   const tabButtonStyle = (isActive: boolean) => ({
     flex: 1,
@@ -452,6 +460,52 @@ export function LeftPanel() {
                 이미지를 추가하세요
               </div>
             )}
+          </div>
+        )}
+
+        {/* 가격 미리보기 */}
+        {hasPlate && pricingSettings && (
+          <div style={{
+            marginTop: '20px',
+            padding: '15px',
+            backgroundColor: '#f9f9f9',
+            borderRadius: '8px',
+            border: '2px solid #4CAF50',
+          }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '10px', color: '#333' }}>
+              💰 예상 가격
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span>기본 가격</span>
+                <span>{formatPrice(pricingSettings.base_price)}</span>
+              </div>
+              {selectedPlate.text && selectedPlate.text.trim().length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span>+ 텍스트</span>
+                  <span>{formatPrice(pricingSettings.text_price)}</span>
+                </div>
+              )}
+              {selectedPlate.images.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span>+ 이미지 {selectedPlate.images.length}개</span>
+                  <span>{formatPrice(pricingSettings.image_price * selectedPlate.images.length)}</span>
+                </div>
+              )}
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: '18px',
+              fontWeight: 700,
+              color: '#4CAF50',
+              marginTop: '10px',
+              paddingTop: '10px',
+              borderTop: '2px solid #ddd',
+            }}>
+              <span>합계</span>
+              <span>{formatPrice(calculatePlatePrice(selectedPlate, pricingSettings))}</span>
+            </div>
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
-import { fetchOrders, getDownloadUrl, deleteOrder, updateOrderStatus, type OrderListItem } from '../utils/api';
-import { formatPrice } from '../utils/pricing';
+import { fetchOrders, getDownloadUrl, deleteOrder, updateOrderStatus, updatePricingSettings, type OrderListItem, type PricingSettings } from '../utils/api';
+import { formatPrice, getPricingSettings, invalidatePricingCache } from '../utils/pricing';
 
 const ADMIN_EMAILS = ['lsh678902@gmail.com'];
 
@@ -12,6 +12,15 @@ export function Admin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+
+  // 가격 설정 상태
+  const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
+  const [editingPricing, setEditingPricing] = useState(false);
+  const [newPricing, setNewPricing] = useState<PricingSettings>({
+    base_price: 20000,
+    text_price: 5000,
+    image_price: 5000,
+  });
 
   const isAdmin = user?.primaryEmailAddress?.emailAddress && ADMIN_EMAILS.includes(user.primaryEmailAddress.emailAddress);
 
@@ -28,6 +37,17 @@ export function Admin() {
     }
   };
 
+  // 가격 설정 로드
+  const loadPricingSettings = async () => {
+    try {
+      const settings = await getPricingSettings();
+      setPricingSettings(settings);
+      setNewPricing(settings);
+    } catch (err) {
+      console.error('Failed to load pricing settings:', err);
+    }
+  };
+
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -37,7 +57,22 @@ export function Admin() {
     }
 
     loadOrders();
+    loadPricingSettings();
   }, [isLoaded, isAdmin]);
+
+  // 가격 설정 저장
+  const handleSavePricing = async () => {
+    try {
+      const token = await getToken();
+      const updated = await updatePricingSettings(newPricing, token);
+      setPricingSettings(updated);
+      invalidatePricingCache(); // 캐시 무효화
+      setEditingPricing(false);
+      alert('가격 설정이 저장되었습니다.');
+    } catch (err: any) {
+      alert('가격 설정 저장 실패: ' + err.message);
+    }
+  };
 
   const handleDeleteOrder = async (orderUuid: string) => {
     if (!confirm('정말로 이 주문을 삭제하시겠습니까?\nOBJ 파일과 모든 데이터가 삭제됩니다.')) {
@@ -185,9 +220,124 @@ export function Admin() {
   return (
     <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>주문 관리</h1>
+        <h1 style={{ margin: 0 }}>관리자 페이지</h1>
         <a href="/" style={{ textDecoration: 'none', color: '#4CAF50', fontSize: '16px' }}>← 홈으로</a>
       </div>
+
+      {/* 가격 설정 섹션 */}
+      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '2px solid #4CAF50' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <h2 style={{ margin: 0, fontSize: '20px' }}>💰 가격 설정</h2>
+          {!editingPricing && (
+            <button
+              onClick={() => setEditingPricing(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#2196F3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              수정
+            </button>
+          )}
+        </div>
+
+        {editingPricing ? (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '15px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>기본 가격 (원)</label>
+                <input
+                  type="number"
+                  value={newPricing.base_price}
+                  onChange={(e) => setNewPricing({ ...newPricing, base_price: Number(e.target.value) })}
+                  style={{ width: '100%', padding: '8px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>텍스트 추가 (원)</label>
+                <input
+                  type="number"
+                  value={newPricing.text_price}
+                  onChange={(e) => setNewPricing({ ...newPricing, text_price: Number(e.target.value) })}
+                  style={{ width: '100%', padding: '8px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>이미지 추가 (원/개)</label>
+                <input
+                  type="number"
+                  value={newPricing.image_price}
+                  onChange={(e) => setNewPricing({ ...newPricing, image_price: Number(e.target.value) })}
+                  style={{ width: '100%', padding: '8px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setEditingPricing(false);
+                  setNewPricing(pricingSettings || { base_price: 20000, text_price: 5000, image_price: 5000 });
+                }}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#999',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSavePricing}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                }}
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+            <div>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>기본 가격</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#333' }}>
+                {pricingSettings ? formatPrice(pricingSettings.base_price) : '로딩 중...'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>텍스트 추가</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#333' }}>
+                {pricingSettings ? formatPrice(pricingSettings.text_price) : '로딩 중...'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>이미지 추가 (개당)</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#333' }}>
+                {pricingSettings ? formatPrice(pricingSettings.image_price) : '로딩 중...'}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 주문 관리 섹션 */}
+      <h2 style={{ marginBottom: '20px', fontSize: '20px' }}>📦 주문 목록</h2>
 
       <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
