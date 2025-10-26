@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DaumPostcode from 'react-daum-postcode';
 import { formatPrice } from '../utils/pricing';
+import { CustomerCalendar } from './CustomerCalendar';
 
 export interface AddressFormData {
   customerName: string;
@@ -10,11 +11,13 @@ export interface AddressFormData {
   address: string;
   detailAddress: string;
   deliveryMessage: string;
+  productionDate: string; // 생산일 추가
 }
 
 interface AddressFormProps {
   initialData: Partial<AddressFormData>;
   price: number;
+  totalQuantity: number; // 총 제품 개수
   onSubmit: (data: AddressFormData) => void;
   onCancel: () => void;
 }
@@ -24,6 +27,7 @@ const STORAGE_KEY = 'addressFormData';
 export const AddressForm: React.FC<AddressFormProps> = ({
   initialData,
   price,
+  totalQuantity,
   onSubmit,
   onCancel,
 }) => {
@@ -47,6 +51,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     address: savedData.address || initialData.address || '',
     detailAddress: savedData.detailAddress || initialData.detailAddress || '',
     deliveryMessage: savedData.deliveryMessage || initialData.deliveryMessage || '',
+    productionDate: '', // 초기값은 빈 문자열, DateSelector가 자동 선택
   });
 
   // formData 변경 시 localStorage에 자동 저장 (이메일 제외)
@@ -103,6 +108,10 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       alert('전화번호를 입력해주세요.');
       return;
     }
+    if (!formData.productionDate) {
+      alert('생산 희망일을 선택해주세요.');
+      return;
+    }
     if (!formData.postalCode.trim()) {
       alert('우편번호를 검색해주세요.');
       return;
@@ -118,32 +127,24 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   return (
     <div
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000,
+        backgroundColor: 'white',
+        padding: '30px',
       }}
     >
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '30px',
-          borderRadius: '8px',
-          maxWidth: '500px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-        }}
-      >
-        <h2 style={{ marginTop: 0, marginBottom: '20px' }}>주문/배송 정보 입력</h2>
+      <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333', fontSize: '20px', fontWeight: 700 }}>
+        📝 배송 정보 입력
+      </h2>
 
         <form onSubmit={handleSubmit}>
+          {/* 좌우 2단 레이아웃 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '30px',
+            marginBottom: '20px'
+          }}>
+            {/* 좌측: 고객 정보 입력 */}
+            <div>
           {/* 이름 */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
@@ -295,34 +296,196 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               }}
             />
           </div>
+            </div>
 
-          {/* 가격 표시 */}
+            {/* 우측: 캘린더 날짜 선택 */}
+            <div>
+              <CustomerCalendar
+                selectedDate={formData.productionDate}
+                onDateChange={(date) => setFormData({ ...formData, productionDate: date })}
+                totalQuantity={totalQuantity}
+              />
+            </div>
+          </div>
+
+          {/* 가격 및 입금 정보 (전체 너비) */}
           <div
             style={{
               marginBottom: '20px',
-              padding: '15px',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '4px',
-              border: '1px solid #dee2e6',
+              padding: '20px',
+              backgroundColor: '#fff9e6',
+              borderRadius: '8px',
+              border: '3px solid #ffc107',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '18px', fontWeight: 'bold' }}>주문 금액</span>
-              <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#007bff' }}>
+            {/* 주문 금액 */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px',
+              paddingBottom: '15px',
+              borderBottom: '2px dashed #ffc107'
+            }}>
+              <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#333' }}>💰 주문 금액</span>
+              <span style={{ fontSize: '28px', fontWeight: 'bold', color: '#d32f2f' }}>
                 {formatPrice(price)}
               </span>
             </div>
-            <div style={{ marginTop: '10px', fontSize: '14px' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#000' }}>💳 입금 계좌</div>
-              <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#000' }}>
-                국민은행 123-456-789012
+
+            {/* 입금 계좌 */}
+            <div>
+              <div style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                marginBottom: '12px',
+                color: '#d32f2f',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ fontSize: '24px' }}>💳</span>
+                <span>입금 계좌 정보</span>
               </div>
-              <div style={{ fontSize: '14px', color: '#6c757d', marginBottom: '10px' }}>
-                예금주: 홍길동
+
+              <div style={{
+                padding: '15px',
+                backgroundColor: 'white',
+                borderRadius: '6px',
+                border: '2px solid #ffc107',
+                marginBottom: '12px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>은행명</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#000' }}>국민은행</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('국민은행');
+                      alert('은행명이 복사되었습니다');
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      backgroundColor: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📋 복사
+                  </button>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>계좌번호</div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#000', fontFamily: 'monospace' }}>
+                      123-456-789012
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('123-456-789012');
+                      alert('계좌번호가 복사되었습니다');
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      backgroundColor: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📋 복사
+                  </button>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>예금주</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#000' }}>홍길동</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('홍길동');
+                      alert('예금주명이 복사되었습니다');
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      backgroundColor: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📋 복사
+                  </button>
+                </div>
               </div>
-              <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.5' }}>
-                ℹ️ 입금 확인 후 제작이 시작됩니다.<br />
-                주문 진행 상황은 '내 주문' 메뉴에서 확인하세요.
+
+              {/* 전체 복사 버튼 */}
+              <button
+                type="button"
+                onClick={() => {
+                  const accountInfo = `국민은행 123-456-789012 (예금주: 홍길동)\n입금액: ${formatPrice(price)}`;
+                  navigator.clipboard.writeText(accountInfo);
+                  alert('전체 입금 정보가 복사되었습니다');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  marginBottom: '15px'
+                }}
+              >
+                📋 전체 계좌정보 복사하기
+              </button>
+
+              {/* 안내 메시지 */}
+              <div style={{
+                padding: '12px',
+                backgroundColor: '#e3f2fd',
+                borderRadius: '6px',
+                border: '1px solid #90caf9'
+              }}>
+                <div style={{ fontSize: '13px', color: '#1976d2', lineHeight: '1.6' }}>
+                  ℹ️ <strong>주문 진행 안내</strong><br />
+                  • 입금 확인 후 생산이 시작됩니다<br />
+                  • 입금자명은 주문자명과 동일하게 해주세요<br />
+                  • 주문 진행 상황은 '내 주문' 메뉴에서 확인 가능합니다<br />
+                  • 입금 확인은 영업일 기준 24시간 이내 처리됩니다
+                </div>
               </div>
             </div>
           </div>
@@ -392,7 +555,6 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             <DaumPostcode onComplete={handlePostcodeComplete} />
           </div>
         )}
-      </div>
     </div>
   );
 };

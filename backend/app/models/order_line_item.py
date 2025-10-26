@@ -26,7 +26,6 @@ class OrderLineItem(Base):
 
     # Product Info
     product_sku = Column(String(50), nullable=False)  # 'QR-PLATE-BASE'
-    stand_sku = Column(String(50))  # 'STAND-45DEG', 'STAND-0DEG', etc.
 
     # QR Data
     qr_url = Column(String(500), nullable=False)

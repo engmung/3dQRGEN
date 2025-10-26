@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { AddressForm, type AddressFormData } from './AddressForm';
 import type { CartItem } from '../store/useCartStore';
 import { getPricingSettings, calculatePlatePrice, formatPrice, type PricingSettings } from '../utils/pricing';
-import type { Product } from '../utils/api';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -10,9 +9,6 @@ interface OrderModalProps {
   cartItems: CartItem[];
   customerEmail: string;
   onSubmit: (addressData: AddressFormData) => Promise<void>;
-  standProducts: Product[];
-  selectedStandSku: string;
-  onStandSelect: (sku: string) => void;
 }
 
 export const OrderModal = ({
@@ -21,9 +17,6 @@ export const OrderModal = ({
   cartItems,
   customerEmail,
   onSubmit,
-  standProducts,
-  selectedStandSku,
-  onStandSelect,
 }: OrderModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
@@ -41,6 +34,9 @@ export const OrderModal = ({
   const totalPrice = pricingSettings
     ? cartItems.reduce((sum, item) => sum + calculatePlatePrice(item.plateConfig, pricingSettings), 0)
     : 0;
+
+  // 총 제품 개수 계산 (quantity 합계)
+  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // QR 타입 라벨
   const getQRTypeLabel = (qrType: string) => {
@@ -92,25 +88,29 @@ export const OrderModal = ({
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: '#2a2a2a',
+          backgroundColor: '#ffffff',
           borderRadius: '12px',
-          maxWidth: '600px',
+          maxWidth: '1200px',
           width: '95%',
           maxHeight: '95vh',
-          overflow: 'auto',
-          color: '#fff',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          color: '#333',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {/* 주문 요약 섹션 */}
         <div
           style={{
             padding: '20px',
-            borderBottom: '2px solid #444',
-            backgroundColor: '#1a1a1a',
+            borderBottom: '2px solid #e0e0e0',
+            backgroundColor: '#f8f8f8',
           }}
         >
-          <h2 style={{ margin: '0 0 15px 0', fontSize: '22px', fontWeight: 700 }}>
-            주문 내역 ({cartItems.length}개)
+          <h2 style={{ margin: '0 0 15px 0', fontSize: '22px', fontWeight: 700, color: '#333' }}>
+            📦 주문 내역 ({cartItems.length}종, 총 {totalQuantity}개)
           </h2>
 
           {/* 장바구니 아이템 목록 */}
@@ -120,40 +120,45 @@ export const OrderModal = ({
                 key={item.id}
                 style={{
                   marginBottom: '10px',
-                  padding: '10px',
-                  backgroundColor: '#333',
-                  borderRadius: '6px',
+                  padding: '12px',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '8px',
                   fontSize: '14px',
+                  border: '1px solid #e0e0e0',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
                 }}
               >
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, color: '#aaa' }}>#{index + 1}</span>
-                  <span style={{ fontWeight: 600 }}>
+                  <span style={{ fontWeight: 600, color: '#888', fontSize: '13px' }}>#{index + 1}</span>
+                  <span style={{ fontWeight: 600, color: '#333' }}>
                     {getQRTypeLabel(item.plateConfig.qrType)} QR
+                  </span>
+                  <span style={{ fontSize: '13px', color: '#2196F3', fontWeight: 600, marginLeft: '4px' }}>
+                    × {item.quantity}개
                   </span>
                   <div style={{ flex: 1 }} />
                   <div
                     style={{
-                      width: '18px',
-                      height: '18px',
+                      width: '20px',
+                      height: '20px',
                       backgroundColor: item.plateConfig.plateColor,
-                      border: '1px solid #666',
-                      borderRadius: '3px',
+                      border: '2px solid #ddd',
+                      borderRadius: '4px',
                     }}
                     title={`거치대: ${item.plateConfig.plateColor}`}
                   />
                   <div
                     style={{
-                      width: '18px',
-                      height: '18px',
+                      width: '20px',
+                      height: '20px',
                       backgroundColor: item.plateConfig.qrColor,
-                      border: '1px solid #666',
-                      borderRadius: '3px',
+                      border: '2px solid #ddd',
+                      borderRadius: '4px',
                     }}
                     title={`QR: ${item.plateConfig.qrColor}`}
                   />
                 </div>
-                <div style={{ fontSize: '11px', color: '#aaa', wordBreak: 'break-all' }}>
+                <div style={{ fontSize: '12px', color: '#666', wordBreak: 'break-all' }}>
                   {item.plateConfig.qrType === 'url' && item.plateConfig.qrUrl && (
                     <div>URL: {item.plateConfig.qrUrl.substring(0, 50)}{item.plateConfig.qrUrl.length > 50 ? '...' : ''}</div>
                   )}
@@ -167,7 +172,7 @@ export const OrderModal = ({
 
                 {/* 판 가격 상세 */}
                 {pricingSettings && (
-                  <div style={{ fontSize: '11px', color: '#aaa', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #555' }}>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e0e0e0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                       <span>기본 가격</span>
                       <span>{formatPrice(pricingSettings.base_price)}</span>
@@ -184,7 +189,7 @@ export const OrderModal = ({
                         <span>{formatPrice(pricingSettings.image_price * item.plateConfig.images.length)}</span>
                       </div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #666', fontWeight: 600, color: '#fff' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e0e0e0', fontWeight: 600, color: '#333', fontSize: '13px' }}>
                       <span>판 합계</span>
                       <span>{formatPrice(calculatePlatePrice(item.plateConfig, pricingSettings))}</span>
                     </div>
@@ -198,77 +203,19 @@ export const OrderModal = ({
           <div
             style={{
               marginTop: '15px',
-              padding: '12px',
-              backgroundColor: '#444',
-              borderRadius: '6px',
+              padding: '15px',
+              backgroundColor: '#e3f5ff',
+              borderRadius: '8px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              border: '2px solid #2196F3',
             }}
           >
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>총 주문 금액</span>
-            <span style={{ fontSize: '32px', fontWeight: 700, color: '#4CAF50' }}>
+            <span style={{ fontSize: '18px', fontWeight: 700, color: '#333' }}>💰 총 결제 금액</span>
+            <span style={{ fontSize: '28px', fontWeight: 700, color: '#2196F3' }}>
               {pricingSettings ? formatPrice(totalPrice) : '계산 중...'}
             </span>
-          </div>
-        </div>
-
-        {/* 거치대 선택 */}
-        <div
-          style={{
-            padding: '20px',
-            borderBottom: '2px solid #444',
-            backgroundColor: '#222',
-          }}
-        >
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 600, color: '#fff' }}>
-            거치대 선택
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {standProducts.map((stand) => (
-              <label
-                key={stand.sku}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '10px 12px',
-                  backgroundColor: selectedStandSku === stand.sku ? '#4CAF50' : '#333',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  border: selectedStandSku === stand.sku ? '2px solid #66BB6A' : '2px solid transparent',
-                }}
-                onMouseEnter={(e) => {
-                  if (selectedStandSku !== stand.sku) {
-                    e.currentTarget.style.backgroundColor = '#3a3a3a';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedStandSku !== stand.sku) {
-                    e.currentTarget.style.backgroundColor = '#333';
-                  }
-                }}
-              >
-                <input
-                  type="radio"
-                  name="stand"
-                  value={stand.sku}
-                  checked={selectedStandSku === stand.sku}
-                  onChange={(e) => onStandSelect(e.target.value)}
-                  style={{ marginRight: '10px', cursor: 'pointer' }}
-                />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '14px', color: '#fff' }}>
-                    {stand.name}
-                  </div>
-                  {stand.description && (
-                    <div style={{ fontSize: '12px', color: '#aaa', marginTop: '2px' }}>
-                      {stand.description}
-                    </div>
-                  )}
-                </div>
-              </label>
-            ))}
           </div>
         </div>
 
@@ -277,6 +224,7 @@ export const OrderModal = ({
           <AddressForm
             initialData={{ customerEmail }}
             price={totalPrice}
+            totalQuantity={totalQuantity}
             onSubmit={handleSubmit}
             onCancel={onClose}
           />

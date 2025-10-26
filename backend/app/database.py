@@ -28,12 +28,15 @@ def get_db():
 
 def init_db():
     """데이터베이스 테이블 생성 및 초기 데이터 설정"""
+    from datetime import date, timedelta
+
     # 모든 모델 import (테이블 생성 전에 필요)
     from app.models.pricing import PricingSetting
     from app.models.product import Product
     from app.models.order_group import OrderGroup
     from app.models.order_line_item import OrderLineItem
     from app.models.order import Order  # 기존 Order 모델도 유지
+    from app.models.production_schedule import ProductionSchedule
 
     # 테이블 생성
     Base.metadata.create_all(bind=engine)
@@ -52,55 +55,35 @@ def init_db():
             db.commit()
             print("✅ 기본 가격 설정 생성 완료")
 
-        # 2. 제품(거치대) 초기 데이터 삽입
+        # 2. 제품 초기 데이터 삽입
         existing_products = db.query(Product).count()
         if existing_products == 0:
-            products = [
-                Product(
-                    sku="QR-PLATE-BASE",
-                    name="QR 판 (기본)",
-                    description="3D QR 코드 판 기본 모델",
-                    category="qr_plate",
-                    base_price=20000.0
-                ),
-                Product(
-                    sku="STAND-0DEG",
-                    name="거치대 (평평 0°)",
-                    description="0도 각도의 평평한 거치대",
-                    category="stand",
-                    base_price=0.0
-                ),
-                Product(
-                    sku="STAND-30DEG",
-                    name="거치대 (30°)",
-                    description="30도 경사 거치대",
-                    category="stand",
-                    base_price=0.0
-                ),
-                Product(
-                    sku="STAND-45DEG",
-                    name="거치대 (45°)",
-                    description="45도 경사 거치대 (기본 권장)",
-                    category="stand",
-                    base_price=0.0
-                ),
-                Product(
-                    sku="STAND-60DEG",
-                    name="거치대 (60°)",
-                    description="60도 경사 거치대",
-                    category="stand",
-                    base_price=0.0
-                ),
-                Product(
-                    sku="STAND-90DEG",
-                    name="거치대 (수직 90°)",
-                    description="90도 수직 거치대",
-                    category="stand",
-                    base_price=0.0
-                ),
-            ]
-            db.add_all(products)
+            qr_plate = Product(
+                sku="QR-PLATE-BASE",
+                name="QR 판 (기본)",
+                description="3D QR 코드 판 기본 모델 (GLB 거치대 포함)",
+                category="qr_plate",
+                base_price=20000.0
+            )
+            db.add(qr_plate)
             db.commit()
-            print(f"✅ 제품 초기 데이터 생성 완료 ({len(products)}개)")
+            print("✅ 제품 초기 데이터 생성 완료 (QR-PLATE-BASE)")
+
+        # 3. 생산 일정 초기 데이터 생성 (오늘부터 60일)
+        existing_schedules = db.query(ProductionSchedule).count()
+        if existing_schedules == 0:
+            today = date.today()
+            schedules = []
+            for i in range(60):
+                schedule_date = today + timedelta(days=i)
+                schedules.append(ProductionSchedule(
+                    date=schedule_date,
+                    max_capacity=5,  # 기본 하루 5개
+                    reserved_quantity=0,
+                    is_available=False  # 기본값: 주문 불가 (관리자가 수동으로 열어야 함)
+                ))
+            db.add_all(schedules)
+            db.commit()
+            print(f"✅ 생산 일정 초기 데이터 생성 완료 (60일, {today} ~ {today + timedelta(days=59)}) - 기본 설정: 주문 불가")
     finally:
         db.close()

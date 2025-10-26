@@ -31,12 +31,13 @@ app.mount("/static", StaticFiles(directory=settings.static_path), name="static")
 
 
 # 라우터 등록
-from app.routers import orders, downloads, pricing, products, order_groups
+from app.routers import orders, downloads, pricing, products, order_groups, production_schedule
 app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
 app.include_router(downloads.router, prefix="/api/downloads", tags=["downloads"])
 app.include_router(pricing.router)
 app.include_router(products.router)
 app.include_router(order_groups.router, prefix="/api/order-groups", tags=["order-groups"])
+app.include_router(production_schedule.router, prefix="/api/production-schedule", tags=["production-schedule"])
 
 
 @app.on_event("startup")

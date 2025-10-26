@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Float, DateTime
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Date
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone, timedelta
 from app.database import Base
@@ -31,6 +31,9 @@ class OrderGroup(Base):
     customer_postal_code = Column(String(10))
     customer_address = Column(Text)
     delivery_message = Column(Text)
+
+    # Production Schedule
+    production_date = Column(Date, nullable=True, index=True)  # 선택한 생산일
 
     # Payment & Status
     status = Column(String(20), default="pending")  # pending, paid, processing, shipped, completed, cancelled

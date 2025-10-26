@@ -1,6 +1,7 @@
 """파일 저장 및 관리 서비스"""
 import os
 import json
+import shutil
 import aiofiles
 from fastapi import UploadFile
 from app.config import settings
@@ -121,6 +122,18 @@ async def save_order_group_files(
         await f.write(content)
 
     return obj_path, mtl_path
+
+
+async def delete_order_group_files(group_uuid: str):
+    """
+    Order Group의 모든 파일 삭제
+
+    Args:
+        group_uuid: 주문 그룹 UUID
+    """
+    group_dir = os.path.join(settings.storage_path, "order_groups", group_uuid)
+    if os.path.exists(group_dir):
+        shutil.rmtree(group_dir)
 
 
 def check_file_exists(file_path: str) -> bool:
