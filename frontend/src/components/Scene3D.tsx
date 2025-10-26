@@ -60,30 +60,35 @@ export const Scene3D = ({ onGltfsLoaded, onQRGeometriesReady }: Scene3DProps = {
       <directionalLight position={[-100, -100, -50]} intensity={1.2} />
       <directionalLight position={[0, 200, 0]} intensity={1.0} />
 
-      {/* 각 QR 판마다 GLB 파츠 모델과 QR 렌더링 */}
-      {plates.map((plate, index) => (
-        <group key={plate.id}>
-          {/* GLB 파츠 모델 (각 판마다 clone된 인스턴스 렌더링) */}
-          <GLBBaseParts
-            plateColor={plate.plateColor}
-            position={[plate.positionX, plate.positionY, plate.positionZ]}
-            onRegionsLoaded={index === 0 ? (regions) => setGlbRegions(regions) : undefined}
-            onGltfsLoaded={index === 0 ? onGltfsLoaded : undefined}
-          />
+      {/* 선택된 QR 판만 중앙에 렌더링 */}
+      {selectedPlateId && (() => {
+        const selectedPlate = plates.find(p => p.id === selectedPlateId);
+        if (!selectedPlate) return null;
 
-          {/* QR 판 인스턴스 (glbRegions 로드 후에만 렌더링) */}
-          {glbRegions && (
-            <QRPlateInstance
-              config={plate}
-              isSelected={plate.id === selectedPlateId}
-              qrRegion={glbRegions.QR}
-              textRegion={glbRegions.TEXT}
-              imageRegion={glbRegions.IMAGE}
-              onGeometriesReady={onQRGeometriesReady ? (geometries) => onQRGeometriesReady(plate.id, geometries) : undefined}
+        return (
+          <group key={selectedPlate.id}>
+            {/* GLB 파츠 모델 (중앙 위치 고정) */}
+            <GLBBaseParts
+              plateColor={selectedPlate.plateColor}
+              position={[0, 0, 0]}
+              onRegionsLoaded={(regions) => setGlbRegions(regions)}
+              onGltfsLoaded={onGltfsLoaded}
             />
-          )}
-        </group>
-      ))}
+
+            {/* QR 판 인스턴스 (glbRegions 로드 후에만 렌더링) */}
+            {glbRegions && (
+              <QRPlateInstance
+                config={selectedPlate}
+                isSelected={true}
+                qrRegion={glbRegions.QR}
+                textRegion={glbRegions.TEXT}
+                imageRegion={glbRegions.IMAGE}
+                onGeometriesReady={onQRGeometriesReady ? (geometries) => onQRGeometriesReady(selectedPlate.id, geometries) : undefined}
+              />
+            )}
+          </group>
+        );
+      })()}
 
       {/* 컨트롤 (회전만 가능) */}
       <OrbitControls
