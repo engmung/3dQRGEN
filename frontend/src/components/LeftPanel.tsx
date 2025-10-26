@@ -35,24 +35,7 @@ export function LeftPanel() {
   const updatePlate = useDesignStore((state) => state.updatePlate);
 
   const selectedPlate = plates.find(p => p.id === selectedPlateId);
-
-  if (!selectedPlate) {
-    return (
-      <div style={{
-        width: '40%',
-        height: 'calc(100vh - 60px)',
-        backgroundColor: '#f5f5f5',
-        borderRight: '1px solid #ddd',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#999',
-        fontSize: '16px'
-      }}>
-        선택된 QR 판이 없습니다
-      </div>
-    );
-  }
+  const hasPlate = !!selectedPlate;
 
   const tabButtonStyle = (isActive: boolean) => ({
     flex: 1,
@@ -109,9 +92,35 @@ export function LeftPanel() {
         flex: 1,
         overflowY: 'auto',
         padding: '20px',
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        position: 'relative'
       }}>
-        {activeTab === 'qr' && (
+        {/* 선택 안 된 경우 오버레이 */}
+        {!hasPlate && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            <div style={{ fontSize: '18px', color: '#999', fontWeight: 'bold' }}>
+              QR 판을 선택하세요
+            </div>
+            <div style={{ fontSize: '14px', color: '#bbb' }}>
+              우측에서 + 버튼을 클릭하여 새 QR 판을 추가할 수 있습니다
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'qr' && selectedPlate && (
           <div>
             {/* QR 타입 선택 */}
             <div style={sectionStyle}>
@@ -210,7 +219,7 @@ export function LeftPanel() {
           </div>
         )}
 
-        {activeTab === 'text' && (
+        {activeTab === 'text' && selectedPlate && (
           <div>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>텍스트 내용</label>
@@ -279,7 +288,7 @@ export function LeftPanel() {
           </div>
         )}
 
-        {activeTab === 'image' && (
+        {activeTab === 'image' && selectedPlate && (
           <div>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>이미지 업로드</label>
