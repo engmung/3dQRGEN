@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Home } from './pages/Home';
+import { HomeDebug } from './pages/HomeDebug';
 import { Admin } from './pages/Admin';
 import { MyOrders } from './pages/MyOrders';
 
@@ -12,6 +13,7 @@ function App() {
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/debug" element={<HomeDebug />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/my-orders" element={<MyOrders />} />
           </Routes>

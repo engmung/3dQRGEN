@@ -21,6 +21,7 @@ export function Header() {
         </h1>
         <nav style={{ display: 'flex', gap: '1rem' }}>
           <a href="/" style={{ textDecoration: 'none', color: '#333' }}>홈</a>
+          <a href="/debug" style={{ textDecoration: 'none', color: '#666', fontSize: '0.9rem' }}>디버그</a>
           <SignedIn>
             <a href="/my-orders" style={{ textDecoration: 'none', color: '#333' }}>내 주문</a>
           </SignedIn>
