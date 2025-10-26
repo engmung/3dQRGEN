@@ -285,3 +285,187 @@ export async function updatePricingSettings(
   }
   return response.json();
 }
+
+// ==================== Products API ====================
+
+export interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  base_price: number;
+}
+
+/**
+ * 제품 목록 조회
+ */
+export async function fetchProducts(category?: string): Promise<Product[]> {
+  const url = category
+    ? `${API_BASE_URL}/api/products?category=${category}`
+    : `${API_BASE_URL}/api/products`;
+
+  const response = await fetchWithRetry(() => fetch(url));
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch products');
+  }
+  return response.json();
+}
+
+/**
+ * SKU로 제품 조회
+ */
+export async function fetchProductBySku(sku: string): Promise<Product> {
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/products/${sku}`)
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch product: ${sku}`);
+  }
+  return response.json();
+}
+
+// ==================== Order Groups API ====================
+
+export interface LineItemData {
+  product_sku: string;
+  stand_sku: string | null;
+  qr_url: string;
+  customization: any;
+  quantity: number;
+  unit_price?: number;  // optional, for validation
+}
+
+export interface OrderGroupResponse {
+  group_uuid: string;
+  total_price: number;
+  line_item_count: number;
+  message: string;
+}
+
+export interface OrderGroupDetail {
+  id: number;
+  group_uuid: string;
+  user_id: string | null;
+  customer_email: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_postal_code: string;
+  customer_address: string;
+  delivery_message: string | null;
+  status: string;
+  payment_id: string | null;
+  total_price: number;
+  created_at: string;
+  updated_at: string;
+  line_items: LineItemDetail[];
+}
+
+export interface LineItemDetail {
+  id: number;
+  line_item_uuid: string;
+  product_sku: string;
+  stand_sku: string | null;
+  qr_url: string;
+  customization: any;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  obj_file_path: string | null;
+  mtl_file_path: string | null;
+  created_at: string;
+}
+
+/**
+ * 주문 그룹 생성 (장바구니 전체 제출)
+ */
+export async function createOrderGroup(
+  customerEmail: string,
+  customerName: string,
+  customerPhone: string,
+  customerPostalCode: string,
+  customerAddress: string,
+  deliveryMessage: string,
+  lineItemsData: LineItemData[],
+  files: Blob[]  // [obj1, mtl1, obj2, mtl2, ...]
+): Promise<OrderGroupResponse> {
+  const formData = new FormData();
+
+  // Customer info
+  formData.append('customer_email', customerEmail);
+  formData.append('customer_name', customerName);
+  formData.append('customer_phone', customerPhone);
+  formData.append('customer_postal_code', customerPostalCode);
+  formData.append('customer_address', customerAddress);
+  formData.append('delivery_message', deliveryMessage);
+
+  // Line items (JSON)
+  formData.append('line_items_json', JSON.stringify(lineItemsData));
+
+  // Files (OBJ + MTL pairs)
+  files.forEach((file, index) => {
+    formData.append('files', file, `file_${index}`);
+  });
+
+  // Clerk JWT token
+  const token = await getAuthToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/order-groups/`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    }),
+    1,
+    500
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to create order group' }));
+    throw new Error(error.detail || 'Failed to create order group');
+  }
+
+  return response.json();
+}
+
+/**
+ * 내 주문 그룹 목록 조회
+ */
+export async function fetchMyOrderGroups(token?: string | null): Promise<OrderGroupDetail[]> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/order-groups/my-orders`, {
+      method: 'GET',
+      headers,
+    })
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch my order groups');
+  }
+  return response.json();
+}
+
+/**
+ * 주문 그룹 상세 조회
+ */
+export async function fetchOrderGroupDetail(groupUuid: string): Promise<OrderGroupDetail> {
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/order-groups/${groupUuid}`)
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch order group detail');
+  }
+  return response.json();
+}

@@ -82,6 +82,47 @@ def get_order_stl_path(order_uuid: str) -> str:
     return os.path.join(settings.storage_path, order_uuid, "qr_plate.obj")
 
 
+async def save_order_group_files(
+    group_uuid: str,
+    line_item_uuid: str,
+    customer_email: str,
+    obj_file: UploadFile,
+    mtl_file: UploadFile
+) -> tuple[str, str]:
+    """
+    Order Group의 Line Item 파일 저장 (OBJ + MTL)
+
+    Args:
+        group_uuid: 주문 그룹 UUID
+        line_item_uuid: 라인 아이템 UUID
+        customer_email: 고객 이메일
+        obj_file: 업로드된 OBJ 파일
+        mtl_file: 업로드된 MTL 파일
+
+    Returns:
+        (obj_file_path, mtl_file_path) 튜플
+    """
+    # 디렉토리 구조: /storage/order_groups/{group_uuid}/{line_item_uuid}/
+    group_dir = os.path.join(settings.storage_path, "order_groups", group_uuid, line_item_uuid)
+    os.makedirs(group_dir, exist_ok=True)
+
+    # 파일명: model.obj, model.mtl (간단하게)
+    obj_path = os.path.join(group_dir, "model.obj")
+    mtl_path = os.path.join(group_dir, "model.mtl")
+
+    # OBJ 파일 저장
+    async with aiofiles.open(obj_path, "wb") as f:
+        content = await obj_file.read()
+        await f.write(content)
+
+    # MTL 파일 저장
+    async with aiofiles.open(mtl_path, "wb") as f:
+        content = await mtl_file.read()
+        await f.write(content)
+
+    return obj_path, mtl_path
+
+
 def check_file_exists(file_path: str) -> bool:
     """
     파일 존재 여부 확인
