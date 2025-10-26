@@ -5,7 +5,6 @@ import { AVAILABLE_FONTS } from '../utils/fontLoader';
 import { QRTypeSelector } from './QRTypeSelector';
 import { WiFiForm } from './forms/WiFiForm';
 import { EmailForm } from './forms/EmailForm';
-import { ColorPalette } from './ColorPalette';
 
 type TabType = 'qr' | 'text' | 'image';
 
@@ -14,14 +13,15 @@ const inputStyle = {
   padding: '8px',
   boxSizing: 'border-box' as const,
   border: '1px solid #ccc',
-  borderRadius: '4px'
+  borderRadius: '4px',
+  fontSize: '16px'
 };
 
 const labelStyle = {
   display: 'block',
   marginBottom: '8px',
-  fontWeight: 'bold',
-  fontSize: '14px'
+  fontWeight: 600,
+  fontSize: '16px'
 };
 
 const sectionStyle = {
@@ -40,48 +40,46 @@ export function LeftPanel() {
   const tabButtonStyle = (isActive: boolean) => ({
     flex: 1,
     padding: '12px',
-    backgroundColor: isActive ? '#fff' : '#e0e0e0',
+    backgroundColor: isActive ? '#fff' : '#f0ede9',
     border: 'none',
-    borderBottom: isActive ? 'none' : '2px solid #ccc',
+    borderRight: '1px solid #e5e0db',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: isActive ? 'bold' : 'normal',
+    fontSize: '18px',
+    fontWeight: isActive ? 600 : 400,
     transition: 'all 0.2s',
+    outline: 'none',
   });
 
   return (
     <div style={{
       width: '40%',
       height: 'calc(100vh - 60px)',
-      backgroundColor: '#f5f5f5',
-      borderRight: '1px solid #ddd',
+      backgroundColor: '#f8f6f3',
+      borderRight: '1px solid #e5e0db',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
     }}>
       {/* 탭 헤더 */}
-      <div style={{ display: 'flex', borderBottom: '2px solid #ccc' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
         <button
           style={tabButtonStyle(activeTab === 'qr')}
           onClick={() => setActiveTab('qr')}
-          onMouseOver={(e) => !( activeTab === 'qr') && (e.currentTarget.style.backgroundColor = '#d0d0d0')}
-          onMouseOut={(e) => !(activeTab === 'qr') && (e.currentTarget.style.backgroundColor = '#e0e0e0')}
         >
           QR
         </button>
         <button
           style={tabButtonStyle(activeTab === 'text')}
           onClick={() => setActiveTab('text')}
-          onMouseOver={(e) => !(activeTab === 'text') && (e.currentTarget.style.backgroundColor = '#d0d0d0')}
-          onMouseOut={(e) => !(activeTab === 'text') && (e.currentTarget.style.backgroundColor = '#e0e0e0')}
         >
           텍스트
         </button>
         <button
-          style={tabButtonStyle(activeTab === 'image')}
+          style={{
+            ...tabButtonStyle(activeTab === 'image'),
+            borderRight: 'none'
+          }}
           onClick={() => setActiveTab('image')}
-          onMouseOver={(e) => !(activeTab === 'image') && (e.currentTarget.style.backgroundColor = '#d0d0d0')}
-          onMouseOut={(e) => !(activeTab === 'image') && (e.currentTarget.style.backgroundColor = '#e0e0e0')}
         >
           이미지
         </button>
@@ -91,6 +89,7 @@ export function LeftPanel() {
       <div style={{
         flex: 1,
         overflowY: 'auto',
+        overflowX: 'hidden',
         padding: '20px',
         backgroundColor: '#fff',
         position: 'relative'
@@ -111,10 +110,10 @@ export function LeftPanel() {
             flexDirection: 'column',
             gap: '10px'
           }}>
-            <div style={{ fontSize: '18px', color: '#999', fontWeight: 'bold' }}>
+            <div style={{ fontSize: '20px', color: '#999', fontWeight: 600 }}>
               QR 판을 선택하세요
             </div>
-            <div style={{ fontSize: '14px', color: '#bbb' }}>
+            <div style={{ fontSize: '16px', color: '#bbb', fontWeight: 400 }}>
               우측에서 + 버튼을 클릭하여 새 QR 판을 추가할 수 있습니다
             </div>
           </div>
@@ -162,17 +161,17 @@ export function LeftPanel() {
 
             {/* QR 설정 */}
             <div style={sectionStyle}>
-              <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>QR 설정</h3>
+              <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '20px', fontWeight: 600 }}>QR 설정</h3>
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={labelStyle}>QR 크기 (mm): {selectedPlate.qrSize.toFixed(1)}</label>
                 <input
                   type="range"
                   value={selectedPlate.qrSize}
-                  onChange={(e) => updatePlate(selectedPlate.id, { qrSize: Number(e.target.value) })}
+                  onInput={(e) => updatePlate(selectedPlate.id, { qrSize: Number(e.currentTarget.value) })}
                   min="20"
                   max="60"
-                  step="1"
+                  step="0.1"
                   style={{ width: '100%' }}
                 />
               </div>
@@ -182,10 +181,10 @@ export function LeftPanel() {
                 <input
                   type="range"
                   value={selectedPlate.qrThickness}
-                  onChange={(e) => updatePlate(selectedPlate.id, { qrThickness: Number(e.target.value) })}
+                  onInput={(e) => updatePlate(selectedPlate.id, { qrThickness: Number(e.currentTarget.value) })}
                   min="1"
                   max="3"
-                  step="0.1"
+                  step="0.01"
                   style={{ width: '100%' }}
                 />
               </div>
@@ -195,10 +194,10 @@ export function LeftPanel() {
                 <input
                   type="range"
                   value={selectedPlate.qrHeightOffset}
-                  onChange={(e) => updatePlate(selectedPlate.id, { qrHeightOffset: Number(e.target.value) })}
+                  onInput={(e) => updatePlate(selectedPlate.id, { qrHeightOffset: Number(e.currentTarget.value) })}
                   min="-50"
                   max="30"
-                  step="0.1"
+                  step="0.01"
                   style={{ width: '100%' }}
                 />
               </div>
@@ -208,10 +207,10 @@ export function LeftPanel() {
                 <input
                   type="range"
                   value={selectedPlate.qrHorizontalOffset}
-                  onChange={(e) => updatePlate(selectedPlate.id, { qrHorizontalOffset: Number(e.target.value) })}
+                  onInput={(e) => updatePlate(selectedPlate.id, { qrHorizontalOffset: Number(e.currentTarget.value) })}
                   min={-(60 - selectedPlate.qrSize) / 2}
                   max={(60 - selectedPlate.qrSize) / 2}
-                  step="0.1"
+                  step="0.01"
                   style={{ width: '100%' }}
                 />
               </div>
@@ -252,10 +251,10 @@ export function LeftPanel() {
               <input
                 type="range"
                 value={selectedPlate.textSize}
-                onChange={(e) => updatePlate(selectedPlate.id, { textSize: Number(e.target.value) })}
+                onInput={(e) => updatePlate(selectedPlate.id, { textSize: Number(e.currentTarget.value) })}
                 min="5"
                 max="30"
-                step="0.5"
+                step="0.1"
                 style={{ width: '100%' }}
               />
             </div>
@@ -265,10 +264,10 @@ export function LeftPanel() {
               <input
                 type="range"
                 value={selectedPlate.textHeightOffset}
-                onChange={(e) => updatePlate(selectedPlate.id, { textHeightOffset: Number(e.target.value) })}
+                onInput={(e) => updatePlate(selectedPlate.id, { textHeightOffset: Number(e.currentTarget.value) })}
                 min="-50"
                 max="70"
-                step="0.1"
+                step="0.01"
                 style={{ width: '100%' }}
               />
             </div>
@@ -278,10 +277,10 @@ export function LeftPanel() {
               <input
                 type="range"
                 value={selectedPlate.textHorizontalOffset}
-                onChange={(e) => updatePlate(selectedPlate.id, { textHorizontalOffset: Number(e.target.value) })}
+                onInput={(e) => updatePlate(selectedPlate.id, { textHorizontalOffset: Number(e.currentTarget.value) })}
                 min="-30"
                 max="30"
-                step="0.1"
+                step="0.01"
                 style={{ width: '100%' }}
               />
             </div>
@@ -290,8 +289,65 @@ export function LeftPanel() {
 
         {activeTab === 'image' && selectedPlate && (
           <div>
+            {/* 프리셋 이미지 선택 */}
             <div style={{ marginBottom: '15px' }}>
-              <label style={labelStyle}>이미지 업로드</label>
+              <label style={labelStyle}>프리셋 이미지</label>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                <button
+                  onClick={async () => {
+                    const response = await fetch('/images/insta.png');
+                    const blob = await response.blob();
+                    const file = new File([blob], 'insta.png', { type: 'image/png' });
+                    updatePlate(selectedPlate.id, { imageFile: file });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    border: '2px solid #ddd',
+                    borderRadius: '4px',
+                    backgroundColor: '#fff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <img src="/images/insta.png" alt="Instagram" style={{ width: '32px', height: '32px' }} />
+                  <span>Instagram</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    const response = await fetch('/images/wifi.png');
+                    const blob = await response.blob();
+                    const file = new File([blob], 'wifi.png', { type: 'image/png' });
+                    updatePlate(selectedPlate.id, { imageFile: file });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    border: '2px solid #ddd',
+                    borderRadius: '4px',
+                    backgroundColor: '#fff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <img src="/images/wifi.png" alt="WiFi" style={{ width: '32px', height: '32px' }} />
+                  <span>WiFi</span>
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>또는 직접 업로드</label>
               <input
                 type="file"
                 accept="image/*"
@@ -304,8 +360,34 @@ export function LeftPanel() {
                 style={inputStyle}
               />
               {selectedPlate.imageFile && (
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  파일: {selectedPlate.imageFile.name}
+                <div style={{
+                  fontSize: '12px',
+                  color: '#666',
+                  marginTop: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '8px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '4px'
+                }}>
+                  <span>파일: {selectedPlate.imageFile.name}</span>
+                  <button
+                    onClick={() => updatePlate(selectedPlate.id, { imageFile: null })}
+                    style={{
+                      padding: '4px 8px',
+                      backgroundColor: '#ff6b6b',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      outline: 'none',
+                    }}
+                  >
+                    제거
+                  </button>
                 </div>
               )}
             </div>
@@ -315,10 +397,10 @@ export function LeftPanel() {
               <input
                 type="range"
                 value={selectedPlate.imageSize}
-                onChange={(e) => updatePlate(selectedPlate.id, { imageSize: Number(e.target.value) })}
+                onInput={(e) => updatePlate(selectedPlate.id, { imageSize: Number(e.currentTarget.value) })}
                 min="10"
                 max="60"
-                step="1"
+                step="0.1"
                 style={{ width: '100%' }}
               />
             </div>
@@ -328,10 +410,10 @@ export function LeftPanel() {
               <input
                 type="range"
                 value={selectedPlate.imageHeightOffset}
-                onChange={(e) => updatePlate(selectedPlate.id, { imageHeightOffset: Number(e.target.value) })}
+                onInput={(e) => updatePlate(selectedPlate.id, { imageHeightOffset: Number(e.currentTarget.value) })}
                 min="-30"
                 max="60"
-                step="0.1"
+                step="0.01"
                 style={{ width: '100%' }}
               />
             </div>
@@ -341,24 +423,15 @@ export function LeftPanel() {
               <input
                 type="range"
                 value={selectedPlate.imageHorizontalOffset}
-                onChange={(e) => updatePlate(selectedPlate.id, { imageHorizontalOffset: Number(e.target.value) })}
+                onInput={(e) => updatePlate(selectedPlate.id, { imageHorizontalOffset: Number(e.currentTarget.value) })}
                 min="-30"
                 max="30"
-                step="0.1"
+                step="0.01"
                 style={{ width: '100%' }}
               />
             </div>
           </div>
         )}
-      </div>
-
-      {/* 하단: 색상 팔레트 */}
-      <div style={{
-        padding: '15px',
-        borderTop: '1px solid #ddd',
-        backgroundColor: '#fafafa'
-      }}>
-        <ColorPalette />
       </div>
     </div>
   );

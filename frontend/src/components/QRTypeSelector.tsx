@@ -10,15 +10,15 @@ interface QRTypeSelectorProps {
  * URL, WiFi, Email 중 하나를 선택할 수 있는 라디오 버튼 그룹
  */
 export function QRTypeSelector({ value, onChange }: QRTypeSelectorProps) {
-  const options: { value: QRType; label: string; icon: string }[] = [
-    { value: 'url', label: 'URL', icon: '🔗' },
-    { value: 'wifi', label: 'WiFi', icon: '📶' },
-    { value: 'email', label: 'Email', icon: '📧' },
+  const options: { value: QRType; label: string }[] = [
+    { value: 'url', label: 'URL' },
+    { value: 'wifi', label: 'WiFi' },
+    { value: 'email', label: 'Email' },
   ];
 
   return (
     <div style={{ marginBottom: '16px' }}>
-      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '16px' }}>
         QR 타입
       </label>
       <div style={{ display: 'flex', gap: '8px' }}>
@@ -32,13 +32,14 @@ export function QRTypeSelector({ value, onChange }: QRTypeSelectorProps) {
               justifyContent: 'center',
               gap: '6px',
               padding: '10px 12px',
-              border: value === option.value ? '2px solid #4CAF50' : '2px solid #ddd',
+              border: value === option.value ? '2px solid #333' : '2px solid #ddd',
               borderRadius: '6px',
-              backgroundColor: value === option.value ? '#e8f5e9' : '#fff',
+              backgroundColor: value === option.value ? '#f5f5f5' : '#fff',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              fontSize: '13px',
-              fontWeight: value === option.value ? 'bold' : 'normal',
+              fontSize: '16px',
+              fontWeight: value === option.value ? 600 : 400,
+              outline: 'none',
             }}
             onMouseEnter={(e) => {
               if (value !== option.value) {
@@ -59,7 +60,6 @@ export function QRTypeSelector({ value, onChange }: QRTypeSelectorProps) {
               onChange={() => onChange(option.value)}
               style={{ display: 'none' }}
             />
-            <span style={{ fontSize: '18px' }}>{option.icon}</span>
             <span>{option.label}</span>
           </label>
         ))}

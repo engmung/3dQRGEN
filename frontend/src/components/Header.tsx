@@ -6,27 +6,54 @@ export function Header() {
   const { user } = useUser();
   const isAdmin = user?.primaryEmailAddress?.emailAddress && ADMIN_EMAILS.includes(user.primaryEmailAddress.emailAddress);
 
+  // 현재 경로 확인
+  const currentPath = window.location.pathname;
+
   return (
     <header style={{
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '1rem 2rem',
-      backgroundColor: '#f8f9fa',
-      borderBottom: '1px solid #dee2e6',
+      padding: '0.5rem 1.5rem',
+      backgroundColor: '#f5f3f0',
+      borderBottom: '1px solid #e5e0db',
+      height: '50px',
+      minHeight: '50px',
+      maxHeight: '50px',
+      boxSizing: 'border-box',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
-          3D QR Platform
+        <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 700 }}>
+          3D QR DESIGNER
         </h1>
         <nav style={{ display: 'flex', gap: '1rem' }}>
-          <a href="/" style={{ textDecoration: 'none', color: '#333' }}>홈</a>
-          <a href="/debug" style={{ textDecoration: 'none', color: '#666', fontSize: '0.9rem' }}>디버그</a>
+          <a href="/" style={{
+            textDecoration: 'none',
+            color: currentPath === '/' ? '#000' : '#666',
+            fontSize: '18px',
+            fontWeight: currentPath === '/' ? 600 : 400
+          }}>홈</a>
+          <a href="/debug" style={{
+            textDecoration: 'none',
+            color: currentPath === '/debug' ? '#000' : '#666',
+            fontSize: '18px',
+            fontWeight: currentPath === '/debug' ? 600 : 400
+          }}>디버그</a>
           <SignedIn>
-            <a href="/my-orders" style={{ textDecoration: 'none', color: '#333' }}>내 주문</a>
+            <a href="/my-orders" style={{
+              textDecoration: 'none',
+              color: currentPath === '/my-orders' ? '#000' : '#666',
+              fontSize: '18px',
+              fontWeight: currentPath === '/my-orders' ? 600 : 400
+            }}>내 주문</a>
           </SignedIn>
           {isAdmin && (
-            <a href="/admin" style={{ textDecoration: 'none', color: '#333' }}>관리자</a>
+            <a href="/admin" style={{
+              textDecoration: 'none',
+              color: currentPath === '/admin' ? '#000' : '#666',
+              fontSize: '18px',
+              fontWeight: currentPath === '/admin' ? 600 : 400
+            }}>관리자</a>
           )}
         </nav>
       </div>
@@ -36,12 +63,14 @@ export function Header() {
           <SignInButton mode="modal">
             <button style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#4CAF50',
+              backgroundColor: '#333',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
-              fontWeight: 'bold',
+              fontSize: '16px',
+              fontWeight: 600,
+              outline: 'none',
             }}>
               로그인
             </button>
