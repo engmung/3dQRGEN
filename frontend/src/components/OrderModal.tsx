@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AddressForm, type AddressFormData } from './AddressForm';
 import type { CartItem } from '../store/useCartStore';
 import { getPricingSettings, calculatePlatePrice, formatPrice, type PricingSettings } from '../utils/pricing';
+import type { Product } from '../utils/api';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -9,6 +10,9 @@ interface OrderModalProps {
   cartItems: CartItem[];
   customerEmail: string;
   onSubmit: (addressData: AddressFormData) => Promise<void>;
+  standProducts: Product[];
+  selectedStandSku: string;
+  onStandSelect: (sku: string) => void;
 }
 
 export const OrderModal = ({
@@ -17,6 +21,9 @@ export const OrderModal = ({
   cartItems,
   customerEmail,
   onSubmit,
+  standProducts,
+  selectedStandSku,
+  onStandSelect,
 }: OrderModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
@@ -203,6 +210,65 @@ export const OrderModal = ({
             <span style={{ fontSize: '32px', fontWeight: 700, color: '#4CAF50' }}>
               {pricingSettings ? formatPrice(totalPrice) : '계산 중...'}
             </span>
+          </div>
+        </div>
+
+        {/* 거치대 선택 */}
+        <div
+          style={{
+            padding: '20px',
+            borderBottom: '2px solid #444',
+            backgroundColor: '#222',
+          }}
+        >
+          <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 600, color: '#fff' }}>
+            거치대 선택
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {standProducts.map((stand) => (
+              <label
+                key={stand.sku}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px 12px',
+                  backgroundColor: selectedStandSku === stand.sku ? '#4CAF50' : '#333',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  border: selectedStandSku === stand.sku ? '2px solid #66BB6A' : '2px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedStandSku !== stand.sku) {
+                    e.currentTarget.style.backgroundColor = '#3a3a3a';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedStandSku !== stand.sku) {
+                    e.currentTarget.style.backgroundColor = '#333';
+                  }
+                }}
+              >
+                <input
+                  type="radio"
+                  name="stand"
+                  value={stand.sku}
+                  checked={selectedStandSku === stand.sku}
+                  onChange={(e) => onStandSelect(e.target.value)}
+                  style={{ marginRight: '10px', cursor: 'pointer' }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: '14px', color: '#fff' }}>
+                    {stand.name}
+                  </div>
+                  {stand.description && (
+                    <div style={{ fontSize: '12px', color: '#aaa', marginTop: '2px' }}>
+                      {stand.description}
+                    </div>
+                  )}
+                </div>
+              </label>
+            ))}
           </div>
         </div>
 
