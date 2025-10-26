@@ -1,6 +1,8 @@
 import { useDesignStore, type QRPlateConfig } from '../store/useDesignStore';
 import { generateQRString } from '../utils/qrGenerator';
 import { generateQRBitmap } from '../utils/qrUtils';
+import { getPricingSettings, calculatePlatePrice, formatPrice } from '../utils/pricing';
+import type { PricingSettings } from '../utils/api';
 import { useEffect, useState } from 'react';
 
 interface RightPanelProps {
@@ -84,8 +86,24 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
   const duplicatePlate = useDesignStore((state) => state.duplicatePlate);
   const updatePlateQuantity = useDesignStore((state) => state.updatePlateQuantity);
 
+  // 가격 설정 상태
+  const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
+
+  // 가격 설정 로드
+  useEffect(() => {
+    getPricingSettings().then(setPricingSettings);
+  }, []);
+
   // 전체 수량 계산
   const totalQuantity = plates.reduce((sum, plate) => sum + plate.quantity, 0);
+
+  // 전체 가격 계산
+  const totalPrice = pricingSettings
+    ? plates.reduce((sum, plate) => {
+        const platePrice = calculatePlatePrice(plate, pricingSettings);
+        return sum + (platePrice * plate.quantity);
+      }, 0)
+    : 0;
 
   const cardStyle = (isSelected: boolean) => ({
     width: '100%',
@@ -305,16 +323,17 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
             </div>
 
             {/* 가격 표시 (카드 바깥 아래) */}
-            <div style={{
-              fontSize: '18px',
-              fontWeight: 600,
-              color: '#666',
-              textAlign: 'left',
-              padding: '2px 0',
-              paddingLeft: '4px',
-            }}>
-              가격: ₩0
-            </div>
+            {pricingSettings && (
+              <div style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#333',
+                textAlign: 'right',
+                padding: '4px 4px',
+              }}>
+                {formatPrice(calculatePlatePrice(plate, pricingSettings))} × {plate.quantity}개 = {formatPrice(calculatePlatePrice(plate, pricingSettings) * plate.quantity)}
+              </div>
+            )}
           </div>
         ))}
 
@@ -341,11 +360,46 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
         </div>
       </div>
 
-      {/* 하단: 주문하기 버튼 */}
+      {/* 하단: 총합계 및 주문하기 버튼 */}
       <div style={{
-        padding: '8px',
-        borderTop: '1px solid #e5e0db'
+        padding: '12px',
+        borderTop: '2px solid #e5e0db',
+        backgroundColor: '#f9f9f9'
       }}>
+        {/* 총합계 표시 */}
+        {pricingSettings && plates.length > 0 && (
+          <div style={{
+            marginBottom: '12px',
+            padding: '12px',
+            backgroundColor: '#fff',
+            border: '1px solid #e5e0db',
+            borderRadius: '4px'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '4px'
+            }}>
+              <span style={{ fontSize: '14px', color: '#666' }}>총 수량</span>
+              <span style={{ fontSize: '14px', fontWeight: 600 }}>{totalQuantity}개</span>
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: '8px',
+              borderTop: '1px solid #f0f0f0'
+            }}>
+              <span style={{ fontSize: '16px', fontWeight: 700, color: '#333' }}>총 금액</span>
+              <span style={{ fontSize: '20px', fontWeight: 700, color: '#FF6B6B' }}>
+                {formatPrice(totalPrice)}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* 주문하기 버튼 */}
         <button
           onClick={onCheckout}
           disabled={plates.length === 0}
@@ -372,7 +426,7 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
             }
           }}
         >
-          주문하기 (총 {totalQuantity}개)
+          주문하기
         </button>
       </div>
     </div>
