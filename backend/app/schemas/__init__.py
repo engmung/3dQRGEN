@@ -1,4 +1,3 @@
-from app.schemas.stand import Stand, StandCreate, StandResponse
 from app.schemas.order import (
     Order,
     OrderCreate,
@@ -8,9 +7,6 @@ from app.schemas.order import (
 )
 
 __all__ = [
-    "Stand",
-    "StandCreate",
-    "StandResponse",
     "Order",
     "OrderCreate",
     "OrderResponse",

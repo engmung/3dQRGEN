@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
@@ -7,18 +7,30 @@ import { loadGLBRegions } from '../utils/glbLoader';
 
 interface GLBBasePartsProps {
   plateColor: string;
+  position?: [number, number, number];
   onRegionsLoaded?: (regions: GLBRegions) => void;
-  onGltfsLoaded?: (gltfs: { back: any; brige: any; front: any; pin: any }) => void;
+  onGltfsLoaded?: (gltfs: {
+    back: any;
+    brige: any;
+    front: any;
+    pin: any;
+  }) => void;
 }
 
-export const GLBBaseParts = ({ plateColor, onRegionsLoaded, onGltfsLoaded }: GLBBasePartsProps) => {
-  // 4개 파츠 로드
+export const GLBBaseParts = ({ plateColor, position, onRegionsLoaded, onGltfsLoaded }: GLBBasePartsProps) => {
+  // 4개 파츠 로드 (원본)
   const backGltf = useLoader(GLTFLoader, '/models/BASE1_parts/back.glb');
   const brigeGltf = useLoader(GLTFLoader, '/models/BASE1_parts/brige.glb');
   const frontGltf = useLoader(GLTFLoader, '/models/BASE1_parts/front.glb');
   const pinGltf = useLoader(GLTFLoader, '/models/BASE1_parts/pin.glb');
   const [regionsExtracted, setRegionsExtracted] = useState(false);
   const [gltfsProvided, setGltfsProvided] = useState(false);
+
+  // 각 인스턴스마다 clone된 scene 생성
+  const backScene = useMemo(() => backGltf.scene.clone(), [backGltf]);
+  const brigeScene = useMemo(() => brigeGltf.scene.clone(), [brigeGltf]);
+  const frontScene = useMemo(() => frontGltf.scene.clone(), [frontGltf]);
+  const pinScene = useMemo(() => pinGltf.scene.clone(), [pinGltf]);
 
   // front.glb에서 영역 데이터 추출
   useEffect(() => {
@@ -34,20 +46,19 @@ export const GLBBaseParts = ({ plateColor, onRegionsLoaded, onGltfsLoaded }: GLB
       });
   }, [onRegionsLoaded, regionsExtracted]);
 
-  // 각 파츠에 사용자 선택 색상 적용 (vertex color 무시)
-  // ⚠️ IMPORTANT: GLTF 전달 전에 먼저 실행되어야 함
+  // clone된 scene에 색상 적용 (각 인스턴스마다 독립적인 material)
   useEffect(() => {
-    [backGltf, brigeGltf, frontGltf, pinGltf].forEach((gltf) => {
-      gltf.scene.traverse((child) => {
+    [backScene, brigeScene, frontScene, pinScene].forEach((scene) => {
+      scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          // 기존 material을 새로운 MeshStandardMaterial로 교체
+          // 새로운 material 인스턴스 생성 (clone 간 공유 방지)
           child.material = new THREE.MeshStandardMaterial({
             color: plateColor,
           });
         }
       });
     });
-  }, [backGltf, brigeGltf, frontGltf, pinGltf, plateColor]);
+  }, [backScene, brigeScene, frontScene, pinScene, plateColor]);
 
   // GLTF 데이터 상위로 전달 (OBJ export용)
   useEffect(() => {
@@ -63,10 +74,10 @@ export const GLBBaseParts = ({ plateColor, onRegionsLoaded, onGltfsLoaded }: GLB
   }, [backGltf, brigeGltf, frontGltf, pinGltf, onGltfsLoaded, gltfsProvided]);
 
   return (
-    <group>
-      <primitive object={backGltf.scene} castShadow receiveShadow />
-      <primitive object={brigeGltf.scene} castShadow receiveShadow />
-      <primitive object={frontGltf.scene} castShadow receiveShadow />
+    <group position={position}>
+      <primitive object={backScene} castShadow receiveShadow />
+      <primitive object={brigeScene} castShadow receiveShadow />
+      <primitive object={frontScene} castShadow receiveShadow />
       {/* PIN은 3D 미리보기에서 숨김 (OBJ export에서만 사용) */}
     </group>
   );

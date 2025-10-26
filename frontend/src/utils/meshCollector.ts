@@ -10,11 +10,16 @@ export interface CollectedMesh {
 
 /**
  * GLB 파츠에서 모든 메시 수집 (world matrix 적용 + 디버깅 transform)
+ * @param gltf - GLB 파일 데이터
+ * @param partName - 파츠 이름 ('back', 'brige', 'front', 'pin')
+ * @param debugTransform - 디버깅용 transform
+ * @param overrideColor - 색상 덮어쓰기 (OBJ export용, 옵션)
  */
 export function collectGLBMeshes(
   gltf: GLTF,
   partName: string,
-  debugTransform: Transform
+  debugTransform: Transform,
+  overrideColor?: string
 ): CollectedMesh[] {
   const meshes: CollectedMesh[] = [];
 
@@ -49,9 +54,14 @@ export function collectGLBMeshes(
       geo.applyMatrix4(rotMatrix);
       geo.applyMatrix4(debugMatrix);
 
+      // 3. Material 처리 (overrideColor가 있으면 새 material 생성)
+      const material = overrideColor
+        ? new THREE.MeshStandardMaterial({ color: overrideColor })
+        : child.material;
+
       meshes.push({
         geometry: geo,
-        material: child.material,
+        material,
         partName,
       });
     }
