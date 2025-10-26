@@ -91,7 +91,7 @@ export const OrderModal = ({
             backgroundColor: '#1a1a1a',
           }}
         >
-          <h2 style={{ margin: '0 0 15px 0', fontSize: '20px' }}>
+          <h2 style={{ margin: '0 0 15px 0', fontSize: '22px', fontWeight: 700 }}>
             주문 내역 ({cartItems.length}개)
           </h2>
 
@@ -105,12 +105,12 @@ export const OrderModal = ({
                   padding: '10px',
                   backgroundColor: '#333',
                   borderRadius: '6px',
-                  fontSize: '13px',
+                  fontSize: '14px',
                 }}
               >
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 'bold', color: '#aaa' }}>#{index + 1}</span>
-                  <span style={{ fontWeight: 'bold' }}>
+                  <span style={{ fontWeight: 600, color: '#aaa' }}>#{index + 1}</span>
+                  <span style={{ fontWeight: 600 }}>
                     {getQRTypeLabel(item.plateConfig.qrType)} QR
                   </span>
                   <div style={{ flex: 1 }} />
@@ -162,8 +162,8 @@ export const OrderModal = ({
               alignItems: 'center',
             }}
           >
-            <span style={{ fontSize: '16px', fontWeight: 'bold' }}>총 주문 금액</span>
-            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#4CAF50' }}>
+            <span style={{ fontSize: '18px', fontWeight: 700 }}>총 주문 금액</span>
+            <span style={{ fontSize: '32px', fontWeight: 700, color: '#4CAF50' }}>
               {totalPrice.toLocaleString()}원
             </span>
           </div>
@@ -196,10 +196,10 @@ export const OrderModal = ({
             }}
           >
             <div style={{ textAlign: 'center', color: '#fff' }}>
-              <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
+              <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '10px' }}>
                 주문 처리 중...
               </div>
-              <div style={{ fontSize: '14px', color: '#aaa' }}>
+              <div style={{ fontSize: '14px', fontWeight: 400, color: '#aaa' }}>
                 OBJ 파일 생성 및 전송 중입니다.
               </div>
             </div>

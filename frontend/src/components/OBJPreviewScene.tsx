@@ -23,13 +23,11 @@ interface OBJPreviewSceneProps {
   qrGeometries?: {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
-    image: THREE.BufferGeometry | null;
+    images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
     textPosition: THREE.Vector3 | null;
     textQuaternion: THREE.Quaternion | null;
-    imagePosition: THREE.Vector3 | null;
-    imageQuaternion: THREE.Quaternion | null;
     qrColor: string;
     zScale: number;
   } | null;
@@ -60,13 +58,11 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
         ...collectQRGeometries(
           qrGeometries.qr,
           qrGeometries.text,
-          qrGeometries.image,
+          qrGeometries.images,
           qrGeometries.qrPosition,
           qrGeometries.qrQuaternion,
           qrGeometries.textPosition,
           qrGeometries.textQuaternion,
-          qrGeometries.imagePosition,
-          qrGeometries.imageQuaternion,
           qrGeometries.qrColor,
           qrGeometries.zScale,
           frontTransform
@@ -86,13 +82,11 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
     plateColor,
     qrGeometries?.qr,
     qrGeometries?.text,
-    qrGeometries?.image,
+    qrGeometries?.images,
     qrGeometries?.qrPosition,
     qrGeometries?.qrQuaternion,
     qrGeometries?.textPosition,
     qrGeometries?.textQuaternion,
-    qrGeometries?.imagePosition,
-    qrGeometries?.imageQuaternion,
     qrGeometries?.qrColor,
     qrGeometries?.zScale,
     backTransform,

@@ -4,6 +4,7 @@ import { Scene3D } from '../components/Scene3D';
 import { LeftPanel } from '../components/LeftPanel';
 import { RightPanel } from '../components/RightPanel';
 import { OrderModal } from '../components/OrderModal';
+import { ColorPalette } from '../components/ColorPalette';
 import { useDesignStore } from '../store/useDesignStore';
 import { useOBJPreviewStore } from '../store/objPreviewStore';
 import { generateOBJFromCartItem } from '../utils/objGenerator';
@@ -156,15 +157,15 @@ export function Home() {
     <div style={{
       display: 'flex',
       width: '100%',
-      height: 'calc(100vh - 60px)', // 헤더 높이 제외
+      height: 'calc(100vh - 50px)', // 헤더 높이 제외
       overflow: 'hidden'
     }}>
       {/* 좌측: 편집 패널 (40%) */}
       <LeftPanel />
 
-      {/* 중앙: 3D 씬 (45%) */}
+      {/* 중앙: 3D 씬 (43%) */}
       <div style={{
-        width: '45%',
+        width: '43%',
         height: '100%',
         position: 'relative'
       }}>
@@ -178,9 +179,11 @@ export function Home() {
             });
           }}
         />
+        {/* 색상 팔레트 (3D 씬 영역 상단 중앙) */}
+        <ColorPalette />
       </div>
 
-      {/* 우측: QR 판 목록 + 주문 (15%) */}
+      {/* 우측: QR 판 목록 + 주문 (17%) */}
       <RightPanel onCheckout={handleCheckout} />
 
       {/* 주문 모달 */}
