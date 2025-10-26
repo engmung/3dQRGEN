@@ -4,33 +4,50 @@ import json
 import aiofiles
 from fastapi import UploadFile
 from app.config import settings
+from datetime import datetime
 
 
-async def save_order_stl(order_uuid: str, file: UploadFile, filename: str = "qr_plate.obj") -> str:
+async def save_order_model(
+    order_uuid: str,
+    user_id: str,
+    obj_file: UploadFile,
+    mtl_file: UploadFile
+) -> tuple[str, str]:
     """
-    3D 모델 파일 저장 (OBJ 형식)
+    3D 모델 파일 저장 (OBJ + MTL)
 
     Args:
         order_uuid: 주문 UUID
-        file: 업로드된 OBJ 파일
-        filename: 저장할 파일명 (기본값: qr_plate.obj)
+        user_id: 사용자 ID
+        obj_file: 업로드된 OBJ 파일
+        mtl_file: 업로드된 MTL 파일
 
     Returns:
-        저장된 파일 경로
+        (obj_file_path, mtl_file_path) 튜플
     """
     # 주문별 디렉토리 생성
     order_dir = os.path.join(settings.storage_path, order_uuid)
     os.makedirs(order_dir, exist_ok=True)
 
-    # 파일 경로
-    file_path = os.path.join(order_dir, filename)
+    # 파일명 생성: {user_id}_{timestamp}.obj/mtl
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_filename = f"{user_id}_{timestamp}"
 
-    # 파일 저장
-    async with aiofiles.open(file_path, "wb") as f:
-        content = await file.read()
+    # 파일 경로
+    obj_path = os.path.join(order_dir, f"{base_filename}.obj")
+    mtl_path = os.path.join(order_dir, f"{base_filename}.mtl")
+
+    # OBJ 파일 저장
+    async with aiofiles.open(obj_path, "wb") as f:
+        content = await obj_file.read()
         await f.write(content)
 
-    return file_path
+    # MTL 파일 저장
+    async with aiofiles.open(mtl_path, "wb") as f:
+        content = await mtl_file.read()
+        await f.write(content)
+
+    return obj_path, mtl_path
 
 
 async def save_order_info(order_uuid: str, order_data: dict):
