@@ -53,8 +53,8 @@ async def create_order(
     price: float = Form(...),  # 주문 가격
     plate_obj_file: UploadFile = File(...),  # QR 판 OBJ 파일
     plate_mtl_file: UploadFile = File(...),  # QR 판 MTL 파일
-    stand_obj_file: UploadFile = File(...),  # 거치대 OBJ 파일
-    stand_mtl_file: UploadFile = File(...),  # 거치대 MTL 파일
+    stand_obj_file: UploadFile = File(None),  # 거치대 OBJ 파일 (optional, GLB 통합 시 불필요)
+    stand_mtl_file: UploadFile = File(None),  # 거치대 MTL 파일 (optional, GLB 통합 시 불필요)
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id)
 ):
@@ -78,8 +78,15 @@ async def create_order(
     try:
         plate_obj_path = await storage.save_order_stl(order_uuid, plate_obj_file, "qr_plate.obj")
         plate_mtl_path = await storage.save_order_stl(order_uuid, plate_mtl_file, "qr_plate.mtl")
-        stand_obj_path = await storage.save_order_stl(order_uuid, stand_obj_file, "stand.obj")
-        stand_mtl_path = await storage.save_order_stl(order_uuid, stand_mtl_file, "stand.mtl")
+
+        # Stand 파일은 선택사항 (GLB 통합 모델의 경우 plate 파일과 동일)
+        if stand_obj_file and stand_obj_file.filename:
+            stand_obj_path = await storage.save_order_stl(order_uuid, stand_obj_file, "stand.obj")
+            stand_mtl_path = await storage.save_order_stl(order_uuid, stand_mtl_file, "stand.mtl")
+        else:
+            # Stand 파일이 없으면 plate 파일 경로를 재사용 (중복 저장 방지)
+            stand_obj_path = plate_obj_path
+            stand_mtl_path = plate_mtl_path
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File save error: {str(e)}")
 
