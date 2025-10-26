@@ -1,5 +1,9 @@
 import { useDesignStore } from '../store/useDesignStore';
+import type { QRType } from '../store/useDesignStore';
 import { AVAILABLE_FONTS, type FontKey } from '../utils/fontLoader';
+import { QRTypeSelector } from './QRTypeSelector';
+import { WiFiForm } from './forms/WiFiForm';
+import { EmailForm } from './forms/EmailForm';
 
 const inputStyle = {
   width: '100%',
@@ -91,18 +95,42 @@ export function EditPanel() {
         </button>
       </div>
 
-      {/* QR URL */}
+      {/* QR 타입 선택 */}
       <div style={sectionStyle}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>QR URL</label>
-          <input
-            type="text"
-            value={selectedPlate.qrUrl}
-            onChange={(e) => updatePlate(selectedPlate.id, { qrUrl: e.target.value })}
-            placeholder="https://example.com"
-            style={inputStyle}
+        <QRTypeSelector
+          value={selectedPlate.qrType}
+          onChange={(type: QRType) => updatePlate(selectedPlate.id, { qrType: type })}
+        />
+      </div>
+
+      {/* QR 데이터 입력 (타입에 따라 다른 폼 표시) */}
+      <div style={sectionStyle}>
+        {selectedPlate.qrType === 'url' && (
+          <div>
+            <label style={labelStyle}>URL</label>
+            <input
+              type="text"
+              value={selectedPlate.qrUrl}
+              onChange={(e) => updatePlate(selectedPlate.id, { qrUrl: e.target.value })}
+              placeholder="https://example.com"
+              style={inputStyle}
+            />
+          </div>
+        )}
+
+        {selectedPlate.qrType === 'wifi' && (
+          <WiFiForm
+            data={selectedPlate.qrWifiData}
+            onChange={(data) => updatePlate(selectedPlate.id, { qrWifiData: data })}
           />
-        </div>
+        )}
+
+        {selectedPlate.qrType === 'email' && (
+          <EmailForm
+            data={selectedPlate.qrEmailData}
+            onChange={(data) => updatePlate(selectedPlate.id, { qrEmailData: data })}
+          />
+        )}
       </div>
 
       {/* QR 설정 */}
