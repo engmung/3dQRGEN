@@ -473,7 +473,7 @@ export function LeftPanel() {
             border: '2px solid #4CAF50',
           }}>
             <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '10px', color: '#333' }}>
-              💰 예상 가격
+              💰 가격
             </div>
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
