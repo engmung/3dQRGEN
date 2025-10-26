@@ -13,7 +13,13 @@ import {
 } from '../utils/meshCollector';
 
 interface OBJPreviewSceneProps {
-  gltfs: { back: any; brige: any; front: any; pin: any } | null;
+  gltfs: {
+    back: any;
+    brige: any;
+    front: any;
+    pin: any;
+  } | null;
+  plateColor?: string; // 판 색상 (선택된 plate의 색상)
   qrGeometries?: {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
@@ -29,7 +35,7 @@ interface OBJPreviewSceneProps {
   } | null;
 }
 
-export const OBJPreviewScene = ({ gltfs, qrGeometries }: OBJPreviewSceneProps) => {
+export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewSceneProps) => {
   const backTransform = useOBJPreviewStore((state) => state.backTransform);
   const brigeTransform = useOBJPreviewStore((state) => state.brigeTransform);
   const frontTransform = useOBJPreviewStore((state) => state.frontTransform);
@@ -42,11 +48,11 @@ export const OBJPreviewScene = ({ gltfs, qrGeometries }: OBJPreviewSceneProps) =
 
     let allMeshes: CollectedMesh[] = [];
 
-    // 1. GLB 파츠 수집
-    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform));
-    allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform));
-    allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform));
-    allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform));
+    // 1. GLB 파츠 수집 (plateColor 적용)
+    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plateColor));
+    allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plateColor));
+    allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plateColor));
+    allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plateColor));
 
     // 2. QR/텍스트/이미지 수집 (Front 파츠에 포함)
     if (qrGeometries) {
@@ -77,6 +83,7 @@ export const OBJPreviewScene = ({ gltfs, qrGeometries }: OBJPreviewSceneProps) =
     return allMeshes;
   }, [
     gltfs,
+    plateColor,
     qrGeometries?.qr,
     qrGeometries?.text,
     qrGeometries?.image,
@@ -143,6 +150,7 @@ export const OBJPreviewScene = ({ gltfs, qrGeometries }: OBJPreviewSceneProps) =
  */
 export const OBJPreviewContainer = ({
   gltfs,
+  plateColor,
   qrGeometries,
 }: OBJPreviewSceneProps) => {
   return (
@@ -163,7 +171,7 @@ export const OBJPreviewContainer = ({
 
       {/* 씬 */}
       <div style={{ flex: 1 }}>
-        <OBJPreviewScene gltfs={gltfs} qrGeometries={qrGeometries} />
+        <OBJPreviewScene gltfs={gltfs} plateColor={plateColor} qrGeometries={qrGeometries} />
       </div>
     </div>
   );

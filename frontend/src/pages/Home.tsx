@@ -19,10 +19,15 @@ import * as THREE from 'three';
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
 export function Home() {
-  const [gltfs, setGltfs] = useState<{ back: any; brige: any; front: any; pin: any } | null>(null);
+  const [gltfs, setGltfs] = useState<{
+    back: any;
+    brige: any;
+    front: any;
+    pin: any;
+  } | null>(null);
   const [showTransformPanel, setShowTransformPanel] = useState(DEV_MODE); // 환경변수로 제어
   const [showOBJPreview, setShowOBJPreview] = useState(false); // OBJ Preview 표시 여부 (기본값: false)
-  const [qrGeometries, setQrGeometries] = useState<{
+  const [qrGeometriesMap, setQrGeometriesMap] = useState<Map<string, {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
     image: THREE.BufferGeometry | null;
@@ -33,7 +38,8 @@ export function Home() {
     imagePosition: THREE.Vector3 | null;
     imageQuaternion: THREE.Quaternion | null;
     qrColor: string;
-  } | null>(null);
+    zScale: number;
+  }>>(new Map());
 
   // OBJ Preview Store
   const backTransform = useOBJPreviewStore((state) => state.backTransform);
@@ -42,41 +48,45 @@ export function Home() {
   const pinTransform = useOBJPreviewStore((state) => state.pinTransform);
   const globalRotation = useOBJPreviewStore((state) => state.globalRotation);
 
-  // 첫 번째 plate (단순화: 첫 번째 판만 사용)
+  // Plates 가져오기
   const plates = useDesignStore((state) => state.plates);
-  const firstPlate = plates[0];
+  const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
+  const selectedPlate = plates.find(p => p.id === selectedPlateId) || plates[0];
 
-  // OBJ Export 핸들러
+  // 선택된 plate의 geometries
+  const selectedQrGeometries = selectedPlate ? qrGeometriesMap.get(selectedPlate.id) : null;
+
+  // 현재 선택된 plate만 Export
   const handleExportOBJ = () => {
-    if (!gltfs) {
-      alert('GLB 파츠가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+    if (!gltfs || !selectedPlate) {
+      alert('GLB 파츠가 아직 로드되지 않았거나 선택된 판이 없습니다.');
       return;
     }
 
     try {
-      // 1. 메시 수집
+      // 1. 메시 수집 (선택된 plate의 색상 적용)
       let allMeshes: any[] = [];
 
-      allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform));
-      allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform));
-      allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform));
-      allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform));
+      allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, selectedPlate.plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, selectedPlate.plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, selectedPlate.plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, selectedPlate.plateColor));
 
-      // QR/텍스트/이미지 추가 (Front 파츠에 포함)
-      if (qrGeometries) {
+      // QR/텍스트/이미지 추가 (선택된 plate의 것만)
+      if (selectedQrGeometries) {
         allMeshes.push(
           ...collectQRGeometries(
-            qrGeometries.qr,
-            qrGeometries.text,
-            qrGeometries.image,
-            qrGeometries.qrPosition,
-            qrGeometries.qrQuaternion,
-            qrGeometries.textPosition,
-            qrGeometries.textQuaternion,
-            qrGeometries.imagePosition,
-            qrGeometries.imageQuaternion,
-            qrGeometries.qrColor,
-            qrGeometries.zScale,
+            selectedQrGeometries.qr,
+            selectedQrGeometries.text,
+            selectedQrGeometries.image,
+            selectedQrGeometries.qrPosition,
+            selectedQrGeometries.qrQuaternion,
+            selectedQrGeometries.textPosition,
+            selectedQrGeometries.textQuaternion,
+            selectedQrGeometries.imagePosition,
+            selectedQrGeometries.imageQuaternion,
+            selectedQrGeometries.qrColor,
+            selectedQrGeometries.zScale,
             frontTransform
           )
         );
@@ -88,12 +98,68 @@ export function Home() {
       // 3. 바닥면 정렬
       allMeshes = alignToGround(allMeshes);
 
-      // 4. Export
-      exportCollectedMeshesToOBJ(allMeshes, '3d_qr_export');
+      // 4. Export (선택된 plate 번호 포함)
+      const plateIndex = plates.findIndex(p => p.id === selectedPlate.id) + 1;
+      exportCollectedMeshesToOBJ(allMeshes, `3d_qr_plate_${plateIndex}`);
     } catch (error) {
       console.error('OBJ export failed:', error);
       alert('OBJ export에 실패했습니다.');
     }
+  };
+
+  // 모든 plate를 개별 파일로 Export
+  const handleExportAllPlates = () => {
+    if (!gltfs) {
+      alert('GLB 파츠가 아직 로드되지 않았습니다.');
+      return;
+    }
+
+    alert(`${plates.length}개의 판을 개별 파일로 다운로드합니다.\n각 판마다 plate_1.obj, plate_2.obj... 형식으로 저장됩니다.`);
+
+    // 각 plate마다 순회하며 export
+    plates.forEach((plate, index) => {
+      try {
+        // 1. 메시 수집
+        let allMeshes: any[] = [];
+
+        allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plate.plateColor));
+        allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plate.plateColor));
+        allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plate.plateColor));
+        allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plate.plateColor));
+
+        // QR/텍스트/이미지 추가
+        const plateGeometries = qrGeometriesMap.get(plate.id);
+        if (plateGeometries) {
+          allMeshes.push(
+            ...collectQRGeometries(
+              plateGeometries.qr,
+              plateGeometries.text,
+              plateGeometries.image,
+              plateGeometries.qrPosition,
+              plateGeometries.qrQuaternion,
+              plateGeometries.textPosition,
+              plateGeometries.textQuaternion,
+              plateGeometries.imagePosition,
+              plateGeometries.imageQuaternion,
+              plateGeometries.qrColor,
+              plateGeometries.zScale,
+              frontTransform
+            )
+          );
+        }
+
+        // 2. Global rotation 적용
+        allMeshes = applyGlobalRotation(allMeshes, globalRotation);
+
+        // 3. 바닥면 정렬
+        allMeshes = alignToGround(allMeshes);
+
+        // 4. Export
+        exportCollectedMeshesToOBJ(allMeshes, `plate_${index + 1}`);
+      } catch (error) {
+        console.error(`Plate ${index + 1} export failed:`, error);
+      }
+    });
   };
 
   return (
@@ -102,7 +168,13 @@ export function Home() {
       <div style={{ width: showOBJPreview ? '70%' : '100%', height: '100%', position: 'relative' }}>
         <Scene3D
           onGltfsLoaded={(loadedGltfs) => setGltfs(loadedGltfs)}
-          onQRGeometriesReady={(geometries) => setQrGeometries(geometries)}
+          onQRGeometriesReady={(plateId, geometries) => {
+            setQrGeometriesMap((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(plateId, geometries);
+              return newMap;
+            });
+          }}
         />
 
         {/* 상단 색상 팔레트 (선택된 판이 있을 때만 표시) */}
@@ -138,32 +210,65 @@ export function Home() {
       {/* OBJ Preview 씬 (30%) */}
       {showOBJPreview && (
         <div style={{ width: '30%', height: '100%', borderLeft: '2px solid #333' }}>
-          <OBJPreviewContainer gltfs={gltfs} qrGeometries={qrGeometries} />
+          <OBJPreviewContainer
+            gltfs={gltfs}
+            plateColor={selectedPlate?.plateColor}
+            qrGeometries={selectedQrGeometries ?? null}
+          />
 
-          {/* Export 버튼 (Preview 창 하단) */}
+          {/* Export 버튼들 (Preview 창 하단) */}
           {gltfs && (
-            <button
-              onClick={handleExportOBJ}
-              style={{
-                position: 'absolute',
-                bottom: showTransformPanel ? '52vh' : '20px',
-                right: '20px',
-                padding: '14px 24px',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                zIndex: 300,
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#45a049')}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#4CAF50')}
-            >
-              💾 OBJ Export
-            </button>
+            <>
+              {/* 선택된 판 Export */}
+              <button
+                onClick={handleExportOBJ}
+                style={{
+                  position: 'absolute',
+                  bottom: showTransformPanel ? '52vh' : '20px',
+                  right: '20px',
+                  padding: '14px 24px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  zIndex: 300,
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#45a049')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#4CAF50')}
+              >
+                💾 OBJ Export
+              </button>
+
+              {/* 모든 판 Export (2개 이상일 때만 표시) */}
+              {plates.length > 1 && (
+                <button
+                  onClick={handleExportAllPlates}
+                  style={{
+                    position: 'absolute',
+                    bottom: showTransformPanel ? '52vh' : '70px',
+                    right: '20px',
+                    padding: '10px 18px',
+                    backgroundColor: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                    zIndex: 300,
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#0b7dda')}
+                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#2196F3')}
+                >
+                  📦 Export All ({plates.length})
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
