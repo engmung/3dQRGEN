@@ -30,13 +30,11 @@ export function HomeDebug() {
   const [qrGeometriesMap, setQrGeometriesMap] = useState<Map<string, {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
-    image: THREE.BufferGeometry | null;
+    images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
     textPosition: THREE.Vector3 | null;
     textQuaternion: THREE.Quaternion | null;
-    imagePosition: THREE.Vector3 | null;
-    imageQuaternion: THREE.Quaternion | null;
     qrColor: string;
     zScale: number;
   }>>(new Map());
@@ -78,13 +76,11 @@ export function HomeDebug() {
           ...collectQRGeometries(
             selectedQrGeometries.qr,
             selectedQrGeometries.text,
-            selectedQrGeometries.image,
+            selectedQrGeometries.images,
             selectedQrGeometries.qrPosition,
             selectedQrGeometries.qrQuaternion,
             selectedQrGeometries.textPosition,
             selectedQrGeometries.textQuaternion,
-            selectedQrGeometries.imagePosition,
-            selectedQrGeometries.imageQuaternion,
             selectedQrGeometries.qrColor,
             selectedQrGeometries.zScale,
             frontTransform
@@ -134,13 +130,11 @@ export function HomeDebug() {
             ...collectQRGeometries(
               plateGeometries.qr,
               plateGeometries.text,
-              plateGeometries.image,
+              plateGeometries.images,
               plateGeometries.qrPosition,
               plateGeometries.qrQuaternion,
               plateGeometries.textPosition,
               plateGeometries.textQuaternion,
-              plateGeometries.imagePosition,
-              plateGeometries.imageQuaternion,
               plateGeometries.qrColor,
               plateGeometries.zScale,
               frontTransform

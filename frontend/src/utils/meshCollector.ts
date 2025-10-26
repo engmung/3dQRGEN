@@ -77,13 +77,11 @@ export function collectGLBMeshes(
 export function collectQRGeometries(
   qrGeometry: THREE.BufferGeometry | null,
   textGeometry: THREE.BufferGeometry | null,
-  imageGeometry: THREE.BufferGeometry | null,
+  imageGeometries: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>,
   qrPosition: THREE.Vector3,
   qrQuaternion: THREE.Quaternion,
   textPosition: THREE.Vector3 | null,
   textQuaternion: THREE.Quaternion | null,
-  imagePosition: THREE.Vector3 | null,
-  imageQuaternion: THREE.Quaternion | null,
   qrColor: string,
   zScale: number,
   debugTransform: Transform
@@ -106,7 +104,7 @@ export function collectQRGeometries(
     // 디버깅 transform 적용
     applyDebugTransform(geo, debugTransform);
 
-    meshes.push({ geometry: geo, material, partName: 'qr' }); // partName을 'qr'로 변경
+    meshes.push({ geometry: geo, material, partName: 'qr' });
   }
 
   // Text Geometry
@@ -124,26 +122,26 @@ export function collectQRGeometries(
     // 디버깅 transform 적용
     applyDebugTransform(geo, debugTransform);
 
-    meshes.push({ geometry: geo, material, partName: 'text' }); // partName을 'text'로 변경
+    meshes.push({ geometry: geo, material, partName: 'text' });
   }
 
-  // Image Geometry
-  if (imageGeometry && imagePosition && imageQuaternion) {
+  // Image Geometries (여러 개 지원)
+  imageGeometries.forEach(({ geometry: imageGeometry, position: imagePosition, quaternion: imageQuaternion }, index) => {
     const geo = imageGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
 
     const imageMatrix = new THREE.Matrix4().compose(
       imagePosition,
       imageQuaternion,
-      new THREE.Vector3(1, 1, 1)
+      new THREE.Vector3(1, 1, zScale) // Z축 스케일 적용 (두께)
     );
     geo.applyMatrix4(imageMatrix);
 
     // 디버깅 transform 적용
     applyDebugTransform(geo, debugTransform);
 
-    meshes.push({ geometry: geo, material, partName: 'image' }); // partName을 'image'로 변경
-  }
+    meshes.push({ geometry: geo, material, partName: `image_${index + 1}` });
+  });
 
   return meshes;
 }
@@ -230,7 +228,7 @@ export function alignToGround(meshes: CollectedMesh[]): CollectedMesh[] {
   // 각 파트별로 바운딩 박스 계산 및 접지
   partGroups.forEach((partMeshes, partName) => {
     // QR/텍스트/이미지는 Front 파트와 같은 Y 오프셋 사용 (개별 접지 안 함)
-    if (partName === 'qr' || partName === 'text' || partName === 'image') {
+    if (partName === 'qr' || partName === 'text' || partName.startsWith('image_')) {
       partMeshes.forEach((mesh) => {
         const geo = mesh.geometry.clone();
         geo.translate(0, frontOffsetY, 0); // Front와 같은 오프셋

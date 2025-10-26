@@ -18,13 +18,11 @@ interface QRPlateInstanceProps {
   onGeometriesReady?: (geometries: {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
-    image: THREE.BufferGeometry | null;
+    images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
     textPosition: THREE.Vector3 | null;
     textQuaternion: THREE.Quaternion | null;
-    imagePosition: THREE.Vector3 | null;
-    imageQuaternion: THREE.Quaternion | null;
     qrColor: string;
     zScale: number;
   }) => void;
@@ -44,9 +42,8 @@ export const QRPlateInstance = ({
     data: boolean[][];
     size: number;
   } | null>(null);
-  const [hovered, setHovered] = useState(false);
   const [textGeometry, setTextGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const [imageContours, setImageContours] = useState<ImageContours | null>(null);
+  const [imageContoursArray, setImageContoursArray] = useState<(ImageContours | null)[]>([]);
 
   // QR Bitmap 생성 (타입에 따라 다른 문자열 생성)
   useEffect(() => {
@@ -116,29 +113,32 @@ export const QRPlateInstance = ({
     };
   }, [config.text, config.textFont, config.textSize, config.qrThickness]);
 
-  // 이미지 Contours 생성 (비동기, Marching Squares)
+  // 이미지 Contours 생성 (비동기, Marching Squares) - 여러 이미지 지원
   useEffect(() => {
-    if (!config.imageFile) {
-      setImageContours(null);
+    if (config.images.length === 0) {
+      setImageContoursArray([]);
       return;
     }
 
     let isCancelled = false;
 
-    imageToContours(config.imageFile, 400) // 400x400 픽셀로 리샘플 (더 세밀한 윤곽선)
-      .then((contours) => {
-        if (isCancelled) return;
-        setImageContours(contours);
-      })
-      .catch((err) => {
-        console.error("Image contour extraction error:", err);
-        setImageContours(null);
-      });
+    // 모든 이미지를 병렬로 처리
+    Promise.all(
+      config.images.map((img) =>
+        imageToContours(img.file, 400).catch((err) => {
+          console.error("Image contour extraction error:", err);
+          return null;
+        })
+      )
+    ).then((contours) => {
+      if (isCancelled) return;
+      setImageContoursArray(contours);
+    });
 
     return () => {
       isCancelled = true;
     };
-  }, [config.imageFile]);
+  }, [config.images]);
 
 
   // QR 코드 3D 블록 생성 (입체)
@@ -183,41 +183,45 @@ export const QRPlateInstance = ({
   // Z축 스케일 계산 (두께 조절)
   const zScale = config.qrThickness / baseThickness;
 
-  // 이미지 3D geometry 생성 (부드러운 ExtrudeGeometry)
-  const imageGeometry = useMemo(() => {
-    if (!imageContours || imageContours.shapes.length === 0) return null;
+  // 이미지 3D geometry 생성 (부드러운 ExtrudeGeometry) - 여러 이미지 지원
+  const imageGeometriesArray = useMemo(() => {
+    if (imageContoursArray.length === 0) return [];
 
-    const { shapes, width, height } = imageContours;
-    const imageSizeUnits = config.imageSize;
+    return imageContoursArray.map((imageContours, index) => {
+      if (!imageContours || imageContours.shapes.length === 0) return null;
 
-    // 스케일 계산 (픽셀 좌표 → mm 단위)
-    const scaleX = imageSizeUnits / width;
-    const scaleY = imageSizeUnits / height;
+      const { shapes, width, height } = imageContours;
+      const imageSizeUnits = config.images[index]?.size || 40;
 
-    // ExtrudeGeometry 설정
-    const extrudeSettings = {
-      depth: config.qrThickness, // QR 두께와 공유
-      bevelEnabled: false,
-      curveSegments: 12,
-    };
+      // 스케일 계산 (픽셀 좌표 → mm 단위)
+      const scaleX = imageSizeUnits / width;
+      const scaleY = imageSizeUnits / height;
 
-    // 각 Shape를 ExtrudeGeometry로 변환
-    const geometries: THREE.BufferGeometry[] = [];
+      // ExtrudeGeometry 설정 (baseThickness 사용)
+      const extrudeSettings = {
+        depth: baseThickness, // 1mm (나중에 zScale로 조절)
+        bevelEnabled: false,
+        curveSegments: 12,
+      };
 
-    for (const shape of shapes) {
-      const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      // 각 Shape를 ExtrudeGeometry로 변환
+      const geometries: THREE.BufferGeometry[] = [];
 
-      // 스케일 적용 (픽셀 좌표 → mm)
-      geometry.scale(scaleX, scaleY, 1);
+      for (const shape of shapes) {
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
 
-      geometries.push(geometry);
-    }
+        // 스케일 적용 (픽셀 좌표 → mm)
+        geometry.scale(scaleX, scaleY, 1);
 
-    if (geometries.length === 0) return null;
+        geometries.push(geometry);
+      }
 
-    // 모든 윤곽선을 하나의 지오메트리로 병합
-    return mergeGeometries(geometries);
-  }, [imageContours, config.imageSize, config.qrThickness]);
+      if (geometries.length === 0) return null;
+
+      // 모든 윤곽선을 하나의 지오메트리로 병합
+      return mergeGeometries(geometries);
+    });
+  }, [imageContoursArray, config.images, config.qrThickness]);
 
   // 법선과 Up 벡터로부터 정확한 quaternion 계산
   const getQuaternionFromNormalAndUp = (
@@ -257,6 +261,36 @@ export const QRPlateInstance = ({
   // 하지만 위치/회전 계산은 early return 이후에 있으므로 ref 사용
   const geometryDataRef = useRef<any>(null);
 
+  // 이미지 위치/회전 계산 (imageRegion이 있을 때만) - 여러 이미지 지원
+  // ⚠️ IMPORTANT: early return 전에 배치 (Hook 순서 유지)
+  const imagePositionsAndQuaternions = useMemo(() => {
+    if (!imageRegion || imageGeometriesArray.length === 0) return [];
+
+    return config.images.map((img, index) => {
+      const geometry = imageGeometriesArray[index];
+      if (!geometry) return null;
+
+      // Quaternion 계산
+      const quaternion = getQuaternionFromNormalAndUp(
+        imageRegion.normal,
+        imageRegion.upVector
+      );
+
+      // Right 벡터 계산
+      const imageRightVector = new THREE.Vector3()
+        .crossVectors(imageRegion.upVector, imageRegion.normal)
+        .normalize();
+
+      // 이미지 위치 계산
+      const position = imageRegion.center.clone()
+        .add(imageRegion.normal.clone().multiplyScalar(0.01))
+        .add(imageRegion.upVector.clone().multiplyScalar(img.heightOffset))
+        .add(imageRightVector.multiplyScalar(img.horizontalOffset));
+
+      return { geometry, position, quaternion };
+    }).filter(Boolean);
+  }, [imageRegion, imageGeometriesArray, config.images]);
+
   useEffect(() => {
     if (onGeometriesReady && geometryDataRef.current) {
       onGeometriesReady(geometryDataRef.current);
@@ -265,11 +299,11 @@ export const QRPlateInstance = ({
     onGeometriesReady,
     baseGeometry,
     textGeometry,
-    imageGeometry,
+    imageGeometriesArray,
     qrRegion,
     config.qrColor,
     config.text,
-    config.imageFile,
+    config.images,
     config.qrUrl,
   ]);
 
@@ -312,10 +346,11 @@ export const QRPlateInstance = ({
   );
 
   // QR 위치 계산
-  // 1. 법선 방향으로 0만큼 offset (표면에 정확히 붙이기)
+  // 1. 법선 방향으로 0.01mm만큼 offset (Z-fighting 방지하면서 표면에 거의 붙임)
   // 2. upVector 방향으로 clampedHeightOffset 만큼 offset (면을 따라 위아래 이동, 제한 적용)
   // 3. rightVector 방향으로 clampedHorizontalOffset 만큼 offset (면을 따라 좌우 이동, 제한 적용)
   const qrPosition = qrRegion.center.clone()
+    .add(qrRegion.normal.clone().multiplyScalar(0.01))
     .add(qrRegion.upVector.clone().multiplyScalar(clampedHeightOffset))
     .add(rightVector.multiplyScalar(clampedHorizontalOffset));
 
@@ -338,61 +373,28 @@ export const QRPlateInstance = ({
 
     // 텍스트 위치 계산 (제한 없음)
     textPosition = textRegion.center.clone()
+      .add(textRegion.normal.clone().multiplyScalar(0.01))
       .add(textRegion.upVector.clone().multiplyScalar(config.textHeightOffset))
       .add(textRightVector.multiplyScalar(config.textHorizontalOffset));
   }
 
-  // 이미지 위치/회전 계산 (imageRegion이 있을 때만)
-  let imagePosition: THREE.Vector3 | null = null;
-  let imageQuaternion: THREE.Quaternion | null = null;
-
-  if (imageRegion && imageGeometry) {
-    // Quaternion 계산
-    imageQuaternion = getQuaternionFromNormalAndUp(
-      imageRegion.normal,
-      imageRegion.upVector
-    );
-
-    // Right 벡터 계산
-    const imageRightVector = new THREE.Vector3()
-      .crossVectors(imageRegion.upVector, imageRegion.normal)
-      .normalize();
-
-    // 이미지 위치 계산 (제한 없음)
-    imagePosition = imageRegion.center.clone()
-      .add(imageRegion.upVector.clone().multiplyScalar(config.imageHeightOffset))
-      .add(imageRightVector.multiplyScalar(config.imageHorizontalOffset));
-  }
-
   // Geometry 데이터를 ref에 저장 (useEffect에서 사용)
+  const imagesToExport = imagePositionsAndQuaternions.filter((item): item is { geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion } => item !== null);
+
   geometryDataRef.current = {
     qr: baseGeometry,
     text: textGeometry,
-    image: imageGeometry,
+    images: imagesToExport,
     qrPosition,
     qrQuaternion,
     textPosition,
     textQuaternion,
-    imagePosition,
-    imageQuaternion,
     qrColor: config.qrColor,
     zScale,
   };
 
   return (
-    <group position={[config.positionX, config.positionY, config.positionZ]}>
-      {/* 선택 표시 원형 띠 (바닥) */}
-      {isSelected && (
-        <mesh
-          position={[0, 0, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          receiveShadow
-        >
-          <ringGeometry args={[80, 90, 64]} />
-          <meshBasicMaterial color="#000000" transparent opacity={0.5} />
-        </mesh>
-      )}
-
+    <group position={[0, 0, 0]}>
       {/* QR 코드 3D 블록들 */}
       <mesh
         geometry={baseGeometry}
@@ -400,15 +402,11 @@ export const QRPlateInstance = ({
         quaternion={qrQuaternion}
         scale={[1, 1, zScale]}
         onClick={handleClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
         castShadow
         receiveShadow={false}
       >
         <meshStandardMaterial
           color={config.qrColor}
-          emissive={hovered ? "#666666" : "#000000"}
-          emissiveIntensity={hovered ? 0.2 : 0}
         />
       </mesh>
 
@@ -419,38 +417,34 @@ export const QRPlateInstance = ({
           position={textPosition}
           quaternion={textQuaternion}
           onClick={handleClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
           castShadow
           receiveShadow={false}
         >
           <meshStandardMaterial
             color={config.qrColor}
-            emissive={hovered ? "#666666" : "#000000"}
-            emissiveIntensity={hovered ? 0.2 : 0}
           />
         </mesh>
       )}
 
-      {/* 3D 이미지 */}
-      {imageGeometry && imagePosition && imageQuaternion && (
-        <mesh
-          geometry={imageGeometry}
-          position={imagePosition}
-          quaternion={imageQuaternion}
-          onClick={handleClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-          castShadow
-          receiveShadow={false}
-        >
-          <meshStandardMaterial
-            color={config.qrColor}
-            emissive={hovered ? "#666666" : "#000000"}
-            emissiveIntensity={hovered ? 0.2 : 0}
-          />
-        </mesh>
-      )}
+      {/* 3D 이미지들 */}
+      {imagePositionsAndQuaternions.map((data, index) => (
+        data && (
+          <mesh
+            key={`image-${index}`}
+            geometry={data.geometry}
+            position={data.position}
+            quaternion={data.quaternion}
+            scale={[1, 1, zScale]}
+            onClick={handleClick}
+            castShadow
+            receiveShadow={false}
+          >
+            <meshStandardMaterial
+              color={config.qrColor}
+            />
+          </mesh>
+        )
+      ))}
     </group>
   );
 };

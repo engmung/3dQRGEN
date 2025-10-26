@@ -291,14 +291,14 @@ export function LeftPanel() {
           <div>
             {/* 프리셋 이미지 선택 */}
             <div style={{ marginBottom: '15px' }}>
-              <label style={labelStyle}>프리셋 이미지</label>
+              <label style={labelStyle}>프리셋 이미지 추가</label>
               <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                 <button
                   onClick={async () => {
                     const response = await fetch('/images/insta.png');
                     const blob = await response.blob();
                     const file = new File([blob], 'insta.png', { type: 'image/png' });
-                    updatePlate(selectedPlate.id, { imageFile: file });
+                    useDesignStore.getState().addImage(selectedPlate.id, file);
                   }}
                   style={{
                     flex: 1,
@@ -312,7 +312,8 @@ export function LeftPanel() {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '4px',
+                    outline: 'none',
                   }}
                 >
                   <img src="/images/insta.png" alt="Instagram" style={{ width: '32px', height: '32px' }} />
@@ -323,7 +324,7 @@ export function LeftPanel() {
                     const response = await fetch('/images/wifi.png');
                     const blob = await response.blob();
                     const file = new File([blob], 'wifi.png', { type: 'image/png' });
-                    updatePlate(selectedPlate.id, { imageFile: file });
+                    useDesignStore.getState().addImage(selectedPlate.id, file);
                   }}
                   style={{
                     flex: 1,
@@ -337,7 +338,8 @@ export function LeftPanel() {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '4px',
+                    outline: 'none',
                   }}
                 >
                   <img src="/images/wifi.png" alt="WiFi" style={{ width: '32px', height: '32px' }} />
@@ -354,26 +356,32 @@ export function LeftPanel() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    updatePlate(selectedPlate.id, { imageFile: file });
+                    useDesignStore.getState().addImage(selectedPlate.id, file);
+                    e.target.value = ''; // Reset input
                   }
                 }}
                 style={inputStyle}
               />
-              {selectedPlate.imageFile && (
+            </div>
+
+            {/* 이미지 리스트 */}
+            {selectedPlate.images.map((img, index) => (
+              <div key={img.id} style={{
+                marginBottom: '20px',
+                padding: '12px',
+                backgroundColor: '#f5f5f5',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+              }}>
                 <div style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  marginTop: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '8px',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '4px'
+                  marginBottom: '10px',
                 }}>
-                  <span>파일: {selectedPlate.imageFile.name}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>이미지 {index + 1}</span>
                   <button
-                    onClick={() => updatePlate(selectedPlate.id, { imageFile: null })}
+                    onClick={() => useDesignStore.getState().removeImage(selectedPlate.id, img.id)}
                     style={{
                       padding: '4px 8px',
                       backgroundColor: '#ff6b6b',
@@ -389,47 +397,61 @@ export function LeftPanel() {
                     제거
                   </button>
                 </div>
-              )}
-            </div>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+                  {img.file.name}
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={labelStyle}>이미지 크기 (mm): {selectedPlate.imageSize.toFixed(1)}</label>
-              <input
-                type="range"
-                value={selectedPlate.imageSize}
-                onInput={(e) => updatePlate(selectedPlate.id, { imageSize: Number(e.currentTarget.value) })}
-                min="10"
-                max="60"
-                step="0.1"
-                style={{ width: '100%' }}
-              />
-            </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ ...labelStyle, fontSize: '14px' }}>크기 (mm): {img.size.toFixed(1)}</label>
+                  <input
+                    type="range"
+                    value={img.size}
+                    onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { size: Number(e.currentTarget.value) })}
+                    min="10"
+                    max="60"
+                    step="0.1"
+                    style={{ width: '100%' }}
+                  />
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={labelStyle}>이미지 높이 (mm): {selectedPlate.imageHeightOffset.toFixed(1)}</label>
-              <input
-                type="range"
-                value={selectedPlate.imageHeightOffset}
-                onInput={(e) => updatePlate(selectedPlate.id, { imageHeightOffset: Number(e.currentTarget.value) })}
-                min="-30"
-                max="60"
-                step="0.01"
-                style={{ width: '100%' }}
-              />
-            </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ ...labelStyle, fontSize: '14px' }}>높이 (mm): {img.heightOffset.toFixed(1)}</label>
+                  <input
+                    type="range"
+                    value={img.heightOffset}
+                    onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { heightOffset: Number(e.currentTarget.value) })}
+                    min="-50"
+                    max="70"
+                    step="0.01"
+                    style={{ width: '100%' }}
+                  />
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={labelStyle}>이미지 좌우 (mm): {selectedPlate.imageHorizontalOffset.toFixed(1)}</label>
-              <input
-                type="range"
-                value={selectedPlate.imageHorizontalOffset}
-                onInput={(e) => updatePlate(selectedPlate.id, { imageHorizontalOffset: Number(e.currentTarget.value) })}
-                min="-30"
-                max="30"
-                step="0.01"
-                style={{ width: '100%' }}
-              />
-            </div>
+                <div style={{ marginBottom: '0' }}>
+                  <label style={{ ...labelStyle, fontSize: '14px' }}>좌우 (mm): {img.horizontalOffset.toFixed(1)}</label>
+                  <input
+                    type="range"
+                    value={img.horizontalOffset}
+                    onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { horizontalOffset: Number(e.currentTarget.value) })}
+                    min="-30"
+                    max="30"
+                    step="0.01"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {selectedPlate.images.length === 0 && (
+              <div style={{
+                padding: '20px',
+                textAlign: 'center',
+                color: '#999',
+                fontSize: '14px',
+              }}>
+                이미지를 추가하세요
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -31,7 +31,7 @@ interface Transforms {
   brigeTransform: Transform;
   frontTransform: Transform;
   pinTransform: Transform;
-  globalRotation: { x: number; y: number; z: number };
+  globalRotation: [number, number, number];
 }
 
 /**
@@ -163,13 +163,11 @@ export async function generateOBJFromCartItem(
         ...collectQRGeometries(
           item.geometries.qr,
           item.geometries.text,
-          item.geometries.image,
+          item.geometries.images,
           item.geometries.qrPosition,
           item.geometries.qrQuaternion,
           item.geometries.textPosition,
           item.geometries.textQuaternion,
-          item.geometries.imagePosition,
-          item.geometries.imageQuaternion,
           item.geometries.qrColor,
           item.geometries.zScale,
           transforms.frontTransform

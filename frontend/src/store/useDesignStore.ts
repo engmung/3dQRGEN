@@ -4,6 +4,15 @@ import type { WiFiData, EmailData } from '../utils/qrGenerator';
 // QR 타입 정의
 export type QRType = 'url' | 'wifi' | 'email';
 
+// 이미지 설정
+export interface ImageConfig {
+  id: string;
+  file: File;
+  size: number;               // 이미지 크기 (mm)
+  heightOffset: number;       // 이미지 높이 오프셋 (upVector 방향, mm)
+  horizontalOffset: number;   // 이미지 좌우 오프셋 (rightVector 방향, mm)
+}
+
 // 개별 QR 판 설정
 export interface QRPlateConfig {
   id: string;
@@ -27,11 +36,8 @@ export interface QRPlateConfig {
   textHeightOffset: number;        // 텍스트 높이 오프셋 (upVector 방향, mm)
   textHorizontalOffset: number;    // 텍스트 좌우 오프셋 (rightVector 방향, mm)
 
-  // 이미지 설정
-  imageFile: File | null;          // 업로드된 이미지 파일
-  imageSize: number;               // 이미지 크기 (mm)
-  imageHeightOffset: number;       // 이미지 높이 오프셋 (upVector 방향, mm)
-  imageHorizontalOffset: number;   // 이미지 좌우 오프셋 (rightVector 방향, mm)
+  // 이미지 설정 (배열로 변경)
+  images: ImageConfig[];
 
   // 색상
   plateColor: string;
@@ -65,6 +71,11 @@ interface DesignStore {
   updatePlate: (id: string, updates: Partial<QRPlateConfig>) => void;
   updatePlateQuantity: (id: string, quantity: number) => void;
   selectPlate: (id: string | null) => void;
+
+  // Image CRUD
+  addImage: (plateId: string, file: File) => ImageConfig;
+  removeImage: (plateId: string, imageId: string) => void;
+  updateImage: (plateId: string, imageId: string, updates: Partial<Omit<ImageConfig, 'id' | 'file'>>) => void;
 
   // 전역 색상 설정
   setGlobalPlateColor: (color: string) => void;
@@ -107,10 +118,7 @@ const createDefaultPlate = (
   textSize: 10,            // 기본 10mm
   textHeightOffset: 0,     // 기본 0mm
   textHorizontalOffset: 0, // 기본 0mm
-  imageFile: null,         // 기본 이미지 없음
-  imageSize: 40,           // 기본 40mm
-  imageHeightOffset: 0,    // 기본 0mm
-  imageHorizontalOffset: 0, // 기본 0mm
+  images: [],              // 기본 이미지 없음 (빈 배열)
   plateColor,
   qrColor, // QR, 텍스트, 이미지 색상 공용
   quantity: 1,             // 기본 수량 1개
@@ -194,6 +202,48 @@ export const useDesignStore = create<DesignStore>((set, get) => {
   // 판 선택
   selectPlate: (id: string | null) => {
     set({ selectedPlateId: id });
+  },
+
+  // 이미지 추가
+  addImage: (plateId: string, file: File) => {
+    const { plates } = get();
+    const newImage: ImageConfig = {
+      id: crypto.randomUUID(),
+      file,
+      size: 40,
+      heightOffset: 0,
+      horizontalOffset: 0,
+    };
+    const updated = plates.map(p =>
+      p.id === plateId ? { ...p, images: [...p.images, newImage] } : p
+    );
+    set({ plates: updated });
+    return newImage;
+  },
+
+  // 이미지 제거
+  removeImage: (plateId: string, imageId: string) => {
+    const { plates } = get();
+    const updated = plates.map(p =>
+      p.id === plateId ? { ...p, images: p.images.filter(img => img.id !== imageId) } : p
+    );
+    set({ plates: updated });
+  },
+
+  // 이미지 업데이트
+  updateImage: (plateId: string, imageId: string, updates: Partial<Omit<ImageConfig, 'id' | 'file'>>) => {
+    const { plates } = get();
+    const updated = plates.map(p =>
+      p.id === plateId
+        ? {
+            ...p,
+            images: p.images.map(img =>
+              img.id === imageId ? { ...img, ...updates } : img
+            ),
+          }
+        : p
+    );
+    set({ plates: updated });
   },
 
   // 전역 색상 설정

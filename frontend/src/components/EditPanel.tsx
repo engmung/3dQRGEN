@@ -268,66 +268,106 @@ export function EditPanel() {
         <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>이미지 설정</h3>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>이미지 업로드</label>
+          <label style={labelStyle}>이미지 추가</label>
           <input
             type="file"
             accept="image/*"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) {
-                updatePlate(selectedPlate.id, { imageFile: file });
+                useDesignStore.getState().addImage(selectedPlate.id, file);
+                e.target.value = '';
               }
             }}
             style={inputStyle}
           />
-          {selectedPlate.imageFile && (
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              파일: {selectedPlate.imageFile.name}
+        </div>
+
+        {/* 이미지 리스트 */}
+        {selectedPlate.images.map((img, index) => (
+          <div key={img.id} style={{
+            marginBottom: '15px',
+            padding: '10px',
+            backgroundColor: '#f9f9f9',
+            borderRadius: '4px',
+            border: '1px solid #ddd',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px',
+            }}>
+              <span style={{ fontSize: '13px', fontWeight: 600 }}>이미지 {index + 1}: {img.file.name}</span>
+              <button
+                onClick={() => useDesignStore.getState().removeImage(selectedPlate.id, img.id)}
+                style={{
+                  padding: '3px 8px',
+                  backgroundColor: '#ff6b6b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                }}
+              >
+                제거
+              </button>
             </div>
-          )}
-        </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>이미지 크기 (mm): {selectedPlate.imageSize.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.imageSize}
-            onChange={(e) => updatePlate(selectedPlate.id, { imageSize: Number(e.target.value) })}
-            min="10"
-            max="80"
-            step="0.5"
-            style={{ width: '100%' }}
-          />
-        </div>
+            <div style={{ marginBottom: '8px' }}>
+              <label style={{ ...labelStyle, fontSize: '12px' }}>크기: {img.size.toFixed(1)}mm</label>
+              <input
+                type="range"
+                value={img.size}
+                onChange={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { size: Number(e.target.value) })}
+                min="10"
+                max="80"
+                step="0.5"
+                style={{ width: '100%' }}
+              />
+            </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>이미지 높이 (mm): {selectedPlate.imageHeightOffset.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.imageHeightOffset}
-            onChange={(e) => updatePlate(selectedPlate.id, { imageHeightOffset: Number(e.target.value) })}
-            min="-50"
-            max="70"
-            step="0.1"
-            style={{ width: '100%' }}
-          />
-        </div>
+            <div style={{ marginBottom: '8px' }}>
+              <label style={{ ...labelStyle, fontSize: '12px' }}>높이: {img.heightOffset.toFixed(1)}mm</label>
+              <input
+                type="range"
+                value={img.heightOffset}
+                onChange={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { heightOffset: Number(e.target.value) })}
+                min="-50"
+                max="70"
+                step="0.1"
+                style={{ width: '100%' }}
+              />
+            </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>이미지 좌우 (mm): {selectedPlate.imageHorizontalOffset.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.imageHorizontalOffset}
-            onChange={(e) => updatePlate(selectedPlate.id, { imageHorizontalOffset: Number(e.target.value) })}
-            min={-(60 - selectedPlate.imageSize) / 2}
-            max={(60 - selectedPlate.imageSize) / 2}
-            step="0.1"
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-            범위: {(-(60 - selectedPlate.imageSize) / 2).toFixed(1)} ~ {((60 - selectedPlate.imageSize) / 2).toFixed(1)}mm
+            <div>
+              <label style={{ ...labelStyle, fontSize: '12px' }}>좌우: {img.horizontalOffset.toFixed(1)}mm</label>
+              <input
+                type="range"
+                value={img.horizontalOffset}
+                onChange={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { horizontalOffset: Number(e.target.value) })}
+                min="-30"
+                max="30"
+                step="0.1"
+                style={{ width: '100%' }}
+              />
+            </div>
           </div>
-        </div>
+        ))}
+
+        {selectedPlate.images.length === 0 && (
+          <div style={{
+            padding: '15px',
+            textAlign: 'center',
+            color: '#999',
+            fontSize: '13px',
+            backgroundColor: '#f9f9f9',
+            borderRadius: '4px',
+          }}>
+            이미지가 없습니다
+          </div>
+        )}
       </div>
 
       {/* 색상 설정 */}
