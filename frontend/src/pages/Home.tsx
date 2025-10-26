@@ -144,7 +144,7 @@ export function Home() {
           qr_y_offset: item.plateConfig.qrHeightOffset,
         };
 
-        // 4. 주문 API 호출 (GLB 통합 모델이므로 stand 파일 미전송)
+        // 4. 주문 API 호출
         console.log(`[Order ${i + 1}/${cartItems.length}] Submitting order...`);
         await createOrder(
           1, // stand_id (GLB 기반은 고정값 1)
@@ -158,9 +158,8 @@ export function Home() {
           `${addressData.address} ${addressData.detailAddress}`, // customer_address
           addressData.deliveryMessage, // delivery_message
           10000, // price (임시: 10,000원)
-          objBlobs.plateObjBlob,
-          objBlobs.plateMtlBlob
-          // stand 파일 미전송 (백엔드에서 plate 경로 재사용)
+          objBlobs.modelObjBlob,
+          objBlobs.modelMtlBlob
         );
 
         console.log(`[Order ${i + 1}/${cartItems.length}] Order created successfully!`);

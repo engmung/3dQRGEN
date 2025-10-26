@@ -15,10 +15,8 @@ import type { Transform } from '../store/objPreviewStore';
 import * as THREE from 'three';
 
 interface OBJBlobs {
-  plateObjBlob: Blob;
-  plateMtlBlob: Blob;
-  standObjBlob?: Blob; // GLB 통합 모델의 경우 undefined
-  standMtlBlob?: Blob; // GLB 통합 모델의 경우 undefined
+  modelObjBlob: Blob;
+  modelMtlBlob: Blob;
 }
 
 interface GLTFs {
@@ -187,13 +185,12 @@ export async function generateOBJFromCartItem(
     const { objString, mtlString } = generateOBJMTLStrings(allMeshes, 'model');
 
     // 5. Blob 생성 및 반환
-    const plateObjBlob = new Blob([objString], { type: 'text/plain' });
-    const plateMtlBlob = new Blob([mtlString], { type: 'text/plain' });
+    const modelObjBlob = new Blob([objString], { type: 'text/plain' });
+    const modelMtlBlob = new Blob([mtlString], { type: 'text/plain' });
 
-    // GLB 통합 모델이므로 stand 파일은 전송하지 않음 (백엔드에서 plate 경로 재사용)
     return {
-      plateObjBlob,
-      plateMtlBlob,
+      modelObjBlob,
+      modelMtlBlob,
     };
   } catch (error) {
     console.error('Failed to generate OBJ from cart item:', error);
