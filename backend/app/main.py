@@ -31,10 +31,8 @@ app.mount("/static", StaticFiles(directory=settings.static_path), name="static")
 
 
 # 라우터 등록
-from app.routers import stands, orders, webhooks, downloads
-app.include_router(stands.router, prefix="/api/stands", tags=["stands"])
+from app.routers import orders, downloads
 app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
-app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
 app.include_router(downloads.router, prefix="/api/downloads", tags=["downloads"])
 
 

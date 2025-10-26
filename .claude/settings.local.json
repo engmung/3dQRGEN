@@ -36,7 +36,8 @@
       "Bash(grep:*)",
       "Bash(npm run type-check:*)",
       "Bash(npm run:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Read(//c/Users/lsh/Desktop/2024/2025_겨울/**)"
     ],
     "deny": [],
     "ask": []
