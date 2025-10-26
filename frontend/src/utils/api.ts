@@ -236,3 +236,52 @@ export async function cancelMyOrder(orderUuid: string, token?: string | null): P
     throw new Error(error.detail || 'Failed to cancel order');
   }
 }
+
+// ===== Pricing API =====
+
+export interface PricingSettings {
+  base_price: number;
+  text_price: number;
+  image_price: number;
+}
+
+/**
+ * 가격 설정 조회
+ */
+export async function fetchPricingSettings(): Promise<PricingSettings> {
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/pricing`)
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch pricing settings');
+  }
+  return response.json();
+}
+
+/**
+ * 가격 설정 업데이트 (관리자용)
+ */
+export async function updatePricingSettings(
+  settings: PricingSettings,
+  token?: string | null
+): Promise<PricingSettings> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/pricing`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(settings),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to update pricing' }));
+    throw new Error(error.detail || 'Failed to update pricing');
+  }
+  return response.json();
+}

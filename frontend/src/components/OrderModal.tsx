@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AddressForm, type AddressFormData } from './AddressForm';
 import type { CartItem } from '../store/useCartStore';
+import { getPricingSettings, calculatePlatePrice, formatPrice, type PricingSettings } from '../utils/pricing';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -18,11 +19,21 @@ export const OrderModal = ({
   onSubmit,
 }: OrderModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
+
+  // 가격 설정 로드
+  useEffect(() => {
+    if (isOpen) {
+      getPricingSettings().then(setPricingSettings);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // 가격 계산 (임시: 아이템당 10,000원)
-  const totalPrice = cartItems.length * 10000;
+  // 가격 계산
+  const totalPrice = pricingSettings
+    ? cartItems.reduce((sum, item) => sum + calculatePlatePrice(item.plateConfig, pricingSettings), 0)
+    : 0;
 
   // QR 타입 라벨
   const getQRTypeLabel = (qrType: string) => {
@@ -146,6 +157,32 @@ export const OrderModal = ({
                     <div>Email: {item.plateConfig.qrEmailData.recipient || '(설정 없음)'}</div>
                   )}
                 </div>
+
+                {/* 판 가격 상세 */}
+                {pricingSettings && (
+                  <div style={{ fontSize: '11px', color: '#aaa', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #555' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>기본 가격</span>
+                      <span>{formatPrice(pricingSettings.base_price)}</span>
+                    </div>
+                    {item.plateConfig.text && item.plateConfig.text.trim().length > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span>+ 텍스트 추가</span>
+                        <span>{formatPrice(pricingSettings.text_price)}</span>
+                      </div>
+                    )}
+                    {item.plateConfig.images.length > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span>+ 이미지 {item.plateConfig.images.length}개</span>
+                        <span>{formatPrice(pricingSettings.image_price * item.plateConfig.images.length)}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #666', fontWeight: 600, color: '#fff' }}>
+                      <span>판 합계</span>
+                      <span>{formatPrice(calculatePlatePrice(item.plateConfig, pricingSettings))}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -164,7 +201,7 @@ export const OrderModal = ({
           >
             <span style={{ fontSize: '18px', fontWeight: 700 }}>총 주문 금액</span>
             <span style={{ fontSize: '32px', fontWeight: 700, color: '#4CAF50' }}>
-              {totalPrice.toLocaleString()}원
+              {pricingSettings ? formatPrice(totalPrice) : '계산 중...'}
             </span>
           </div>
         </div>
