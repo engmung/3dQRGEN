@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { Scene3D } from '../components/Scene3D';
 import { LeftPanel } from '../components/LeftPanel';
@@ -9,7 +9,7 @@ import { useDesignStore } from '../store/useDesignStore';
 import { useOBJPreviewStore } from '../store/objPreviewStore';
 import { generateOBJFromCartItem } from '../utils/objGenerator';
 import { generateQRString } from '../utils/qrGenerator';
-import { createOrder } from '../utils/api';
+import { createOrderGroup, fetchProducts, type Product, type LineItemData } from '../utils/api';
 import { getPricingSettings, calculatePlatePrice } from '../utils/pricing';
 import type { AddressFormData } from '../components/AddressForm';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -42,8 +42,17 @@ export function Home() {
 
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
+  // 거치대 제품 목록 및 선택된 거치대
+  const [standProducts, setStandProducts] = useState<Product[]>([]);
+  const [selectedStandSku, setSelectedStandSku] = useState<string>('STAND-45DEG'); // 기본값: 45도
+
   // Plates 가져오기
   const plates = useDesignStore((state) => state.plates);
+
+  // 거치대 목록 로드
+  useEffect(() => {
+    fetchProducts('stand').then(setStandProducts).catch(console.error);
+  }, []);
 
   // OBJ Transform 설정
   const backTransform = useOBJPreviewStore((state) => state.backTransform);
@@ -72,7 +81,7 @@ export function Home() {
     setIsOrderModalOpen(true);
   };
 
-  // 주문 제출
+  // 주문 제출 (새 방식: OrderGroup)
   const handleOrderSubmit = async (addressData: AddressFormData) => {
     if (!user || !gltfs) return;
 
@@ -82,7 +91,12 @@ export function Home() {
       // 가격 설정 가져오기
       const pricingSettings = await getPricingSettings();
 
-      // 각 plate를 순회하며 주문 생성
+      console.log(`[OrderGroup] Preparing ${plates.length} plates for submission...`);
+
+      // 1. 모든 plate에 대해 OBJ 파일 생성 및 LineItem 데이터 준비
+      const lineItemsData: LineItemData[] = [];
+      const files: Blob[] = [];
+
       for (let i = 0; i < plates.length; i++) {
         const plate = plates[i];
         const geometries = qrGeometriesMap.get(plate.id);
@@ -92,9 +106,9 @@ export function Home() {
           continue;
         }
 
-        console.log(`[Order ${i + 1}/${plates.length}] Generating OBJ files...`);
+        console.log(`[OrderGroup] Generating OBJ for plate ${i + 1}/${plates.length}...`);
 
-        // 1. OBJ/MTL Blob 생성
+        // OBJ/MTL Blob 생성
         const objBlobs = await generateOBJFromCartItem(
           { id: plate.id, plateConfig: plate, geometries, addedAt: new Date() },
           gltfs,
@@ -107,7 +121,7 @@ export function Home() {
           }
         );
 
-        // 2. QR 문자열 생성
+        // QR 문자열 생성
         let qrString = '';
         if (plate.qrType === 'url') {
           qrString = generateQRString('url', plate.qrUrl);
@@ -117,7 +131,7 @@ export function Home() {
           qrString = generateQRString('email', plate.qrEmailData);
         }
 
-        // 3. Customization 데이터 추출 (가격 계산용 필드 포함)
+        // Customization 데이터 (가격 계산 + 3D 정보)
         const customization = {
           plate_width: 100,
           plate_height: 100,
@@ -125,37 +139,63 @@ export function Home() {
           qr_size: plate.qrSize,
           qr_depth: plate.qrThickness,
           qr_y_offset: plate.qrHeightOffset,
-          text: plate.text,           // 가격 계산용
-          images: plate.images,       // 가격 계산용
+          text: plate.text,
+          images: plate.images,
+          // 추가 정보도 저장 가능
+          qrType: plate.qrType,
+          plateColor: plate.plateColor,
+          qrColor: plate.qrColor,
         };
 
-        // 4. 가격 계산
-        const platePrice = calculatePlatePrice(plate, pricingSettings);
+        // 단가 계산
+        const unitPrice = calculatePlatePrice(plate, pricingSettings);
 
-        // 5. 주문 API 호출
-        console.log(`[Order ${i + 1}/${plates.length}] Submitting order (${platePrice}원)...`);
-        await createOrder(
-          1, // stand_id (GLB 기반은 고정값 1)
-          'GLB Base Stand', // stand_name
-          qrString, // qr_url
-          customization, // customization
-          email, // customer_email
-          addressData.customerName, // customer_name
-          addressData.customerPhone, // customer_phone
-          addressData.postalCode, // customer_postal_code
-          `${addressData.address} ${addressData.detailAddress}`, // customer_address
-          addressData.deliveryMessage, // delivery_message
-          platePrice, // price (동적 계산)
-          objBlobs.modelObjBlob,
-          objBlobs.modelMtlBlob
-        );
+        // LineItem 데이터 추가
+        lineItemsData.push({
+          product_sku: 'QR-PLATE-BASE',
+          stand_sku: selectedStandSku,  // 🔥 선택된 거치대 SKU
+          qr_url: qrString,
+          customization,
+          quantity: plate.quantity,  // 🔥 진짜 수량!
+          unit_price: unitPrice,  // 서버 검증용
+        });
 
-        console.log(`[Order ${i + 1}/${plates.length}] Order created successfully!`);
+        // 파일 추가 (OBJ, MTL 순서)
+        files.push(objBlobs.modelObjBlob);
+        files.push(objBlobs.modelMtlBlob);
       }
 
-      // 6. 성공 시 모달 닫기
+      if (lineItemsData.length === 0) {
+        throw new Error('생성 가능한 주문이 없습니다.');
+      }
+
+      // 2. OrderGroup API 호출 (한 번에 전체 제출)
+      console.log(`[OrderGroup] Submitting order group with ${lineItemsData.length} line items...`);
+
+      const response = await createOrderGroup(
+        email,
+        addressData.customerName,
+        addressData.customerPhone,
+        addressData.postalCode,
+        `${addressData.address} ${addressData.detailAddress}`,
+        addressData.deliveryMessage,
+        lineItemsData,
+        files
+      );
+
+      console.log(`[OrderGroup] Success!`, response);
+
+      // 3. 성공 시 모달 닫기
       setIsOrderModalOpen(false);
-      alert(`${plates.length}개의 주문이 완료되었습니다!\n"내 주문" 메뉴에서 확인하실 수 있습니다.`);
+
+      const totalQuantity = lineItemsData.reduce((sum, item) => sum + item.quantity, 0);
+      alert(
+        `주문이 완료되었습니다!\n` +
+        `• 제품 종류: ${response.line_item_count}개\n` +
+        `• 총 수량: ${totalQuantity}개\n` +
+        `• 총 금액: ${response.total_price.toLocaleString()}원\n\n` +
+        `"내 주문" 메뉴에서 확인하실 수 있습니다.`
+      );
     } catch (error) {
       console.error('Order submission error:', error);
       throw error; // OrderModal에서 에러 메시지 표시
@@ -207,6 +247,9 @@ export function Home() {
         }))}
         customerEmail={user?.primaryEmailAddress?.emailAddress || ''}
         onSubmit={handleOrderSubmit}
+        standProducts={standProducts}
+        selectedStandSku={selectedStandSku}
+        onStandSelect={setSelectedStandSku}
       />
     </div>
   );
