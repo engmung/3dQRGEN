@@ -43,15 +43,6 @@ export const Scene3D = ({ onGltfsLoaded, onQRGeometriesReady }: Scene3DProps = {
       gl={{ antialias: true }}
       onPointerMissed={() => selectPlate(null)} // 빈 공간 클릭 시 선택 해제
     >
-      {/* 평면 바닥 (그리드) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -5, 0]} receiveShadow>
-        <planeGeometry args={[1000, 1000]} />
-        <meshStandardMaterial color="#f0f0f0" />
-      </mesh>
-
-      {/* 그리드 헬퍼 */}
-      <gridHelper args={[1000, 50, '#cccccc', '#e0e0e0']} position={[0, -4.9, 0]} />
-
       {/* 조명 */}
       <ambientLight intensity={2.0} />
       <directionalLight
@@ -94,12 +85,13 @@ export const Scene3D = ({ onGltfsLoaded, onQRGeometriesReady }: Scene3DProps = {
         </group>
       ))}
 
-      {/* 컨트롤 */}
+      {/* 컨트롤 (회전만 가능) */}
       <OrbitControls
         enableDamping
         dampingFactor={0.05}
-        minDistance={50}
-        maxDistance={500}
+        enableZoom={false}  // 줌 비활성화
+        enablePan={false}   // 팬 비활성화
+        // 회전만 가능
       />
     </Canvas>
   );
