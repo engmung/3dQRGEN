@@ -9,7 +9,7 @@ from datetime import datetime
 
 async def save_order_model(
     order_uuid: str,
-    user_id: str,
+    customer_email: str,
     obj_file: UploadFile,
     mtl_file: UploadFile
 ) -> tuple[str, str]:
@@ -18,7 +18,7 @@ async def save_order_model(
 
     Args:
         order_uuid: 주문 UUID
-        user_id: 사용자 ID
+        customer_email: 고객 이메일
         obj_file: 업로드된 OBJ 파일
         mtl_file: 업로드된 MTL 파일
 
@@ -29,9 +29,11 @@ async def save_order_model(
     order_dir = os.path.join(settings.storage_path, order_uuid)
     os.makedirs(order_dir, exist_ok=True)
 
-    # 파일명 생성: {user_id}_{timestamp}.obj/mtl
+    # 파일명 생성: {email}_{timestamp}.obj/mtl
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    base_filename = f"{user_id}_{timestamp}"
+    # 이메일에서 @ 기호를 _로 치환 (파일명 안전성)
+    safe_email = customer_email.replace("@", "_").replace(".", "_")
+    base_filename = f"{safe_email}_{timestamp}"
 
     # 파일 경로
     obj_path = os.path.join(order_dir, f"{base_filename}.obj")

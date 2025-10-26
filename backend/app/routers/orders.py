@@ -72,11 +72,11 @@ async def create_order(
     # 2. 주문 UUID 생성
     order_uuid = str(uuid.uuid4())
 
-    # 3. OBJ+MTL 파일 저장 (단순화된 로직: 파일 2개만)
+    # 3. OBJ+MTL 파일 저장 (파일명: {email}_{timestamp}.obj/mtl)
     try:
         obj_path, mtl_path = await storage.save_order_model(
             order_uuid,
-            user_id,
+            customer_email,
             model_obj_file,
             model_mtl_file
         )
