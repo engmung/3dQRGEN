@@ -9,7 +9,7 @@ import { useDesignStore } from '../store/useDesignStore';
 import { useOBJPreviewStore } from '../store/objPreviewStore';
 import { generateOBJFromCartItem } from '../utils/objGenerator';
 import { generateQRString } from '../utils/qrGenerator';
-import { createOrderGroup, fetchProducts, type Product, type LineItemData } from '../utils/api';
+import { createOrderGroup, type LineItemData } from '../utils/api';
 import { getPricingSettings, calculatePlatePrice } from '../utils/pricing';
 import type { AddressFormData } from '../components/AddressForm';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -42,17 +42,8 @@ export function Home() {
 
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
-  // 거치대 제품 목록 및 선택된 거치대
-  const [standProducts, setStandProducts] = useState<Product[]>([]);
-  const [selectedStandSku, setSelectedStandSku] = useState<string>('STAND-45DEG'); // 기본값: 45도
-
   // Plates 가져오기
   const plates = useDesignStore((state) => state.plates);
-
-  // 거치대 목록 로드
-  useEffect(() => {
-    fetchProducts('stand').then(setStandProducts).catch(console.error);
-  }, []);
 
   // OBJ Transform 설정
   const backTransform = useOBJPreviewStore((state) => state.backTransform);
@@ -153,10 +144,9 @@ export function Home() {
         // LineItem 데이터 추가
         lineItemsData.push({
           product_sku: 'QR-PLATE-BASE',
-          stand_sku: selectedStandSku,  // 🔥 선택된 거치대 SKU
           qr_url: qrString,
           customization,
-          quantity: plate.quantity,  // 🔥 진짜 수량!
+          quantity: plate.quantity,
           unit_price: unitPrice,  // 서버 검증용
         });
 
@@ -179,6 +169,7 @@ export function Home() {
         addressData.postalCode,
         `${addressData.address} ${addressData.detailAddress}`,
         addressData.deliveryMessage,
+        addressData.productionDate, // 생산 희망일
         lineItemsData,
         files
       );
@@ -242,14 +233,12 @@ export function Home() {
         cartItems={plates.map(plate => ({
           id: plate.id,
           plateConfig: plate,
+          quantity: plate.quantity,
           geometries: qrGeometriesMap.get(plate.id) || null,
           addedAt: new Date()
         }))}
         customerEmail={user?.primaryEmailAddress?.emailAddress || ''}
         onSubmit={handleOrderSubmit}
-        standProducts={standProducts}
-        selectedStandSku={selectedStandSku}
-        onStandSelect={setSelectedStandSku}
       />
     </div>
   );

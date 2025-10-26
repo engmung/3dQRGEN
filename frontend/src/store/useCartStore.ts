@@ -6,6 +6,7 @@ import * as THREE from 'three';
 export interface CartItem {
   id: string;  // 장바구니 아이템 고유 ID (UUID)
   plateConfig: QRPlateConfig;  // Plate 전체 설정
+  quantity: number;  // 주문 수량
   geometries: {  // QR/텍스트/이미지 geometry 정보
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
@@ -46,6 +47,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     const newItem: CartItem = {
       id: crypto.randomUUID(),
       plateConfig: JSON.parse(JSON.stringify(plateConfig)), // Deep copy
+      quantity: 1, // 기본 수량 1개
       geometries: geometries ? {
         qr: geometries.qr?.clone() ?? null,
         text: geometries.text?.clone() ?? null,

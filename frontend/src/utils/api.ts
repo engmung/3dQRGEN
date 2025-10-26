@@ -331,7 +331,6 @@ export async function fetchProductBySku(sku: string): Promise<Product> {
 
 export interface LineItemData {
   product_sku: string;
-  stand_sku: string | null;
   qr_url: string;
   customization: any;
   quantity: number;
@@ -367,7 +366,6 @@ export interface LineItemDetail {
   id: number;
   line_item_uuid: string;
   product_sku: string;
-  stand_sku: string | null;
   qr_url: string;
   customization: any;
   quantity: number;
@@ -388,6 +386,7 @@ export async function createOrderGroup(
   customerPostalCode: string,
   customerAddress: string,
   deliveryMessage: string,
+  productionDate: string, // YYYY-MM-DD
   lineItemsData: LineItemData[],
   files: Blob[]  // [obj1, mtl1, obj2, mtl2, ...]
 ): Promise<OrderGroupResponse> {
@@ -400,6 +399,9 @@ export async function createOrderGroup(
   formData.append('customer_postal_code', customerPostalCode);
   formData.append('customer_address', customerAddress);
   formData.append('delivery_message', deliveryMessage);
+
+  // Production schedule
+  formData.append('production_date', productionDate);
 
   // Line items (JSON)
   formData.append('line_items_json', JSON.stringify(lineItemsData));
@@ -467,5 +469,286 @@ export async function fetchOrderGroupDetail(groupUuid: string): Promise<OrderGro
   if (!response.ok) {
     throw new Error('Failed to fetch order group detail');
   }
+  return response.json();
+}
+
+/**
+ * 관리자용 전체 주문 그룹 목록 조회
+ */
+export async function fetchAllOrderGroups(token?: string | null): Promise<OrderGroupDetail[]> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/order-groups/admin/list`, {
+      method: 'GET',
+      headers,
+    })
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch all order groups');
+  }
+  return response.json();
+}
+
+/**
+ * 주문 그룹 상태 업데이트 (관리자용)
+ */
+export async function updateOrderGroupStatus(groupUuid: string, status: string, token?: string | null): Promise<void> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/order-groups/${groupUuid}/status?status=${encodeURIComponent(status)}`, {
+    method: 'PATCH',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update order group status');
+  }
+}
+
+/**
+ * 주문 그룹 취소 (고객용, pending 상태만 가능)
+ */
+export async function cancelOrderGroup(groupUuid: string, token?: string | null): Promise<void> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/order-groups/${groupUuid}/cancel`, {
+    method: 'PATCH',
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Failed to cancel order group' }));
+    throw new Error(error.detail || 'Failed to cancel order group');
+  }
+}
+
+/**
+ * 주문 그룹 삭제 (관리자용)
+ */
+export async function deleteOrderGroup(groupUuid: string, token?: string | null): Promise<void> {
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/order-groups/${groupUuid}`, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete order group');
+  }
+}
+
+/**
+ * 주문 그룹 파일 다운로드 URL 가져오기
+ */
+export function getOrderGroupDownloadUrl(groupUuid: string): string {
+  return `${API_BASE_URL}/api/order-groups/${groupUuid}/download`;
+}
+
+// ============================================
+// 생산 일정 (Production Schedule) API
+// ============================================
+
+export interface ProductionScheduleDate {
+  id: number;
+  date: string; // YYYY-MM-DD
+  max_capacity: number;
+  reserved_quantity: number;
+  is_available: boolean;
+  available_slots: number;
+}
+
+export interface ProductionScheduleUpdate {
+  max_capacity?: number;
+  is_available?: boolean;
+}
+
+export interface ProductionScheduleCreate {
+  date: string; // YYYY-MM-DD
+  max_capacity: number;
+  is_available?: boolean;
+}
+
+/**
+ * 주문 가능한 날짜 목록 조회 (공개 API)
+ */
+export async function fetchAvailableDates(): Promise<ProductionScheduleDate[]> {
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/production-schedule/available`)
+  );
+  if (!response.ok) {
+    throw new Error('Failed to fetch available dates');
+  }
+  return response.json();
+}
+
+/**
+ * 전체 생산 일정 조회 (관리자 전용)
+ */
+export async function fetchAllProductionSchedule(
+  token: string | null,
+  startDate?: string,
+  endDate?: string
+): Promise<ProductionScheduleDate[]> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const params = new URLSearchParams();
+  if (startDate) params.append('start_date', startDate);
+  if (endDate) params.append('end_date', endDate);
+
+  const url = `${API_BASE_URL}/api/production-schedule/admin${params.toString() ? `?${params.toString()}` : ''}`;
+
+  const response = await fetchWithRetry(
+    () => fetch(url, {
+      method: 'GET',
+      headers,
+    })
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch production schedule');
+  }
+
+  return response.json();
+}
+
+/**
+ * 생산 일정 생성 (관리자 전용)
+ */
+export async function createProductionDate(
+  data: ProductionScheduleCreate,
+  token: string | null
+): Promise<ProductionScheduleDate> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/production-schedule/admin`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    })
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to create production schedule');
+  }
+
+  return response.json();
+}
+
+/**
+ * 생산 일정 수정 (관리자 전용)
+ */
+export async function updateProductionDate(
+  date: string, // YYYY-MM-DD
+  data: ProductionScheduleUpdate,
+  token: string | null
+): Promise<ProductionScheduleDate> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/production-schedule/admin/${date}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    })
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to update production schedule');
+  }
+
+  return response.json();
+}
+
+/**
+ * 생산 일정 비활성화 (관리자 전용)
+ */
+export async function disableProductionDate(
+  date: string, // YYYY-MM-DD
+  token: string | null
+): Promise<void> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/production-schedule/admin/${date}`, {
+      method: 'DELETE',
+      headers,
+    })
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to disable production schedule');
+  }
+}
+
+/**
+ * 특정 날짜의 주문 목록 조회 (관리자 전용)
+ */
+export async function fetchDateOrders(
+  date: string, // YYYY-MM-DD
+  token: string | null
+): Promise<any> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetchWithRetry(
+    () => fetch(`${API_BASE_URL}/api/production-schedule/admin/${date}/orders`, {
+      method: 'GET',
+      headers,
+    })
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch date orders');
+  }
+
   return response.json();
 }
