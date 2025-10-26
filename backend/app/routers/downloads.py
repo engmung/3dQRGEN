@@ -29,22 +29,37 @@ async def download_obj(
 
     # 2. 파일 경로 설정
     order_dir = os.path.join(settings.storage_path, order_uuid)
-    files_to_zip = [
-        ("qr_plate.obj", "qr_plate.obj"),
-        ("qr_plate.mtl", "qr_plate.mtl"),
-        ("stand.obj", "stand.obj"),
-        ("stand.mtl", "stand.mtl"),
-    ]
 
     # 3. ZIP 파일 생성 (메모리)
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        for filename, arcname in files_to_zip:
-            file_path = os.path.join(order_dir, filename)
-            if os.path.exists(file_path):
-                zip_file.write(file_path, arcname)
-            else:
-                raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+        # Plate 파일 (필수)
+        plate_obj_path = os.path.join(order_dir, "qr_plate.obj")
+        plate_mtl_path = os.path.join(order_dir, "qr_plate.mtl")
+
+        if not os.path.exists(plate_obj_path):
+            raise HTTPException(status_code=404, detail="Plate OBJ file not found")
+        if not os.path.exists(plate_mtl_path):
+            raise HTTPException(status_code=404, detail="Plate MTL file not found")
+
+        zip_file.write(plate_obj_path, "qr_plate.obj")
+        zip_file.write(plate_mtl_path, "qr_plate.mtl")
+
+        # Stand 파일 (선택적, 없으면 plate 파일 재사용)
+        stand_obj_path = os.path.join(order_dir, "stand.obj")
+        stand_mtl_path = os.path.join(order_dir, "stand.mtl")
+
+        if os.path.exists(stand_obj_path):
+            zip_file.write(stand_obj_path, "stand.obj")
+        else:
+            # Stand 파일이 없으면 plate 파일을 stand 이름으로 복사
+            zip_file.write(plate_obj_path, "stand.obj")
+
+        if os.path.exists(stand_mtl_path):
+            zip_file.write(stand_mtl_path, "stand.mtl")
+        else:
+            # Stand 파일이 없으면 plate 파일을 stand 이름으로 복사
+            zip_file.write(plate_mtl_path, "stand.mtl")
 
     # 4. ZIP 파일 전송
     zip_buffer.seek(0)

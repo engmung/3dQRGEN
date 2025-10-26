@@ -86,8 +86,8 @@ export async function createOrder(
   price: number,
   plateObjBlob: Blob,
   plateMtlBlob: Blob,
-  standObjBlob: Blob,
-  standMtlBlob: Blob
+  standObjBlob?: Blob, // GLB 통합 모델의 경우 optional
+  standMtlBlob?: Blob  // GLB 통합 모델의 경우 optional
 ): Promise<OrderResponse> {
   const formData = new FormData();
   formData.append('stand_id', standId.toString());
@@ -103,8 +103,12 @@ export async function createOrder(
   formData.append('price', price.toString());
   formData.append('plate_obj_file', plateObjBlob, 'qr_plate.obj');
   formData.append('plate_mtl_file', plateMtlBlob, 'qr_plate.mtl');
-  formData.append('stand_obj_file', standObjBlob, 'stand.obj');
-  formData.append('stand_mtl_file', standMtlBlob, 'stand.mtl');
+
+  // Stand 파일은 선택적으로 전송 (GLB 통합 모델의 경우 생략)
+  if (standObjBlob && standMtlBlob) {
+    formData.append('stand_obj_file', standObjBlob, 'stand.obj');
+    formData.append('stand_mtl_file', standMtlBlob, 'stand.mtl');
+  }
 
   // Clerk JWT 토큰 가져오기
   const token = await getAuthToken();
