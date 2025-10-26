@@ -21,7 +21,7 @@ const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 export function Home() {
   const [gltfs, setGltfs] = useState<{ back: any; brige: any; front: any; pin: any } | null>(null);
   const [showTransformPanel, setShowTransformPanel] = useState(DEV_MODE); // 환경변수로 제어
-  const [showOBJPreview, setShowOBJPreview] = useState(true); // OBJ Preview 표시 여부
+  const [showOBJPreview, setShowOBJPreview] = useState(false); // OBJ Preview 표시 여부 (기본값: false)
   const [qrGeometries, setQrGeometries] = useState<{
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;

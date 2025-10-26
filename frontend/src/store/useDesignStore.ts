@@ -1,11 +1,20 @@
 import { create } from 'zustand';
+import type { WiFiData, EmailData } from '../utils/qrGenerator';
+
+// QR 타입 정의
+export type QRType = 'url' | 'wifi' | 'email';
 
 // 개별 QR 판 설정
 export interface QRPlateConfig {
   id: string;
 
-  // QR 설정
-  qrUrl: string;
+  // QR 타입 및 데이터
+  qrType: QRType;          // QR 타입
+  qrUrl: string;           // URL 타입일 때 사용
+  qrWifiData: WiFiData;    // WiFi 타입일 때 사용
+  qrEmailData: EmailData;  // Email 타입일 때 사용
+
+  // QR 공통 설정
   qrSize: number;          // QR 크기 (mm)
   qrThickness: number;     // QR 두께 (mm)
   qrHeightOffset: number;  // QR 높이 오프셋 (upVector 방향, mm)
@@ -66,7 +75,20 @@ const createDefaultPlate = (
   index: number = 0
 ): QRPlateConfig => ({
   id,
-  qrUrl: 'https://example.com',
+  // QR 타입 및 데이터
+  qrType: 'url',                          // 기본 타입: URL
+  qrUrl: 'https://example.com',           // URL 기본값
+  qrWifiData: {                           // WiFi 기본값
+    ssid: '',
+    password: '',
+    security: 'WPA',
+  },
+  qrEmailData: {                          // Email 기본값
+    recipient: '',
+    subject: '',
+    body: '',
+  },
+  // QR 공통 설정
   qrSize: 50,              // 기본 50mm
   qrThickness: 2,          // 기본 2mm
   qrHeightOffset: 2.9,     // 기본 2.9mm (upVector 방향 오프셋)

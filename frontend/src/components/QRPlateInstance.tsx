@@ -7,6 +7,7 @@ import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { useDesignStore, type QRPlateConfig } from "../store/useDesignStore";
 import type { VertexGroup } from "../utils/glbLoader";
 import { loadFont, type FontKey } from "../utils/fontLoader";
+import { generateQRString } from "../utils/qrGenerator";
 
 interface QRPlateInstanceProps {
   config: QRPlateConfig;
@@ -47,17 +48,34 @@ export const QRPlateInstance = ({
   const [textGeometry, setTextGeometry] = useState<THREE.BufferGeometry | null>(null);
   const [imageContours, setImageContours] = useState<ImageContours | null>(null);
 
-  // QR Bitmap 생성
+  // QR Bitmap 생성 (타입에 따라 다른 문자열 생성)
   useEffect(() => {
-    if (!config.qrUrl) {
+    // QR 타입에 따라 문자열 생성
+    let qrString = '';
+    try {
+      if (config.qrType === 'url') {
+        qrString = generateQRString('url', config.qrUrl);
+      } else if (config.qrType === 'wifi') {
+        qrString = generateQRString('wifi', config.qrWifiData);
+      } else if (config.qrType === 'email') {
+        qrString = generateQRString('email', config.qrEmailData);
+      }
+    } catch (error) {
+      console.error('QR string generation error:', error);
       setQrBitmap(null);
       return;
     }
 
-    generateQRBitmap(config.qrUrl)
+    // 빈 문자열이면 QR 생성 안 함
+    if (!qrString || qrString.trim() === '') {
+      setQrBitmap(null);
+      return;
+    }
+
+    generateQRBitmap(qrString)
       .then((bitmap) => setQrBitmap(bitmap))
       .catch((err) => console.error("QR bitmap generation error:", err));
-  }, [config.qrUrl]);
+  }, [config.qrType, config.qrUrl, config.qrWifiData, config.qrEmailData]);
 
   // 텍스트 Geometry 생성 (비동기 폰트 로딩)
   useEffect(() => {
