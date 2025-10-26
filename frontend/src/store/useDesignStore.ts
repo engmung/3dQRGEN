@@ -37,6 +37,9 @@ export interface QRPlateConfig {
   plateColor: string;
   qrColor: string; // QR, 텍스트, 이미지 공용
 
+  // 주문 수량
+  quantity: number;
+
   // 3D 씬 내 위치
   positionX: number;
   positionY: number;
@@ -52,15 +55,21 @@ interface DesignStore {
   globalPlateColor: string;
   globalQrColor: string;
 
+  // 3D 씬 배경 색상
+  backgroundColor: string;
+
   // Plate CRUD
   addPlate: () => QRPlateConfig;
   removePlate: (id: string) => void;
+  duplicatePlate: (id: string) => QRPlateConfig | null;
   updatePlate: (id: string, updates: Partial<QRPlateConfig>) => void;
+  updatePlateQuantity: (id: string, quantity: number) => void;
   selectPlate: (id: string | null) => void;
 
   // 전역 색상 설정
   setGlobalPlateColor: (color: string) => void;
   setGlobalQrColor: (color: string) => void;
+  setBackgroundColor: (color: string) => void;
 
   // 선택된 판의 색상 변경 (전역 + 개별)
   updateSelectedPlateColor: (color: string) => void;
@@ -104,6 +113,7 @@ const createDefaultPlate = (
   imageHorizontalOffset: 0, // 기본 0mm
   plateColor,
   qrColor, // QR, 텍스트, 이미지 색상 공용
+  quantity: 1,             // 기본 수량 1개
   // 새 판은 X축으로 간격을 두고 배치
   positionX: index * 120,
   positionY: 0,
@@ -120,14 +130,15 @@ export const useDesignStore = create<DesignStore>((set, get) => {
 
     globalPlateColor: '#ffffff',
     globalQrColor: '#000000',
+    backgroundColor: '#D2B48C',
 
-  // 새 판 추가
+  // 새 판 추가 (기본 색상 사용)
   addPlate: () => {
-    const { plates, globalPlateColor, globalQrColor } = get();
+    const { plates } = get();
     const newPlate = createDefaultPlate(
       crypto.randomUUID(),
-      globalPlateColor,
-      globalQrColor,
+      '#ffffff',  // 기본 흰색
+      '#000000',  // 기본 검정색
       plates.length
     );
     set({ plates: [...plates, newPlate], selectedPlateId: newPlate.id });
@@ -145,11 +156,37 @@ export const useDesignStore = create<DesignStore>((set, get) => {
     set({ plates: filtered, selectedPlateId: newSelectedId });
   },
 
+  // 판 복사
+  duplicatePlate: (id: string) => {
+    const { plates } = get();
+    const original = plates.find(p => p.id === id);
+    if (!original) return null;
+
+    const duplicated: QRPlateConfig = {
+      ...original,
+      id: crypto.randomUUID(),
+      positionX: plates.length * 120,
+    };
+
+    set({ plates: [...plates, duplicated], selectedPlateId: duplicated.id });
+    return duplicated;
+  },
+
   // 판 업데이트
   updatePlate: (id: string, updates: Partial<QRPlateConfig>) => {
     const { plates } = get();
     const updated = plates.map(p =>
       p.id === id ? { ...p, ...updates } : p
+    );
+    set({ plates: updated });
+  },
+
+  // 판 수량 업데이트
+  updatePlateQuantity: (id: string, quantity: number) => {
+    const { plates } = get();
+    const clamped = Math.max(1, Math.min(99, quantity)); // 1~99 제한
+    const updated = plates.map(p =>
+      p.id === id ? { ...p, quantity: clamped } : p
     );
     set({ plates: updated });
   },
@@ -166,6 +203,10 @@ export const useDesignStore = create<DesignStore>((set, get) => {
 
   setGlobalQrColor: (color: string) => {
     set({ globalQrColor: color });
+  },
+
+  setBackgroundColor: (color: string) => {
+    set({ backgroundColor: color });
   },
 
   // 선택된 판의 색상 변경 (전역 + 개별)

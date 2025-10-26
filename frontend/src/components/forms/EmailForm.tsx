@@ -15,10 +15,10 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
       {/* 수신자 입력 */}
       <div>
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
           수신자 (To) *
         </label>
         <input
@@ -29,12 +29,13 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
           style={{
             width: '100%',
             padding: '8px 10px',
-            fontSize: '13px',
+            fontSize: '16px',
             border: '1px solid #ddd',
             borderRadius: '4px',
             outline: 'none',
+            boxSizing: 'border-box',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#4CAF50')}
+          onFocus={(e) => (e.currentTarget.style.borderColor = '#333')}
           onBlur={(e) => (e.currentTarget.style.borderColor = '#ddd')}
         />
         <div style={{ marginTop: '4px', fontSize: '11px', color: '#999' }}>
@@ -44,7 +45,7 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
 
       {/* 제목 입력 */}
       <div>
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
           제목 (Subject)
         </label>
         <input
@@ -55,19 +56,20 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
           style={{
             width: '100%',
             padding: '8px 10px',
-            fontSize: '13px',
+            fontSize: '16px',
             border: '1px solid #ddd',
             borderRadius: '4px',
             outline: 'none',
+            boxSizing: 'border-box',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#4CAF50')}
+          onFocus={(e) => (e.currentTarget.style.borderColor = '#333')}
           onBlur={(e) => (e.currentTarget.style.borderColor = '#ddd')}
         />
       </div>
 
       {/* 본문 입력 */}
       <div>
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
           본문 (Body)
         </label>
         <textarea
@@ -78,14 +80,15 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
           style={{
             width: '100%',
             padding: '8px 10px',
-            fontSize: '13px',
+            fontSize: '16px',
             border: '1px solid #ddd',
             borderRadius: '4px',
             outline: 'none',
             resize: 'vertical',
             fontFamily: 'inherit',
+            boxSizing: 'border-box',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#4CAF50')}
+          onFocus={(e) => (e.currentTarget.style.borderColor = '#333')}
           onBlur={(e) => (e.currentTarget.style.borderColor = '#ddd')}
         />
       </div>

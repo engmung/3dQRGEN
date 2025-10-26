@@ -1,7 +1,78 @@
-import { useDesignStore } from '../store/useDesignStore';
+import { useDesignStore, type QRPlateConfig } from '../store/useDesignStore';
+import { generateQRString } from '../utils/qrGenerator';
+import { generateQRBitmap } from '../utils/qrUtils';
+import { useEffect, useState } from 'react';
 
 interface RightPanelProps {
   onCheckout: () => void;
+}
+
+// QR 미리보기 컴포넌트 (Hook 사용을 위해 분리)
+function QRPreview({ plate }: { plate: QRPlateConfig }) {
+  const [qrBitmap, setQrBitmap] = useState<{ data: boolean[][]; size: number } | null>(null);
+
+  useEffect(() => {
+    // QR 문자열 생성
+    let qrString = '';
+    try {
+      if (plate.qrType === 'url') {
+        qrString = generateQRString('url', plate.qrUrl);
+      } else if (plate.qrType === 'wifi') {
+        qrString = generateQRString('wifi', plate.qrWifiData);
+      } else if (plate.qrType === 'email') {
+        qrString = generateQRString('email', plate.qrEmailData);
+      }
+    } catch (error) {
+      console.error('QR string generation error:', error);
+      return;
+    }
+
+    if (!qrString || qrString.trim() === '') {
+      setQrBitmap(null);
+      return;
+    }
+
+    // QR 비트맵 생성
+    generateQRBitmap(qrString)
+      .then((bitmap) => setQrBitmap(bitmap))
+      .catch((err) => {
+        console.error('QR bitmap generation error:', err);
+        setQrBitmap(null);
+      });
+  }, [plate.qrType, plate.qrUrl, plate.qrWifiData, plate.qrEmailData]);
+
+  return (
+    <div style={{
+      width: '50%',
+      height: '100%',
+      backgroundColor: plate.plateColor,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '0px',
+    }}>
+      {qrBitmap && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${qrBitmap.size}, 1fr)`,
+          gap: '0px',
+          width: '100%',
+          height: '100%',
+        }}>
+          {qrBitmap.data.flat().map((filled, idx) => (
+            <div
+              key={idx}
+              style={{
+                backgroundColor: filled ? plate.qrColor : plate.plateColor,
+                width: '100%',
+                height: '100%',
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function RightPanel({ onCheckout }: RightPanelProps) {
@@ -9,66 +80,182 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
   const selectPlate = useDesignStore((state) => state.selectPlate);
   const addPlate = useDesignStore((state) => state.addPlate);
+  const removePlate = useDesignStore((state) => state.removePlate);
+  const duplicatePlate = useDesignStore((state) => state.duplicatePlate);
+  const updatePlateQuantity = useDesignStore((state) => state.updatePlateQuantity);
+
+  // 전체 수량 계산
+  const totalQuantity = plates.reduce((sum, plate) => sum + plate.quantity, 0);
 
   const cardStyle = (isSelected: boolean) => ({
     width: '100%',
-    aspectRatio: '1',
+    aspectRatio: '2 / 1',
     backgroundColor: isSelected ? '#fff' : '#f5f5f5',
-    border: isSelected ? '3px solid #4A90E2' : '2px solid #ddd',
-    borderRadius: '8px',
+    border: isSelected ? '3px solid #333' : '2px solid #e5e0db',
+    borderRadius: '0',
     cursor: 'pointer',
     overflow: 'hidden',
     transition: 'all 0.2s',
-    boxShadow: isSelected ? '0 4px 12px rgba(74, 144, 226, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.1)',
+    boxShadow: isSelected ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.1)',
     display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
     position: 'relative' as const,
   });
 
   const addButtonStyle = {
     width: '100%',
-    aspectRatio: '1',
+    aspectRatio: '2 / 1',
     backgroundColor: '#fafafa',
     border: '2px dashed #ccc',
-    borderRadius: '8px',
+    borderRadius: '0',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '48px',
+    fontSize: '40px',
     color: '#999',
     transition: 'all 0.2s',
   };
 
-  // 썸네일 생성 (임시: 색상 조합으로 표시)
-  const renderThumbnail = (plate: typeof plates[0]) => {
+  // 우측 컨트롤 영역 (50%)
+  const renderControls = (plate: typeof plates[0]) => {
     return (
       <div style={{
-        width: '100%',
+        width: '50%',
         height: '100%',
         display: 'flex',
+        flexDirection: 'column',
       }}>
+        {/* 상단: 수량 조절 */}
         <div style={{
-          flex: 1,
-          backgroundColor: plate.plateColor,
-        }} />
+          height: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '4px',
+          padding: '4px',
+        }}>
+          <span style={{ fontSize: '16px', fontWeight: 600, marginRight: '2px' }}>수량:</span>
+          <span style={{ fontSize: '24px', fontWeight: 700, marginRight: '4px' }}>
+            {plate.quantity}
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              updatePlateQuantity(plate.id, plate.quantity - 1);
+            }}
+            style={{
+              width: '26px',
+              height: '26px',
+              border: '1px solid #ccc',
+              borderRadius: '0',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              fontSize: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0',
+            }}
+          >
+            −
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              updatePlateQuantity(plate.id, plate.quantity + 1);
+            }}
+            style={{
+              width: '26px',
+              height: '26px',
+              border: '1px solid #ccc',
+              borderRadius: '0',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              fontSize: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0',
+            }}
+          >
+            +
+          </button>
+        </div>
+
+        {/* 하단: 복사/삭제 버튼 */}
         <div style={{
-          flex: 1,
-          backgroundColor: plate.qrColor,
-        }} />
+          height: '50%',
+          display: 'flex',
+          gap: '0',
+        }}>
+          {/* 좌측: 복사 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const duplicated = duplicatePlate(plate.id);
+              if (duplicated) selectPlate(duplicated.id);
+            }}
+            style={{
+              flex: 1,
+              border: 'none',
+              borderRadius: '0',
+              backgroundColor: '#4A90E2',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3A7BC8'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4A90E2'}
+          >
+            복사
+          </button>
+
+          {/* 우측: 삭제 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              removePlate(plate.id);
+            }}
+            style={{
+              flex: 1,
+              border: 'none',
+              borderRadius: '0',
+              backgroundColor: '#FF6B6B',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FF5252'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FF6B6B'}
+          >
+            삭제
+          </button>
+        </div>
       </div>
     );
   };
 
   return (
     <div style={{
-      width: '15%',
-      height: 'calc(100vh - 60px)',
+      width: '17%',
+      height: 'calc(100vh - 50px)',
       backgroundColor: '#fff',
-      borderLeft: '1px solid #ddd',
+      borderLeft: '1px solid #e5e0db',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
@@ -76,63 +263,58 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
       {/* 상단: 타이틀 */}
       <div style={{
         padding: '15px',
-        borderBottom: '1px solid #ddd',
-        fontWeight: 'bold',
-        fontSize: '16px',
-        backgroundColor: '#fafafa'
+        borderBottom: '1px solid #e5e0db',
+        fontWeight: 600,
+        fontSize: '18px',
+        backgroundColor: '#f5f3f0'
       }}>
-        QR 판 목록
+        장바구니
       </div>
 
       {/* 중앙: 카드 리스트 */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '15px',
+        overflowX: 'hidden',
+        padding: '10px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '15px'
+        gap: '10px'
       }}>
         {plates.map((plate) => (
-          <div
-            key={plate.id}
-            style={cardStyle(plate.id === selectedPlateId)}
-            onClick={() => selectPlate(plate.id)}
-            onMouseOver={(e) => {
-              if (plate.id !== selectedPlateId) {
-                e.currentTarget.style.borderColor = '#4A90E2';
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (plate.id !== selectedPlateId) {
-                e.currentTarget.style.borderColor = '#ddd';
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-              }
-            }}
-          >
-            {renderThumbnail(plate)}
+          <div key={plate.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {/* 카드 */}
+            <div
+              style={cardStyle(plate.id === selectedPlateId)}
+              onClick={() => selectPlate(plate.id)}
+              onMouseOver={(e) => {
+                if (plate.id !== selectedPlateId) {
+                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (plate.id !== selectedPlateId) {
+                  e.currentTarget.style.borderColor = '#e5e0db';
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                }
+              }}
+            >
+              <QRPreview plate={plate} />
+              {renderControls(plate)}
+            </div>
 
-            {/* 선택 표시 */}
-            {plate.id === selectedPlateId && (
-              <div style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                backgroundColor: '#4A90E2',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                fontWeight: 'bold'
-              }}>
-                ✓
-              </div>
-            )}
+            {/* 가격 표시 (카드 바깥 아래) */}
+            <div style={{
+              fontSize: '18px',
+              fontWeight: 600,
+              color: '#666',
+              textAlign: 'left',
+              padding: '2px 0',
+              paddingLeft: '4px',
+            }}>
+              가격: ₩0
+            </div>
           </div>
         ))}
 
@@ -155,14 +337,14 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
           }}
         >
           <div>+</div>
-          <div style={{ fontSize: '12px', marginTop: '8px' }}>새 QR 판</div>
+          <div style={{ fontSize: '14px', fontWeight: 400, marginTop: '4px' }}>새 QR 판</div>
         </div>
       </div>
 
       {/* 하단: 주문하기 버튼 */}
       <div style={{
-        padding: '15px',
-        borderTop: '1px solid #ddd'
+        padding: '8px',
+        borderTop: '1px solid #e5e0db'
       }}>
         <button
           onClick={onCheckout}
@@ -175,8 +357,8 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
             border: 'none',
             borderRadius: '8px',
             cursor: plates.length === 0 ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
+            fontSize: '18px',
+            fontWeight: 700,
             transition: 'all 0.2s'
           }}
           onMouseOver={(e) => {
@@ -190,7 +372,7 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
             }
           }}
         >
-          주문하기 ({plates.length})
+          주문하기 (총 {totalQuantity}개)
         </button>
       </div>
     </div>

@@ -18,7 +18,7 @@ export function WiFiForm({ data, onChange }: WiFiFormProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {/* SSID 입력 */}
       <div>
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
           네트워크 이름 (SSID) *
         </label>
         <input
@@ -29,19 +29,20 @@ export function WiFiForm({ data, onChange }: WiFiFormProps) {
           style={{
             width: '100%',
             padding: '8px 10px',
-            fontSize: '13px',
+            fontSize: '16px',
             border: '1px solid #ddd',
             borderRadius: '4px',
             outline: 'none',
+            boxSizing: 'border-box',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#4CAF50')}
+          onFocus={(e) => (e.currentTarget.style.borderColor = '#333')}
           onBlur={(e) => (e.currentTarget.style.borderColor = '#ddd')}
         />
       </div>
 
       {/* 보안 타입 선택 */}
       <div>
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
           보안 타입 *
         </label>
         <select
@@ -50,13 +51,14 @@ export function WiFiForm({ data, onChange }: WiFiFormProps) {
           style={{
             width: '100%',
             padding: '8px 10px',
-            fontSize: '13px',
+            fontSize: '16px',
             border: '1px solid #ddd',
             borderRadius: '4px',
             outline: 'none',
             backgroundColor: '#fff',
+            boxSizing: 'border-box',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#4CAF50')}
+          onFocus={(e) => (e.currentTarget.style.borderColor = '#333')}
           onBlur={(e) => (e.currentTarget.style.borderColor = '#ddd')}
         >
           <option value="WPA">WPA / WPA2</option>
@@ -68,7 +70,7 @@ export function WiFiForm({ data, onChange }: WiFiFormProps) {
       {/* 비밀번호 입력 (보안 타입이 'nopass'가 아닐 때만 표시) */}
       {data.security !== 'nopass' && (
         <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
             비밀번호 *
           </label>
           <input
@@ -79,10 +81,11 @@ export function WiFiForm({ data, onChange }: WiFiFormProps) {
             style={{
               width: '100%',
               padding: '8px 10px',
-              fontSize: '13px',
+              fontSize: '16px',
               border: '1px solid #ddd',
               borderRadius: '4px',
               outline: 'none',
+              boxSizing: 'border-box',
             }}
             onFocus={(e) => (e.currentTarget.style.borderColor = '#4CAF50')}
             onBlur={(e) => (e.currentTarget.style.borderColor = '#ddd')}
