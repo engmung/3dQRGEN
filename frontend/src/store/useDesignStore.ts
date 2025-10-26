@@ -53,7 +53,7 @@ interface DesignStore {
   globalQrColor: string;
 
   // Plate CRUD
-  addPlate: () => void;
+  addPlate: () => QRPlateConfig;
   removePlate: (id: string) => void;
   updatePlate: (id: string, updates: Partial<QRPlateConfig>) => void;
   selectPlate: (id: string | null) => void;
@@ -91,7 +91,7 @@ const createDefaultPlate = (
   // QR 공통 설정
   qrSize: 50,              // 기본 50mm
   qrThickness: 2,          // 기본 2mm
-  qrHeightOffset: 2.9,     // 기본 2.9mm (upVector 방향 오프셋)
+  qrHeightOffset: 0,       // 기본 0mm (upVector 방향 오프셋, GLB 표면에 맞춤)
   qrHorizontalOffset: 0,   // 기본 0mm (rightVector 방향 오프셋)
   text: '',                // 기본 빈 텍스트
   textFont: 'Pretendard-Regular', // 기본 폰트
@@ -131,6 +131,7 @@ export const useDesignStore = create<DesignStore>((set, get) => {
       plates.length
     );
     set({ plates: [...plates, newPlate], selectedPlateId: newPlate.id });
+    return newPlate;
   },
 
   // 판 삭제
