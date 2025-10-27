@@ -219,26 +219,64 @@ async def get_date_orders(
 ):
     """
     특정 날짜의 주문 목록 조회 (관리자 전용)
+    LineItem 기준으로 날짜 필터링
     """
-    target_date = date.fromisoformat(schedule_date)
+    from app.models.order_line_item import OrderLineItem
+    from collections import defaultdict
 
-    orders = db.query(OrderGroup).filter(
-        OrderGroup.production_date == target_date
+    target_date = date.fromisoformat(schedule_date)
+    target_date_str = target_date.isoformat()
+
+    # 🔥 production_dates JSON에서 해당 날짜 포함된 LineItem 조회
+    # Python에서 필터링 (SQLite JSON 쿼리보다 안전)
+    all_line_items = db.query(OrderLineItem).filter(
+        OrderLineItem.production_dates.isnot(None)
     ).all()
 
+    # 해당 날짜가 포함된 LineItem만 필터링
+    line_items = [
+        item for item in all_line_items
+        if item.production_dates and target_date_str in item.production_dates
+    ]
+
+    # OrderGroup별로 집계
+    order_map = defaultdict(lambda: {"line_items": [], "total_qty": 0})
+
+    for item in line_items:
+        order_group = item.order_group
+        quantity_for_this_date = item.production_dates.get(target_date_str, 0)
+
+        order_map[order_group.group_uuid]["order_group"] = order_group
+        order_map[order_group.group_uuid]["line_items"].append({
+            "line_item_uuid": item.line_item_uuid,
+            "product_sku": item.product_sku,
+            "quantity": item.quantity,  # 전체 수량
+            "quantity_for_this_date": quantity_for_this_date,  # 🔥 이 날짜 수량
+            "production_dates": item.production_dates,  # 🔥 전체 배분 정보
+            "qr_url": item.qr_url,
+            "obj_file_path": item.obj_file_path,
+            "mtl_file_path": item.mtl_file_path
+        })
+        order_map[order_group.group_uuid]["total_qty"] += quantity_for_this_date
+
+    # 결과 생성
     result = []
-    for order in orders:
-        total_quantity = sum(item.quantity for item in order.line_items)
+    for group_uuid, data in order_map.items():
+        order_group = data["order_group"]
         result.append({
-            "group_uuid": order.group_uuid,
-            "customer_name": order.customer_name,
-            "total_quantity": total_quantity,
-            "status": order.status,
-            "created_at": order.created_at.isoformat() if order.created_at else None
+            "group_uuid": group_uuid,
+            "customer_name": order_group.customer_name,
+            "customer_phone": order_group.customer_phone,
+            "customer_address": order_group.customer_address,
+            "total_quantity": data["total_qty"],  # 이 날짜의 제품 수량
+            "line_items": data["line_items"],  # 이 날짜의 제품 목록
+            "status": order_group.status,
+            "created_at": order_group.created_at.isoformat() if order_group.created_at else None
         })
 
     return {
         "date": schedule_date,
         "total_orders": len(result),
+        "total_quantity": sum(r["total_quantity"] for r in result),
         "orders": result
     }

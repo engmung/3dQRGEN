@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { fetchAvailableDates, type ProductionScheduleDate } from '../utils/api';
 
 interface CustomerCalendarProps {
-  selectedDate: string | null;
-  onDateChange: (date: string) => void;
-  totalQuantity: number; // 주문하려는 총 제품 개수
+  totalQuantity: number; // 주문하려는 총 제품 개수 (표시용)
+  readOnly?: boolean; // 읽기 전용 모드 (선택 불가)
 }
 
-export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: CustomerCalendarProps) {
+export function CustomerCalendar({ totalQuantity, readOnly = true }: CustomerCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [schedules, setSchedules] = useState<ProductionScheduleDate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,14 +22,6 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
       const data = await fetchAvailableDates();
       setSchedules(data);
       setLoading(false);
-
-      // 자동 선택: 용량이 충분한 첫 번째 날짜 선택
-      if (!selectedDate) {
-        const suitable = data.find(d => d.available_slots >= totalQuantity);
-        if (suitable) {
-          onDateChange(suitable.date);
-        }
-      }
     } catch (err: any) {
       console.error('Failed to load available dates:', err);
       setError(err.message);
@@ -47,16 +38,10 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  // 날짜 클릭 핸들러
+  // 읽기 전용 모드에서는 날짜 클릭 불가
   const handleDateClick = (dateStr: string) => {
-    const schedule = schedules.find(s => s.date === dateStr);
-
-    // 클릭 가능 여부 확인
-    if (!schedule) return; // 데이터 없음
-    if (!schedule.is_available) return; // 주문 불가
-    if (schedule.available_slots < totalQuantity) return; // 용량 부족
-
-    onDateChange(dateStr);
+    // 읽기 전용 모드 - 아무 동작 안 함
+    return;
   };
 
   // 캘린더 렌더링
@@ -81,53 +66,42 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
       const today = new Date().toISOString().split('T')[0];
       const isToday = dateStr === today;
       const isPast = dateStr < today;
-      const isSelected = dateStr === selectedDate;
 
       let bgColor = '#fff';
       let textColor = '#333';
       let cursor = 'default';
-      let clickable = false;
+      let badge = '';  // 뱃지 텍스트
 
       if (schedule) {
         if (!schedule.is_available) {
           // 주문 불가
-          bgColor = '#9e9e9e';
-          textColor = '#fff';
-          cursor = 'not-allowed';
-        } else if (schedule.available_slots < totalQuantity) {
-          // 용량 부족 (빨강, 클릭 불가)
+          bgColor = '#e0e0e0';
+          textColor = '#999';
+        } else if (schedule.available_slots === 0) {
+          // 마감
           bgColor = '#ef5350';
           textColor = '#fff';
-          cursor = 'not-allowed';
+          badge = '🔥 마감';
+        } else if (schedule.available_slots <= 2) {
+          // 마감 임박
+          bgColor = '#ffeb3b';
+          textColor = '#333';
+          badge = '⚡ 마감임박';
         } else {
-          // 선택 가능
-          clickable = true;
-          cursor = 'pointer';
-          const ratio = schedule.reserved_quantity / schedule.max_capacity;
-          if (ratio >= 0.8) {
-            bgColor = '#ffeb3b'; // 노랑 (거의 마감)
-            textColor = '#333';
-          } else if (ratio >= 0.5) {
-            bgColor = '#fff9c4'; // 연한 노랑
-            textColor = '#333';
-          } else {
-            bgColor = '#66bb6a'; // 초록 (여유)
-            textColor = '#fff';
-          }
+          // 예약 가능
+          bgColor = '#66bb6a';
+          textColor = '#fff';
         }
       } else if (isPast) {
         bgColor = '#f5f5f5';
         textColor = '#999';
-        cursor = 'not-allowed';
       }
 
-      // 선택된 날짜는 파란 테두리
-      const border = isSelected ? '3px solid #2196F3' : '1px solid #e0e0e0';
+      const border = '1px solid #e0e0e0';
 
       days.push(
         <td
           key={day}
-          onClick={() => clickable && handleDateClick(dateStr)}
           style={{
             padding: '8px',
             border,
@@ -140,28 +114,20 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
             minHeight: '60px',
             position: 'relative',
             fontWeight: isToday ? 'bold' : 'normal',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (clickable) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (clickable) {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
-            }
           }}
         >
           <div style={{ fontSize: '16px', marginBottom: '4px' }}>
             {day}
             {isToday && <span style={{ fontSize: '10px', marginLeft: '2px' }}>📍</span>}
           </div>
-          {schedule && (
+          {badge && (
+            <div style={{ fontSize: '10px', fontWeight: 'bold' }}>
+              {badge}
+            </div>
+          )}
+          {schedule && schedule.is_available && !badge && (
             <div style={{ fontSize: '10px' }}>
-              남은: {schedule.available_slots}개
+              {schedule.available_slots}자리
             </div>
           )}
         </td>
@@ -201,25 +167,29 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
     );
   }
 
-  // 선택된 날짜 정보
-  const selectedSchedule = schedules.find(s => s.date === selectedDate);
-
   return (
     <div>
       {/* 헤더 */}
       <div style={{ marginBottom: '15px' }}>
         <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333', fontWeight: 'bold' }}>
-          생산 희망일 선택 *
+          📅 현재 예약 현황
         </h3>
-        <div style={{ fontSize: '13px', color: '#666' }}>
-          총 주문 수량: <strong style={{ color: '#2196F3', fontSize: '15px' }}>{totalQuantity}개</strong>
+        <div style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>
+          주문 수량: <strong style={{ color: '#2196F3', fontSize: '15px' }}>{totalQuantity}개</strong>
+        </div>
+        <div style={{ fontSize: '12px', color: '#888', backgroundColor: '#f0f8ff', padding: '8px', borderRadius: '4px', border: '1px solid #d0e8ff' }}>
+          💡 주문하시면 가능한 가장 빠른 날짜부터 자동으로 배정됩니다.
         </div>
       </div>
 
       {/* 월 이동 버튼 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <button
-          onClick={goToPrevMonth}
+          onClick={(e) => {
+            e.preventDefault();
+            goToPrevMonth();
+          }}
+          type="button"
           style={{
             padding: '8px 16px',
             backgroundColor: '#2196F3',
@@ -231,13 +201,17 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
             fontWeight: 'bold',
           }}
         >
-          ← 이전 달
+          ← 이전달
         </button>
         <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#333' }}>
           {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
         </h4>
         <button
-          onClick={goToNextMonth}
+          onClick={(e) => {
+            e.preventDefault();
+            goToNextMonth();
+          }}
+          type="button"
           style={{
             padding: '8px 16px',
             backgroundColor: '#2196F3',
@@ -249,7 +223,7 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
             fontWeight: 'bold',
           }}
         >
-          다음 달 →
+          다음달 →
         </button>
       </div>
 
@@ -257,19 +231,11 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '15px', fontSize: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <div style={{ width: '20px', height: '20px', backgroundColor: '#66bb6a', border: '1px solid #ccc' }}></div>
-          <span>여유</span>
+          <span>선택 가능</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '20px', height: '20px', backgroundColor: '#ffeb3b', border: '1px solid #ccc' }}></div>
-          <span>보통</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '20px', height: '20px', backgroundColor: '#ef5350', border: '1px solid #ccc' }}></div>
-          <span>용량부족</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '20px', height: '20px', backgroundColor: '#9e9e9e', border: '1px solid #ccc' }}></div>
-          <span>주문불가</span>
+          <div style={{ width: '20px', height: '20px', backgroundColor: '#e0e0e0', border: '1px solid #ccc' }}></div>
+          <span>선택 불가</span>
         </div>
       </div>
 
@@ -294,50 +260,6 @@ export function CustomerCalendar({ selectedDate, onDateChange, totalQuantity }: 
         <tbody>{renderCalendar()}</tbody>
       </table>
 
-      {/* 선택된 날짜 정보 */}
-      {selectedDate && selectedSchedule && (
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#e3f5ff',
-          borderRadius: '8px',
-          border: '2px solid #2196F3',
-        }}>
-          <div style={{ fontSize: '14px', color: '#333', marginBottom: '8px' }}>
-            <strong>✅ 선택한 날짜:</strong>
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#2196F3', marginBottom: '8px' }}>
-            {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              weekday: 'short'
-            })}
-          </div>
-          <div style={{ fontSize: '13px', color: '#666' }}>
-            이 날짜의 남은 생산 슬롯: <strong style={{ color: '#4CAF50' }}>{selectedSchedule.available_slots}개</strong>
-          </div>
-          <div style={{ fontSize: '12px', color: '#888', marginTop: '8px', borderTop: '1px solid #ccc', paddingTop: '8px' }}>
-            💡 생산 완료 후 배송이 시작됩니다. (생산 1-2일 소요)
-          </div>
-        </div>
-      )}
-
-      {/* 선택 가능한 날짜 없음 */}
-      {schedules.length > 0 && !schedules.some(s => s.is_available && s.available_slots >= totalQuantity) && (
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#fff3cd',
-          borderRadius: '8px',
-          border: '2px solid #ffc107',
-          color: '#856404',
-        }}>
-          <strong>⚠️ 선택 가능한 날짜가 없습니다</strong>
-          <div style={{ fontSize: '13px', marginTop: '8px' }}>
-            현재 주문 수량({totalQuantity}개)을 생산할 수 있는 날짜가 없습니다.<br />
-            관리자에게 문의해주세요.
-          </div>
-        </div>
-      )}
     </div>
   );
 }

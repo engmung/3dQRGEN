@@ -32,8 +32,8 @@ class OrderGroup(Base):
     customer_address = Column(Text)
     delivery_message = Column(Text)
 
-    # Production Schedule
-    production_date = Column(Date, nullable=True, index=True)  # 선택한 생산일
+    # Production Schedule (DEPRECATED - LineItem별로 이동됨)
+    production_date = Column(Date, nullable=True, index=True)  # 하위호환용 (사용 안 함)
 
     # Payment & Status
     status = Column(String(20), default="pending")  # pending, paid, processing, shipped, completed, cancelled

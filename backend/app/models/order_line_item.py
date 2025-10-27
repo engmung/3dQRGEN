@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, Date, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone, timedelta
 from app.database import Base
@@ -35,6 +35,10 @@ class OrderLineItem(Base):
     quantity = Column(Integer, nullable=False, default=1)  # 🔥 진짜 수량!
     unit_price = Column(Float, nullable=False)  # 개당 가격
     total_price = Column(Float, nullable=False)  # unit_price * quantity
+
+    # Production Schedule (제품별 날짜)
+    production_date = Column(Date, nullable=True, index=True)  # DEPRECATED (하위 호환용)
+    production_dates = Column(JSON, nullable=True)  # 🔥 신규! {"2025-11-01": 3, "2025-11-02": 2}
 
     # Files
     obj_file_path = Column(String(255))  # /storage/order_groups/{group_uuid}/{line_item_uuid}/model.obj

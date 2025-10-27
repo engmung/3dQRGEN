@@ -11,7 +11,7 @@ export interface AddressFormData {
   address: string;
   detailAddress: string;
   deliveryMessage: string;
-  productionDate: string; // 생산일 추가
+  // productionDate 제거됨 (서버가 자동 배분)
 }
 
 interface AddressFormProps {
@@ -51,7 +51,6 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     address: savedData.address || initialData.address || '',
     detailAddress: savedData.detailAddress || initialData.detailAddress || '',
     deliveryMessage: savedData.deliveryMessage || initialData.deliveryMessage || '',
-    productionDate: '', // 초기값은 빈 문자열, DateSelector가 자동 선택
   });
 
   // formData 변경 시 localStorage에 자동 저장 (이메일 제외)
@@ -106,10 +105,6 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     }
     if (!formData.customerPhone.trim()) {
       alert('전화번호를 입력해주세요.');
-      return;
-    }
-    if (!formData.productionDate) {
-      alert('생산 희망일을 선택해주세요.');
       return;
     }
     if (!formData.postalCode.trim()) {
@@ -298,12 +293,11 @@ export const AddressForm: React.FC<AddressFormProps> = ({
           </div>
             </div>
 
-            {/* 우측: 캘린더 날짜 선택 */}
+            {/* 우측: 캘린더 (읽기 전용) */}
             <div>
               <CustomerCalendar
-                selectedDate={formData.productionDate}
-                onDateChange={(date) => setFormData({ ...formData, productionDate: date })}
                 totalQuantity={totalQuantity}
+                readOnly={true}
               />
             </div>
           </div>

@@ -86,17 +86,22 @@ def get_order_stl_path(order_uuid: str) -> str:
 async def save_order_group_files(
     group_uuid: str,
     line_item_uuid: str,
-    customer_email: str,
+    customer_name: str,
+    product_index: int,
+    quantity: int,
     obj_file: UploadFile,
     mtl_file: UploadFile
 ) -> tuple[str, str]:
     """
     Order Group의 Line Item 파일 저장 (OBJ + MTL)
+    파일명: {고객명}_제품{번호}(x{수량})_{주문시간}.obj/mtl
 
     Args:
         group_uuid: 주문 그룹 UUID
         line_item_uuid: 라인 아이템 UUID
-        customer_email: 고객 이메일
+        customer_name: 고객명
+        product_index: 제품 번호 (1부터 시작)
+        quantity: 수량
         obj_file: 업로드된 OBJ 파일
         mtl_file: 업로드된 MTL 파일
 
@@ -107,9 +112,17 @@ async def save_order_group_files(
     group_dir = os.path.join(settings.storage_path, "order_groups", group_uuid, line_item_uuid)
     os.makedirs(group_dir, exist_ok=True)
 
-    # 파일명: model.obj, model.mtl (간단하게)
-    obj_path = os.path.join(group_dir, "model.obj")
-    mtl_path = os.path.join(group_dir, "model.mtl")
+    # 주문 시간 포맷 (YYYY-MM-DD_HH-MM)
+    order_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
+
+    # 고객명 (파일명에 안전한 문자로 변환)
+    safe_customer_name = customer_name.replace(" ", "_").replace("/", "-").replace("\\", "-")
+
+    # 파일명: {고객명}_제품{번호}(x{수량})_{주문시간}
+    base_filename = f"{safe_customer_name}_제품{product_index}(x{quantity})_{order_time}"
+
+    obj_path = os.path.join(group_dir, f"{base_filename}.obj")
+    mtl_path = os.path.join(group_dir, f"{base_filename}.mtl")
 
     # OBJ 파일 저장
     async with aiofiles.open(obj_path, "wb") as f:

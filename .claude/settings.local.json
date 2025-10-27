@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n[주문 시스템] 생산 일정 관리 및 주문 UI 대개편\n\n## Backend (생산 일정 시스템)\n- ProductionSchedule 모델 추가: 날짜별 생산 용량 관리\n- OrderGroup에 production_date 필드 추가\n- 생산 일정 CRUD API 구현 (/api/production-schedule)\n- 주문 생성 시 생산 용량 검증 및 예약량 자동 관리\n- Row-level locking으로 동시성 문제 해결\n- DB 초기화: 60일 일정 자동 생성 (기본 닫힘)\n\n## Frontend (주문 UI 대개편)\n### 새 컴포넌트\n- CustomerCalendar: 고객용 캘린더 날짜 선택기\n  - 색상 코딩 (초록/노랑/빨강/회색)\n  - 용량 부족 날짜 자동 필터링\n  - 남은 슬롯 표시\n- ProductionCalendar: 관리자용 일정 관리 캘린더\n\n### UI 개선\n- OrderModal: 흰 배경 + 검정 글자로 가독성 향상\n- AddressForm: 좌우 2단 레이아웃 (정보 입력 | 캘린더)\n- 스크롤 문제 수정 (overflow 처리)\n- 모달 너비 확장 (600px → 1200px)\n\n### 버그 수정\n- CartItem에 quantity 필드 추가\n- Home.tsx에서 OrderModal에 quantity 전달 누락 수정\n- fetchWithRetry 호출 방식 수정 (화살표 함수로 전달)\n- Admin 페이지 스크롤 활성화\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(cat:*)",
+      "Bash(powershell:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
