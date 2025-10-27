@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react';
 import { AddressForm, type AddressFormData } from './AddressForm';
 import type { CartItem } from '../store/useCartStore';
-import { getPricingSettings, calculatePlatePrice, formatPrice, type PricingSettings } from '../utils/pricing';
+import { getPricingSettings, calculatePlatePrice, formatPrice } from '../utils/pricing';
+import { getQRTypeLabel } from '../utils/qrHelpers';
+import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
+import { COLORS } from '../styles/colors';
+
+interface PricingSettings {
+  base_price: number;
+  text_price: number;
+  image_price: number;
+}
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -38,20 +47,6 @@ export const OrderModal = ({
   // 총 제품 개수 계산 (quantity 합계)
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // QR 타입 라벨
-  const getQRTypeLabel = (qrType: string) => {
-    switch (qrType) {
-      case 'url':
-        return 'URL';
-      case 'wifi':
-        return 'WiFi';
-      case 'email':
-        return 'Email';
-      default:
-        return qrType;
-    }
-  };
-
   // 주문 제출
   const handleSubmit = async (addressData: AddressFormData) => {
     if (isSubmitting) return;
@@ -69,37 +64,21 @@ export const OrderModal = ({
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000,
-        overflow: 'auto',
-      }}
-      onClick={onClose}
-    >
+    <div style={MODAL_OVERLAY} onClick={onClose}>
       <div
-        onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: '#ffffff',
+          ...MODAL_CONTENT_LARGE,
+          backgroundColor: COLORS.background.white,
+          color: COLORS.text.primary,
           borderRadius: '12px',
-          maxWidth: '1200px',
-          width: '95%',
           maxHeight: '95vh',
           overflowY: 'auto',
           overflowX: 'hidden',
-          color: '#333',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
           display: 'flex',
           flexDirection: 'column',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* 주문 요약 섹션 */}
         <div

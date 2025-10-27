@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCartStore } from '../store/useCartStore';
+import { getQRTypeLabel } from '../utils/qrHelpers';
 
 interface CartPanelProps {
   onCheckout: () => void;  // 주문하기 버튼 클릭 시 호출
@@ -10,15 +11,6 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
   const items = useCartStore((state) => state.items);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const clearCart = useCartStore((state) => state.clearCart);
-
-  const getQRTypeLabel = (qrType: string) => {
-    switch (qrType) {
-      case 'url': return 'URL';
-      case 'wifi': return 'WiFi';
-      case 'email': return 'Email';
-      default: return qrType;
-    }
-  };
 
   return (
     <>

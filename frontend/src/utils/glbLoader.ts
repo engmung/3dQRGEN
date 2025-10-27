@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
+// Region cache to avoid re-parsing GLB files
+const regionCache = new Map<string, GLBRegions>();
+
 export interface VertexGroup {
   vertices: THREE.Vector3[];      // 모든 vertex 위치
   center: THREE.Vector3;          // 중심점
@@ -168,6 +171,18 @@ function extractVertexGroup(
  * @returns Promise<GLBRegions>
  */
 export function loadGLBRegions(glbPath: string): Promise<GLBRegions> {
+  // Check cache first
+  if (regionCache.has(glbPath)) {
+    if (import.meta.env.DEV) {
+      console.log(`✅ [GLB Cache] Using cached regions for ${glbPath}`);
+    }
+    return Promise.resolve(regionCache.get(glbPath)!);
+  }
+
+  if (import.meta.env.DEV) {
+    console.log(`📦 [GLB Load] Loading regions from ${glbPath}`);
+  }
+
   return new Promise((resolve, reject) => {
     const loader = new GLTFLoader();
 
@@ -211,6 +226,13 @@ export function loadGLBRegions(glbPath: string): Promise<GLBRegions> {
           QR: extractVertexGroup(positions, normals, colors, 1),   // G channel
           IMAGE: extractVertexGroup(positions, normals, colors, 2), // B channel
         };
+
+        // Cache before returning
+        regionCache.set(glbPath, regions);
+
+        if (import.meta.env.DEV) {
+          console.log(`💾 [GLB Cache] Cached regions for ${glbPath}`);
+        }
 
         resolve(regions);
       },

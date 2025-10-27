@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { fetchMyOrderGroups, cancelOrderGroup, type OrderGroupDetail } from '../utils/api';
 import { formatPrice } from '../utils/pricing';
+import { getStatusText, getStatusColor } from '../utils/orderHelpers';
+import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
 
 export const MyOrders = () => {
   const { getToken } = useAuth();
@@ -43,26 +45,6 @@ export const MyOrders = () => {
     } catch (err: any) {
       alert(err.message || '주문 취소에 실패했습니다.');
     }
-  };
-
-  const getStatusText = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      pending: '입금 대기',
-      paid: '입금 완료',
-      completed: '배송 완료',
-      failed: '취소됨',
-    };
-    return statusMap[status] || status;
-  };
-
-  const getStatusColor = (status: string) => {
-    const colorMap: { [key: string]: string } = {
-      pending: '#ffc107',
-      paid: '#28a745',
-      completed: '#007bff',
-      failed: '#dc3545',
-    };
-    return colorMap[status] || '#6c757d';
   };
 
   if (loading) {
@@ -225,30 +207,11 @@ export const MyOrders = () => {
       {/* 주문 상세 모달 */}
       {selectedOrderGroup && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
+          style={MODAL_OVERLAY}
           onClick={() => setSelectedOrderGroup(null)}
         >
           <div
-            style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '8px',
-              maxWidth: '800px',
-              width: '90%',
-              maxHeight: '90vh',
-              overflow: 'auto',
-            }}
+            style={MODAL_CONTENT_LARGE}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 style={{ marginTop: 0, marginBottom: '20px' }}>주문 상세 정보</h2>
