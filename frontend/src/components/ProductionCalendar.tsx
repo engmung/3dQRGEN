@@ -22,10 +22,15 @@ export function ProductionCalendar({ onReload }: ProductionCalendarProps) {
       const token = await getToken();
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
+      // Timezone-safe date formatting
+      const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
+      console.log(`📅 [ProductionCalendar] Loading schedules: ${startDate} ~ ${endDate}`);
       const data = await fetchAllProductionSchedule(token, startDate, endDate);
+      console.log(`📅 [ProductionCalendar] Loaded ${data.length} schedules:`, data.map(d => `${d.date}(${d.is_available})`));
       setSchedules(data);
       setLoading(false);
     } catch (err) {
@@ -91,16 +96,25 @@ export function ProductionCalendar({ onReload }: ProductionCalendarProps) {
     try {
       const token = await getToken();
 
-      if (selectedDate.id === 0) {
+      // 먼저 해당 날짜가 DB에 존재하는지 확인
+      const allSchedules = await fetchAllProductionSchedule(
+        token,
+        selectedDate.date,
+        selectedDate.date
+      );
+      const existingSchedule = allSchedules.find(s => s.date === selectedDate.date);
+
+      // 존재 여부에 따라 POST/PATCH 결정
+      if (existingSchedule) {
+        // 수정
+        await updateProductionDate(selectedDate.date, editData, token);
+      } else {
         // 새로 생성
         await createProductionDate({
           date: selectedDate.date,
           max_capacity: editData.max_capacity,
           is_available: editData.is_available
         }, token);
-      } else {
-        // 수정
-        await updateProductionDate(selectedDate.date, editData, token);
       }
 
       alert('저장되었습니다.');
@@ -349,18 +363,96 @@ export function ProductionCalendar({ onReload }: ProductionCalendarProps) {
             {/* 주문 목록 */}
             {dateOrders && dateOrders.orders.length > 0 && (
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-                <h4 style={{ marginTop: 0, marginBottom: '10px' }}>이 날짜의 주문 ({dateOrders.total_orders}건)</h4>
+                <h4 style={{ marginTop: 0, marginBottom: '10px' }}>
+                  이 날짜의 주문 ({dateOrders.total_orders}건, 총 {dateOrders.total_quantity}개)
+                </h4>
                 {dateOrders.orders.map((order: any, index: number) => (
                   <div key={index} style={{
-                    padding: '8px',
-                    marginBottom: '8px',
+                    padding: '12px',
+                    marginBottom: '10px',
                     backgroundColor: 'white',
                     borderRadius: '4px',
-                    fontSize: '13px'
+                    fontSize: '13px',
+                    border: '1px solid #ddd'
                   }}>
-                    <div><strong>{order.customer_name}</strong> - {order.total_quantity}개</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>
-                      상태: {order.status} | UUID: {order.group_uuid.substring(0, 8)}...
+                    <div style={{ marginBottom: '6px' }}>
+                      <strong style={{ fontSize: '14px' }}>{order.customer_name}</strong> ({order.customer_phone})
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
+                      📍 {order.customer_address}
+                    </div>
+                    <div style={{ fontSize: '12px', marginBottom: '8px' }}>
+                      📦 이 날짜 제품: <strong>{order.total_quantity}개</strong> | 상태: <span style={{
+                        color: order.status === 'pending' ? '#ff9800' : '#4caf50',
+                        fontWeight: 'bold'
+                      }}>{order.status}</span>
+                    </div>
+
+                    {/* 🔥 여러 날짜 배분 정보 표시 */}
+                    {order.line_items && order.line_items.length > 0 && order.line_items[0].production_dates && (
+                      Object.keys(order.line_items[0].production_dates).length > 1 && (
+                        <div style={{
+                          fontSize: '11px',
+                          padding: '6px 8px',
+                          backgroundColor: '#e3f2fd',
+                          borderRadius: '4px',
+                          marginBottom: '8px',
+                          border: '1px solid #90caf9'
+                        }}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#1976d2' }}>
+                            ⚡ 여러 날짜에 걸친 주문 (전체 {order.line_items[0].quantity}개)
+                          </div>
+                          {Object.entries(order.line_items[0].production_dates).map(([date, qty]: [string, any]) => (
+                            <div key={date} style={{ marginLeft: '8px', fontSize: '10px' }}>
+                              • {date}: <strong>{qty}개</strong>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    )}
+
+                    {/* LineItem 상세 정보 */}
+                    {order.line_items && order.line_items.length > 0 && (
+                      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e0e0e0' }}>
+                        {order.line_items.map((item: any, idx: number) => (
+                          <div key={idx} style={{
+                            fontSize: '11px',
+                            color: '#555',
+                            marginBottom: '4px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}>
+                            <span>
+                              • {item.product_sku}
+                              {item.quantity_for_this_date && item.quantity_for_this_date !== item.quantity ? (
+                                <> ×{item.quantity_for_this_date} <span style={{color: '#999'}}>(전체 {item.quantity}개 중)</span></>
+                              ) : (
+                                <> ×{item.quantity}</>
+                              )}
+                            </span>
+                            {item.line_item_uuid && (
+                              <a
+                                href={`${import.meta.env.VITE_API_BASE_URL}/api/order-groups/${order.group_uuid}/line-items/${item.line_item_uuid}/download`}
+                                download
+                                style={{
+                                  color: '#2196F3',
+                                  textDecoration: 'none',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                📥 OBJ
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ fontSize: '11px', color: '#999', marginTop: '8px' }}>
+                      UUID: {order.group_uuid}
                     </div>
                   </div>
                 ))}

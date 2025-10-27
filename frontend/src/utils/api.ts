@@ -335,12 +335,14 @@ export interface LineItemData {
   customization: any;
   quantity: number;
   unit_price?: number;  // optional, for validation
+  // production_date 제거됨 (서버가 자동 배분)
 }
 
 export interface OrderGroupResponse {
   group_uuid: string;
   total_price: number;
   line_item_count: number;
+  allocation: Record<string, number>;  // 🔥 날짜별 배분 결과 {date: quantity}
   message: string;
 }
 
@@ -386,8 +388,7 @@ export async function createOrderGroup(
   customerPostalCode: string,
   customerAddress: string,
   deliveryMessage: string,
-  productionDate: string, // YYYY-MM-DD
-  lineItemsData: LineItemData[],
+  lineItemsData: LineItemData[],  // production_date는 각 LineItem에 포함됨
   files: Blob[]  // [obj1, mtl1, obj2, mtl2, ...]
 ): Promise<OrderGroupResponse> {
   const formData = new FormData();
@@ -400,10 +401,7 @@ export async function createOrderGroup(
   formData.append('customer_address', customerAddress);
   formData.append('delivery_message', deliveryMessage);
 
-  // Production schedule
-  formData.append('production_date', productionDate);
-
-  // Line items (JSON)
+  // Line items (JSON - production_date 포함)
   formData.append('line_items_json', JSON.stringify(lineItemsData));
 
   // Files (OBJ + MTL pairs)
