@@ -13,6 +13,10 @@ interface ColorInfo {
   value: string;
 }
 
+interface ColorCombination {
+  colors: string[];
+}
+
 const inputStyle = {
   width: '100%',
   padding: '8px',
@@ -43,7 +47,7 @@ export function EditPanel() {
 
   const [showColorGuide, setShowColorGuide] = useState(false);
   const [availableColors, setAvailableColors] = useState<ColorInfo[]>([]);
-  const [allowedCombinations, setAllowedCombinations] = useState<Array<{plate: string, qr: string}>>([]);
+  const [allowedCombinations, setAllowedCombinations] = useState<ColorCombination[]>([]);
   const [colorWarningMessage, setColorWarningMessage] = useState<string>('');
 
   const selectedPlate = plates.find(p => p.id === selectedPlateId);
@@ -64,13 +68,20 @@ export function EditPanel() {
     loadColorPalette();
   }, []);
 
-  // 색상 조합이 허용되는지 확인 (순서 무관)
+  // 색상 조합이 허용되는지 확인 (순서 무관, 같은 색상 불가)
   const isCombinationAllowed = (plateColor: string, qrColor: string) => {
+    if (plateColor === qrColor) return false;
+
     return allowedCombinations.some(combo =>
       combo.colors.length === 2 &&
-      combo.colors.some(c => c.toLowerCase() === plateColor.toLowerCase()) &&
-      combo.colors.some(c => c.toLowerCase() === qrColor.toLowerCase())
+      combo.colors.includes(plateColor) &&
+      combo.colors.includes(qrColor)
     );
+  };
+
+  // 색상이 사용 가능한지 확인
+  const isColorAvailable = (color: string, _type: 'plate' | 'qr') => {
+    return availableColors.some(c => c.value === color);
   };
 
   if (!selectedPlate) {

@@ -244,6 +244,9 @@ export interface PricingSettings {
   text_price: number;
   image_price: number;
   announcement_message?: string;
+  available_colors?: string;
+  allowed_combinations?: string;
+  color_warning_message?: string;
 }
 
 /**
