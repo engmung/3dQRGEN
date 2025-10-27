@@ -93,8 +93,13 @@ export function Home() {
         const geometries = qrGeometriesMap.get(plate.id);
 
         if (!geometries) {
-          console.warn(`Plate ${plate.id} geometries not ready, skipping...`);
-          continue;
+          console.error(`Plate ${plate.id} geometries not ready!`);
+          throw new Error(
+            `일부 제품의 3D 모델이 준비되지 않았습니다.\n\n` +
+            `💡 해결 방법:\n` +
+            `우측 장바구니에서 모든 제품을 한 번씩 클릭하여 3D 모델을 확인한 후 다시 주문해주세요.\n\n` +
+            `(새로고침 후 첫 주문 시 발생할 수 있는 현상입니다)`
+          );
         }
 
         console.log(`[OrderGroup] Generating OBJ for plate ${i + 1}/${plates.length}...`);
