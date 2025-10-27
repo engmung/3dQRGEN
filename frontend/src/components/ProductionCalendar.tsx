@@ -360,96 +360,201 @@ export function ProductionCalendar({ onReload }: ProductionCalendarProps) {
                 <h4 style={{ marginTop: 0, marginBottom: '10px' }}>
                   이 날짜의 주문 ({dateOrders.total_orders}건, 총 {dateOrders.total_quantity}개)
                 </h4>
-                {dateOrders.orders.map((order: any, index: number) => (
-                  <div key={index} style={{
-                    padding: '12px',
-                    marginBottom: '10px',
-                    backgroundColor: 'white',
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    border: '1px solid #ddd'
-                  }}>
-                    <div style={{ marginBottom: '6px' }}>
-                      <strong style={{ fontSize: '14px' }}>{order.customer_name}</strong> ({order.customer_phone})
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
-                      📍 {order.customer_address}
-                    </div>
-                    <div style={{ fontSize: '12px', marginBottom: '8px' }}>
-                      📦 이 날짜 제품: <strong>{order.total_quantity}개</strong> | 상태: <span style={{
-                        color: order.status === 'pending' ? '#ff9800' : '#4caf50',
-                        fontWeight: 'bold'
-                      }}>{order.status}</span>
-                    </div>
+                {dateOrders.orders.map((order: any, orderIndex: number) => {
+                  // LineItem 단위로 정리
+                  const lineItems: {
+                    index: number;
+                    name: string;
+                    type: string;
+                    totalQty: number;
+                    dates: { [date: string]: number };
+                  }[] = [];
 
-                    {/* 🔥 여러 날짜 배분 정보 표시 */}
-                    {order.line_items && order.line_items.length > 0 && order.line_items[0].production_dates && (
-                      Object.keys(order.line_items[0].production_dates).length > 1 && (
-                        <div style={{
-                          fontSize: '11px',
-                          padding: '6px 8px',
-                          backgroundColor: '#e3f2fd',
-                          borderRadius: '4px',
-                          marginBottom: '8px',
-                          border: '1px solid #90caf9'
-                        }}>
-                          <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#1976d2' }}>
-                            ⚡ 여러 날짜에 걸친 주문 (전체 {order.line_items[0].quantity}개)
+                  let lineItemCounter = 1;
+                  order.line_items?.forEach((item: any) => {
+                    // QR 타입 추출 (SKU에서)
+                    let qrType = 'BASE';
+                    if (item.product_sku?.includes('IMAGE')) qrType = 'IMAGE';
+                    else if (item.product_sku?.includes('TEXT')) qrType = 'TEXT';
+
+                    lineItems.push({
+                      index: lineItemCounter++,
+                      name: `${order.customer_name}_${lineItemCounter}`,
+                      type: qrType,
+                      totalQty: item.quantity || 0,
+                      dates: item.production_dates || { [selectedDate?.date || '']: item.quantity || 0 }
+                    });
+                  });
+
+                  // 총 제품 개수 계산
+                  const totalProducts = lineItems.reduce((sum, item) => sum + item.totalQty, 0);
+
+                  // 날짜 개수 계산 (전체 주문 기준)
+                  const allDates = new Set<string>();
+                  lineItems.forEach(item => {
+                    Object.keys(item.dates).forEach(date => allDates.add(date));
+                  });
+                  const dateCount = allDates.size;
+
+                  // 오늘 제작 대상 (LineItem별 개수)
+                  const todayItems = lineItems
+                    .map(item => ({
+                      index: item.index,
+                      qty: item.dates[selectedDate?.date || ''] || 0
+                    }))
+                    .filter(item => item.qty > 0);
+
+                  // 날짜 포맷팅 (YYYY-MM-DD → MM/DD)
+                  const formatShortDate = (dateStr: string) => {
+                    const [, month, day] = dateStr.split('-');
+                    return `${month}/${day}`;
+                  };
+
+                  return (
+                    <div key={orderIndex} style={{
+                      padding: '16px',
+                      marginBottom: '12px',
+                      backgroundColor: 'white',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      border: '2px solid #333',
+                      position: 'relative'
+                    }}>
+                      {/* 구분선 상단 */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '-2px',
+                        left: '10px',
+                        right: '10px',
+                        height: '2px',
+                        background: 'repeating-linear-gradient(90deg, #333 0, #333 8px, transparent 8px, transparent 16px)'
+                      }} />
+
+                      {/* 고객 정보 */}
+                      <div style={{ marginBottom: '10px' }}>
+                        <div style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '4px' }}>
+                          👤 {order.customer_name} ({order.customer_phone})
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>
+                          📍 {order.customer_address}
+                        </div>
+                        {order.customer_memo && (
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            📝 {order.customer_memo}
                           </div>
-                          {Object.entries(order.line_items[0].production_dates).map(([date, qty]: [string, any]) => (
-                            <div key={date} style={{ marginLeft: '8px', fontSize: '10px' }}>
-                              • {date}: <strong>{qty}개</strong>
+                        )}
+                      </div>
+
+                      {/* 주문 구성 */}
+                      <div style={{ marginBottom: '12px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                          📦 주문 구성 (총 {lineItems.length}종류, {totalProducts}개{dateCount > 1 ? ` → ${dateCount}일 분할` : ''})
+                        </div>
+                        <div style={{
+                          border: '1px solid #333',
+                          borderRadius: '4px',
+                          padding: '8px',
+                          backgroundColor: '#fafafa'
+                        }}>
+                          {lineItems.map((item, idx) => (
+                            <div key={idx} style={{
+                              fontSize: '11px',
+                              padding: '6px 8px',
+                              borderBottom: idx < lineItems.length - 1 ? '1px solid #e0e0e0' : 'none',
+                              backgroundColor: '#fff'
+                            }}>
+                              {/* 제품명과 총 개수 */}
+                              <div style={{ fontWeight: 'bold', marginBottom: '4px', fontFamily: 'monospace' }}>
+                                #{item.index} {order.customer_name}_{item.index} ({item.type}) - {item.totalQty}개
+                              </div>
+
+                              {/* 날짜별 분할 정보 (2개 이상 날짜일 때만) */}
+                              {Object.keys(item.dates).length > 1 ? (
+                                <div style={{ paddingLeft: '12px', fontSize: '10px', color: '#555' }}>
+                                  {Object.entries(item.dates)
+                                    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                                    .map(([date, qty], dateIdx) => (
+                                      <div key={dateIdx} style={{ marginBottom: '2px' }}>
+                                        {dateIdx === 0 ? '├' : dateIdx === Object.keys(item.dates).length - 1 ? '└' : '├'} {formatShortDate(date)}: {qty}개 {date === selectedDate?.date ? '✓' : ''}
+                                      </div>
+                                    ))}
+                                </div>
+                              ) : (
+                                <div style={{ paddingLeft: '12px', fontSize: '10px', color: '#555' }}>
+                                  └ {formatShortDate(Object.keys(item.dates)[0])}: {item.totalQty}개 ✓
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
-                      )
-                    )}
-
-                    {/* LineItem 상세 정보 */}
-                    {order.line_items && order.line_items.length > 0 && (
-                      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e0e0e0' }}>
-                        {order.line_items.map((item: any, idx: number) => (
-                          <div key={idx} style={{
-                            fontSize: '11px',
-                            color: '#555',
-                            marginBottom: '4px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}>
-                            <span>
-                              • {item.product_sku}
-                              {item.quantity_for_this_date && item.quantity_for_this_date !== item.quantity ? (
-                                <> ×{item.quantity_for_this_date} <span style={{color: '#999'}}>(전체 {item.quantity}개 중)</span></>
-                              ) : (
-                                <> ×{item.quantity}</>
-                              )}
-                            </span>
-                            {item.line_item_uuid && (
-                              <a
-                                href={`${import.meta.env.VITE_API_BASE_URL}/api/order-groups/${order.group_uuid}/line-items/${item.line_item_uuid}/download`}
-                                download
-                                style={{
-                                  color: '#2196F3',
-                                  textDecoration: 'none',
-                                  fontSize: '11px',
-                                  fontWeight: 'bold'
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                📥 OBJ
-                              </a>
-                            )}
-                          </div>
-                        ))}
                       </div>
-                    )}
 
-                    <div style={{ fontSize: '11px', color: '#999', marginTop: '8px' }}>
-                      UUID: {order.group_uuid}
+                      {/* 오늘 제작 대상 */}
+                      {todayItems.length > 0 && (
+                        <div style={{
+                          fontSize: '12px',
+                          marginBottom: '10px',
+                          padding: '8px 12px',
+                          backgroundColor: '#fff3cd',
+                          border: '1px solid #ffc107',
+                          borderRadius: '4px',
+                          fontWeight: 'bold'
+                        }}>
+                          <div style={{ marginBottom: '4px' }}>🎯 금일({formatShortDate(selectedDate?.date || '')}) 제작</div>
+                          {todayItems.map((item, idx) => (
+                            <div key={idx} style={{ fontSize: '11px', paddingLeft: '12px' }}>
+                              • #{item.index}: {item.qty}개
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* 하단 정보 */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '11px',
+                        paddingTop: '8px',
+                        borderTop: '1px solid #e0e0e0'
+                      }}>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <a
+                            href={`${import.meta.env.VITE_API_BASE_URL}/api/order-groups/${order.group_uuid}/download`}
+                            download
+                            style={{
+                              color: '#2196F3',
+                              textDecoration: 'none',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            📥 전체 ZIP
+                          </a>
+                          <span style={{
+                            color: order.status === 'pending' ? '#ff9800' : '#4caf50',
+                            fontWeight: 'bold'
+                          }}>
+                            상태: {order.status}
+                          </span>
+                        </div>
+                        <div style={{ color: '#999', fontSize: '10px' }}>
+                          UUID: {order.group_uuid.substring(0, 8)}...
+                        </div>
+                      </div>
+
+                      {/* 구분선 하단 */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '-2px',
+                        left: '10px',
+                        right: '10px',
+                        height: '2px',
+                        background: 'repeating-linear-gradient(90deg, #333 0, #333 8px, transparent 8px, transparent 16px)'
+                      }} />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
