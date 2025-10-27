@@ -94,44 +94,14 @@ export function Admin() {
   };
 
   const handleConfirmPayment = async (groupUuid: string) => {
-    if (!confirm('입금을 확인했습니까?')) {
-      return;
-    }
-
-    try {
-      const token = await getToken();
-      await updateOrderGroupStatus(groupUuid, 'paid', token);
-      alert('입금 확인되었습니다.');
-      await loadOrderGroups();
-    } catch (err: any) {
-      alert('상태 업데이트 실패: ' + err.message);
-    }
-  };
-
-  const handleStartProduction = async (groupUuid: string) => {
-    if (!confirm('제작을 시작하시겠습니까?')) {
+    if (!confirm('입금을 확인했습니까?\n(자동으로 제작 중 상태로 변경됩니다)')) {
       return;
     }
 
     try {
       const token = await getToken();
       await updateOrderGroupStatus(groupUuid, 'in_production', token);
-      alert('제작 시작으로 표시되었습니다.');
-      await loadOrderGroups();
-    } catch (err: any) {
-      alert('상태 업데이트 실패: ' + err.message);
-    }
-  };
-
-  const handleCompleteProduction = async (groupUuid: string) => {
-    if (!confirm('제작을 완료하시겠습니까?')) {
-      return;
-    }
-
-    try {
-      const token = await getToken();
-      await updateOrderGroupStatus(groupUuid, 'production_completed', token);
-      alert('제작 완료로 표시되었습니다.');
+      alert('입금 확인 및 제작 중으로 표시되었습니다.');
       await loadOrderGroups();
     } catch (err: any) {
       alert('상태 업데이트 실패: ' + err.message);
@@ -562,27 +532,10 @@ export function Admin() {
                         >
                           📋 상세보기
                         </button>
-                        {/* 입금 대기 → 입금 확인 */}
+                        {/* 입금 대기 → 제작 중 (입금 확인) */}
                         {orderGroup.status === 'pending' && (
                           <button
                             onClick={() => handleConfirmPayment(orderGroup.group_uuid)}
-                            style={{
-                              padding: '4px 8px',
-                              fontSize: '12px',
-                              backgroundColor: '#17a2b8',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            💰 입금 확인
-                          </button>
-                        )}
-                        {/* 입금 완료 → 제작 시작 */}
-                        {orderGroup.status === 'paid' && (
-                          <button
-                            onClick={() => handleStartProduction(orderGroup.group_uuid)}
                             style={{
                               padding: '4px 8px',
                               fontSize: '12px',
@@ -593,28 +546,11 @@ export function Admin() {
                               cursor: 'pointer'
                             }}
                           >
-                            🔨 제작 시작
+                            💰 입금 확인
                           </button>
                         )}
-                        {/* 제작 중 → 제작 완료 */}
+                        {/* 제작 중 → 배송 시작 */}
                         {orderGroup.status === 'in_production' && (
-                          <button
-                            onClick={() => handleCompleteProduction(orderGroup.group_uuid)}
-                            style={{
-                              padding: '4px 8px',
-                              fontSize: '12px',
-                              backgroundColor: '#6610f2',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            ✅ 제작 완료
-                          </button>
-                        )}
-                        {/* 제작 완료 → 배송 시작 */}
-                        {orderGroup.status === 'production_completed' && (
                           <button
                             onClick={() => handleStartShipping(orderGroup.group_uuid)}
                             style={{
