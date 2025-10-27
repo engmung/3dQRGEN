@@ -39,9 +39,9 @@ export const OrderModal = ({
 
   if (!isOpen) return null;
 
-  // 가격 계산
+  // 가격 계산 (수량 포함)
   const totalPrice = pricingSettings
-    ? cartItems.reduce((sum, item) => sum + calculatePlatePrice(item.plateConfig, pricingSettings), 0)
+    ? cartItems.reduce((sum, item) => sum + calculatePlatePrice(item.plateConfig, pricingSettings) * item.quantity, 0)
     : 0;
 
   // 총 제품 개수 계산 (quantity 합계)
@@ -80,130 +80,13 @@ export const OrderModal = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 주문 요약 섹션 */}
-        <div
-          style={{
-            padding: '20px',
-            borderBottom: '2px solid #e0e0e0',
-            backgroundColor: '#f8f8f8',
-          }}
-        >
-          <h2 style={{ margin: '0 0 15px 0', fontSize: '22px', fontWeight: 700, color: '#333' }}>
-            📦 주문 내역 ({cartItems.length}종, 총 {totalQuantity}개)
-          </h2>
-
-          {/* 장바구니 아이템 목록 */}
-          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-            {cartItems.map((item, index) => (
-              <div
-                key={item.id}
-                style={{
-                  marginBottom: '10px',
-                  padding: '12px',
-                  backgroundColor: '#ffffff',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  border: '1px solid #e0e0e0',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                }}
-              >
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, color: '#888', fontSize: '13px' }}>#{index + 1}</span>
-                  <span style={{ fontWeight: 600, color: '#333' }}>
-                    {getQRTypeLabel(item.plateConfig.qrType)} QR
-                  </span>
-                  <span style={{ fontSize: '13px', color: '#2196F3', fontWeight: 600, marginLeft: '4px' }}>
-                    × {item.quantity}개
-                  </span>
-                  <div style={{ flex: 1 }} />
-                  <div
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: item.plateConfig.plateColor,
-                      border: '2px solid #ddd',
-                      borderRadius: '4px',
-                    }}
-                    title={`거치대: ${item.plateConfig.plateColor}`}
-                  />
-                  <div
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: item.plateConfig.qrColor,
-                      border: '2px solid #ddd',
-                      borderRadius: '4px',
-                    }}
-                    title={`QR: ${item.plateConfig.qrColor}`}
-                  />
-                </div>
-                <div style={{ fontSize: '12px', color: '#666', wordBreak: 'break-all' }}>
-                  {item.plateConfig.qrType === 'url' && item.plateConfig.qrUrl && (
-                    <div>URL: {item.plateConfig.qrUrl.substring(0, 50)}{item.plateConfig.qrUrl.length > 50 ? '...' : ''}</div>
-                  )}
-                  {item.plateConfig.qrType === 'wifi' && (
-                    <div>WiFi: {item.plateConfig.qrWifiData.ssid || '(설정 없음)'}</div>
-                  )}
-                  {item.plateConfig.qrType === 'email' && (
-                    <div>Email: {item.plateConfig.qrEmailData.recipient || '(설정 없음)'}</div>
-                  )}
-                </div>
-
-                {/* 판 가격 상세 */}
-                {pricingSettings && (
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e0e0e0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span>기본 가격</span>
-                      <span>{formatPrice(pricingSettings.base_price)}</span>
-                    </div>
-                    {item.plateConfig.text && item.plateConfig.text.trim().length > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>+ 텍스트 추가</span>
-                        <span>{formatPrice(pricingSettings.text_price)}</span>
-                      </div>
-                    )}
-                    {item.plateConfig.images.length > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>+ 이미지 {item.plateConfig.images.length}개</span>
-                        <span>{formatPrice(pricingSettings.image_price * item.plateConfig.images.length)}</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e0e0e0', fontWeight: 600, color: '#333', fontSize: '13px' }}>
-                      <span>판 합계</span>
-                      <span>{formatPrice(calculatePlatePrice(item.plateConfig, pricingSettings))}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* 총 금액 */}
-          <div
-            style={{
-              marginTop: '15px',
-              padding: '15px',
-              backgroundColor: '#e3f5ff',
-              borderRadius: '8px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              border: '2px solid #2196F3',
-            }}
-          >
-            <span style={{ fontSize: '18px', fontWeight: 700, color: '#333' }}>💰 총 결제 금액</span>
-            <span style={{ fontSize: '28px', fontWeight: 700, color: '#2196F3' }}>
-              {pricingSettings ? formatPrice(totalPrice) : '계산 중...'}
-            </span>
-          </div>
-        </div>
-
         {/* 배송지 입력 폼 (AddressForm 재사용) */}
         <div style={{ backgroundColor: 'white' }}>
           <AddressForm
             initialData={{ customerEmail }}
             price={totalPrice}
             totalQuantity={totalQuantity}
+            cartItems={cartItems}
             onSubmit={handleSubmit}
             onCancel={onClose}
           />

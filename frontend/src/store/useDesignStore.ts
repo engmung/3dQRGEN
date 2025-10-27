@@ -1,10 +1,44 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { WiFiData, EmailData } from '../utils/qrGenerator';
 
 // QR 타입 정의
 export type QRType = 'url' | 'wifi' | 'email';
 
-// 이미지 설정
+// 유틸리티: File → Base64 DataURL
+async function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// 유틸리티: Base64 DataURL → File
+function dataURLtoFile(dataUrl: string, filename: string, mimeType: string): File {
+  const arr = dataUrl.split(',');
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mimeType });
+}
+
+// 이미지 설정 (저장용 - Base64)
+interface ImageConfigStored {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileDataUrl: string;
+  size: number;
+  heightOffset: number;
+  horizontalOffset: number;
+}
+
+// 이미지 설정 (런타임용 - File 객체)
 export interface ImageConfig {
   id: string;
   file: File;
@@ -128,17 +162,19 @@ const createDefaultPlate = (
   positionZ: 0,
 });
 
-export const useDesignStore = create<DesignStore>((set, get) => {
-  const initialPlateId = crypto.randomUUID();
+export const useDesignStore = create<DesignStore>()(
+  persist(
+    (set, get) => {
+      const initialPlateId = crypto.randomUUID();
 
-  return {
-    // 초기값: 1개 판 (자동 선택)
-    plates: [createDefaultPlate(initialPlateId, '#ffffff', '#000000', 0)],
-    selectedPlateId: initialPlateId,
+      return {
+        // 초기값: 1개 판 (자동 선택)
+        plates: [createDefaultPlate(initialPlateId, '#ffffff', '#000000', 0)],
+        selectedPlateId: initialPlateId,
 
-    globalPlateColor: '#ffffff',
-    globalQrColor: '#000000',
-    backgroundColor: '#D2B48C',
+        globalPlateColor: '#ffffff',
+        globalQrColor: '#000000',
+        backgroundColor: '#D2B48C',
 
   // 새 판 추가 (기본 색상 사용)
   addPlate: () => {
@@ -276,4 +312,86 @@ export const useDesignStore = create<DesignStore>((set, get) => {
     }
   },
 };
-});
+    },
+    {
+      name: '3d-qr-design-store',
+      storage: {
+        getItem: async (name: string) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+
+          try {
+            const data = JSON.parse(str);
+
+            // plates의 images를 File 객체로 복원
+            if (data.state.plates) {
+              const restoredPlates = await Promise.all(
+                data.state.plates.map(async (plate: any) => {
+                  if (plate.images && Array.isArray(plate.images)) {
+                    const restoredImages = plate.images.map((img: ImageConfigStored) => ({
+                      id: img.id,
+                      file: dataURLtoFile(img.fileDataUrl, img.fileName, img.fileType),
+                      size: img.size,
+                      heightOffset: img.heightOffset,
+                      horizontalOffset: img.horizontalOffset,
+                    }));
+                    return { ...plate, images: restoredImages };
+                  }
+                  return plate;
+                })
+              );
+              data.state.plates = restoredPlates;
+            }
+
+            return data;
+          } catch (error) {
+            console.error('Failed to restore from localStorage:', error);
+            return null;
+          }
+        },
+        setItem: async (name: string, value: any) => {
+          try {
+            // plates의 images를 Base64로 변환
+            if (value.state.plates) {
+              const serializedPlates = await Promise.all(
+                value.state.plates.map(async (plate: QRPlateConfig) => {
+                  if (plate.images && plate.images.length > 0) {
+                    const serializedImages = await Promise.all(
+                      plate.images.map(async (img: ImageConfig) => {
+                        const dataUrl = await fileToDataURL(img.file);
+                        return {
+                          id: img.id,
+                          fileName: img.file.name,
+                          fileType: img.file.type,
+                          fileDataUrl: dataUrl,
+                          size: img.size,
+                          heightOffset: img.heightOffset,
+                          horizontalOffset: img.horizontalOffset,
+                        } as ImageConfigStored;
+                      })
+                    );
+                    return { ...plate, images: serializedImages };
+                  }
+                  return plate;
+                })
+              );
+              value.state.plates = serializedPlates;
+            }
+
+            localStorage.setItem(name, JSON.stringify(value));
+          } catch (error) {
+            console.error('Failed to save to localStorage:', error);
+            // QuotaExceededError 처리
+            if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+              console.warn('localStorage quota exceeded. Clearing old data...');
+              localStorage.removeItem(name);
+            }
+          }
+        },
+        removeItem: (name: string) => {
+          localStorage.removeItem(name);
+        },
+      },
+    }
+  )
+);
