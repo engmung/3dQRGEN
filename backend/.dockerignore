@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# 가상환경
+.venv/
+venv/
+ENV/
+env/
+
+# 데이터베이스 (호스트에서 마운트)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# 저장소 (호스트에서 마운트)
+storage/
+
+# 환경변수
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# 로그
+*.log
+
+# 기타
+.DS_Store
+Thumbs.db

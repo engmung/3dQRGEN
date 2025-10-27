@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Backend - FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qr-platform-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=sqlite:///./data/qr_platform.db
+      - CORS_ORIGINS=http://localhost,http://localhost:80,https://*.trycloudflare.com
+    volumes:
+      # SQLite 데이터베이스
+      - ./backend/data:/app/data
+      # 주문 파일 저장소
+      - ./backend/storage:/app/storage
+      # 정적 파일 (거치대 모델 등)
+      - ./backend/static:/app/static
+    ports:
+      - "8000:8000"
+    networks:
+      - qr-platform
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Frontend - React + Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # 빌드 타임 환경변수
+        - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+        - VITE_DEV_MODE=${VITE_DEV_MODE:-false}
+    container_name: qr-platform-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - qr-platform
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Cloudflare Tunnel (선택적)
+  # 사용하려면 주석을 해제하고 TUNNEL_TOKEN을 설정하세요
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: qr-platform-tunnel
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run
+  #   environment:
+  #     - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     - frontend
+  #     - backend
+  #   networks:
+  #     - qr-platform
+
+networks:
+  qr-platform:
+    driver: bridge
+
+volumes:
+  # 명시적 볼륨 선언 (옵션)
+  backend-data:
+  backend-storage:
+  backend-static:
