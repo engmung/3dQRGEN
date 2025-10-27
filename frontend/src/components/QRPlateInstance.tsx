@@ -18,11 +18,14 @@ interface QRPlateInstanceProps {
   onGeometriesReady?: (geometries: {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
+    image: THREE.BufferGeometry | null;
     images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
     textPosition: THREE.Vector3 | null;
     textQuaternion: THREE.Quaternion | null;
+    imagePosition: THREE.Vector3 | null;
+    imageQuaternion: THREE.Quaternion | null;
     qrColor: string;
     zScale: number;
   }) => void;
@@ -406,11 +409,14 @@ export const QRPlateInstance = ({
   geometryDataRef.current = {
     qr: baseGeometry,
     text: textGeometry,
+    image: null, // Legacy field for backwards compatibility
     images: imagesToExport,
     qrPosition,
     qrQuaternion,
     textPosition,
     textQuaternion,
+    imagePosition: null, // Legacy field for backwards compatibility
+    imageQuaternion: null, // Legacy field for backwards compatibility
     qrColor: config.qrColor,
     zScale,
   };

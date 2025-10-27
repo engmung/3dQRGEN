@@ -23,6 +23,7 @@ interface Scene3DProps {
       qr: THREE.BufferGeometry | null;
       text: THREE.BufferGeometry | null;
       image: THREE.BufferGeometry | null;
+      images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
       qrPosition: THREE.Vector3;
       qrQuaternion: THREE.Quaternion;
       textPosition: THREE.Vector3 | null;

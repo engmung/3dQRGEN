@@ -11,6 +11,7 @@ export interface CartItem {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
     image: THREE.BufferGeometry | null;
+    images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
     textPosition: THREE.Vector3 | null;
@@ -52,6 +53,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
         qr: geometries.qr?.clone() ?? null,
         text: geometries.text?.clone() ?? null,
         image: geometries.image?.clone() ?? null,
+        images: geometries.images.map(img => ({
+          geometry: img.geometry.clone(),
+          position: img.position.clone(),
+          quaternion: img.quaternion.clone()
+        })),
         qrPosition: geometries.qrPosition.clone(),
         qrQuaternion: geometries.qrQuaternion.clone(),
         textPosition: geometries.textPosition?.clone() ?? null,

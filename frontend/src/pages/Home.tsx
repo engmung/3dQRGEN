@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { Scene3D } from '../components/Scene3D';
 import { LeftPanel } from '../components/LeftPanel';
@@ -30,6 +30,7 @@ export function Home() {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
     image: THREE.BufferGeometry | null;
+    images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
     textPosition: THREE.Vector3 | null;
@@ -106,7 +107,7 @@ export function Home() {
 
         // OBJ/MTL Blob 생성
         const objBlobs = await generateOBJFromCartItem(
-          { id: plate.id, plateConfig: plate, geometries, addedAt: new Date() },
+          { id: plate.id, plateConfig: plate, geometries, addedAt: new Date(), quantity: plate.quantity },
           gltfs,
           {
             backTransform,

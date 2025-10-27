@@ -1,4 +1,4 @@
-version: '3.8'
+name: qr-platform
 
 services:
   # Backend - FastAPI
@@ -12,7 +12,7 @@ services:
       - ./backend/.env
     environment:
       - DATABASE_URL=sqlite:///./data/qr_platform.db
-      - CORS_ORIGINS=http://localhost,http://localhost:80,https://*.trycloudflare.com
+      - CORS_ORIGINS=http://localhost,http://localhost:3748,https://*.trycloudflare.com
     volumes:
       # SQLite 데이터베이스
       - ./backend/data:/app/data
@@ -21,7 +21,7 @@ services:
       # 정적 파일 (거치대 모델 등)
       - ./backend/static:/app/static
     ports:
-      - "8000:8000"
+      - "3747:8000"
     networks:
       - qr-platform
     healthcheck:
@@ -39,12 +39,12 @@ services:
       args:
         # 빌드 타임 환경변수
         - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
-        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:3747}
         - VITE_DEV_MODE=${VITE_DEV_MODE:-false}
     container_name: qr-platform-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3748:80"
     depends_on:
       backend:
         condition: service_healthy

@@ -48,6 +48,10 @@ async def startup_event():
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
+
+    # httpx의 반복적인 HTTP 요청 로그 숨김 (텔레그램 봇 폴링)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
     logger = logging.getLogger(__name__)
 
     # 데이터베이스 초기화
