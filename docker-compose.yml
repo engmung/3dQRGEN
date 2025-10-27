@@ -1,3 +1,5 @@
+name: qrplatform
+
 services:
   # Backend - FastAPI
   backend:
