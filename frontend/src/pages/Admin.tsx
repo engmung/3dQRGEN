@@ -17,6 +17,12 @@ export function Admin() {
   const [selectedOrderGroups, setSelectedOrderGroups] = useState<Set<string>>(new Set());
   const [selectedOrderGroupDetail, setSelectedOrderGroupDetail] = useState<OrderGroupDetail | null>(null);
 
+  // 필터링, 정렬, 검색 상태
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'price' | 'status'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchQuery, setSearchQuery] = useState('');
+
   // 가격 설정 상태
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [editingPricing, setEditingPricing] = useState(false);
@@ -24,6 +30,7 @@ export function Admin() {
     base_price: 20000,
     text_price: 5000,
     image_price: 5000,
+    announcement_message: '',
   });
 
   const isAdmin = user?.primaryEmailAddress?.emailAddress && ADMIN_EMAILS.includes(user.primaryEmailAddress.emailAddress);
@@ -207,6 +214,114 @@ export function Admin() {
     }
   };
 
+  // 선택한 항목 일괄 상태 변경
+  const handleBulkStatusChange = async () => {
+    if (selectedOrderGroups.size === 0) {
+      alert('상태를 변경할 주문을 선택해주세요.');
+      return;
+    }
+
+    // 선택된 주문들의 상태를 분석
+    const selectedOrders = orderGroups.filter(og => selectedOrderGroups.has(og.group_uuid));
+    const statuses = new Set(selectedOrders.map(og => og.status));
+
+    // 다음 상태 결정
+    let nextStatus: string | null = null;
+    let statusLabel = '';
+
+    if (statuses.size === 1) {
+      const currentStatus = Array.from(statuses)[0];
+      switch (currentStatus) {
+        case 'pending':
+          nextStatus = 'in_production';
+          statusLabel = '제작 중';
+          break;
+        case 'in_production':
+          nextStatus = 'shipped';
+          statusLabel = '배송 중';
+          break;
+        case 'shipped':
+          nextStatus = 'completed';
+          statusLabel = '배송 완료';
+          break;
+        default:
+          alert('더 이상 진행할 수 없는 상태입니다.');
+          return;
+      }
+    } else {
+      alert('같은 상태의 주문만 선택해주세요.');
+      return;
+    }
+
+    if (!confirm(`선택한 ${selectedOrderGroups.size}개 주문을 "${statusLabel}" 상태로 변경하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const groupUuid of selectedOrderGroups) {
+        try {
+          await updateOrderGroupStatus(groupUuid, nextStatus, token);
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to update order group ${groupUuid}:`, err);
+          failCount++;
+        }
+      }
+
+      alert(`${successCount}개 상태 변경 완료${failCount > 0 ? `, ${failCount}개 실패` : ''}`);
+      setSelectedOrderGroups(new Set());
+      await loadOrderGroups();
+    } catch (err: any) {
+      alert('일괄 상태 변경 실패: ' + err.message);
+    }
+  };
+
+  // 필터링 및 정렬된 주문 목록
+  const getFilteredAndSortedOrders = () => {
+    let filtered = orderGroups;
+
+    // 상태 필터링
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(og => og.status === statusFilter);
+    }
+
+    // 검색
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(og =>
+        og.customer_name.toLowerCase().includes(query) ||
+        og.customer_phone.includes(query) ||
+        og.customer_address.toLowerCase().includes(query) ||
+        og.group_uuid.toLowerCase().includes(query)
+      );
+    }
+
+    // 정렬
+    const sorted = [...filtered].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+          break;
+        case 'price':
+          comparison = a.total_price - b.total_price;
+          break;
+        case 'status':
+          comparison = a.status.localeCompare(b.status);
+          break;
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  };
+
   // 클립보드 복사 함수
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -307,11 +422,34 @@ export function Admin() {
                 />
               </div>
             </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                📢 공지사항 (홈 화면 배너에 표시됩니다)
+              </label>
+              <textarea
+                value={newPricing.announcement_message || ''}
+                onChange={(e) => setNewPricing({ ...newPricing, announcement_message: e.target.value })}
+                placeholder="예: 현재 테스트기간이라 3일간만 15개 판매중입니다.&#10;이후 오픈은 2025년 2월 1일 예정입니다."
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  fontSize: '14px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  minHeight: '100px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                }}
+              />
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                * 비워두면 기본 메시지가 표시됩니다.
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => {
                   setEditingPricing(false);
-                  setNewPricing(pricingSettings || { base_price: 20000, text_price: 5000, image_price: 5000 });
+                  setNewPricing(pricingSettings || { base_price: 20000, text_price: 5000, image_price: 5000, announcement_message: '' });
                 }}
                 style={{
                   padding: '10px 20px',
@@ -375,9 +513,102 @@ export function Admin() {
       {/* 주문 관리 섹션 */}
       <h2 style={{ marginBottom: '20px', fontSize: '20px' }}>📦 주문 목록</h2>
 
+      {/* 필터링, 정렬, 검색 컨트롤 */}
+      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #ddd' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+          {/* 상태 필터 */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
+              📋 상태 필터
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                fontSize: '14px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                backgroundColor: '#fff'
+              }}
+            >
+              <option value="all">전체 보기</option>
+              <option value="pending">입금 대기</option>
+              <option value="in_production">제작 중</option>
+              <option value="shipped">배송 중</option>
+              <option value="completed">배송 완료</option>
+              <option value="failed">취소됨</option>
+            </select>
+          </div>
+
+          {/* 정렬 기준 */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
+              🔀 정렬 기준
+            </label>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'date' | 'price' | 'status')}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  fontSize: '14px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: '#fff'
+                }}
+              >
+                <option value="date">주문 일시</option>
+                <option value="price">가격</option>
+                <option value="status">상태</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                style={{
+                  padding: '10px 15px',
+                  fontSize: '14px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: '#fff',
+                  fontWeight: 'bold'
+                }}
+                title={sortOrder === 'asc' ? '오름차순' : '내림차순'}
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </button>
+            </div>
+          </div>
+
+          {/* 검색 */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
+              🔍 검색
+            </label>
+            <input
+              type="text"
+              placeholder="고객명, 전화번호, 주소, UUID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                fontSize: '14px',
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
       <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-          총 주문 수: <strong>{orderGroups.length}</strong>개 | 선택된 주문: <strong>{selectedOrderGroups.size}</strong>개
+          총 주문 수: <strong>{orderGroups.length}</strong>개 | 필터링 결과: <strong>{getFilteredAndSortedOrders().length}</strong>개 | 선택된 주문: <strong>{selectedOrderGroups.size}</strong>개
         </p>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
@@ -394,6 +625,22 @@ export function Admin() {
             }}
           >
             {selectedOrderGroups.size === orderGroups.length ? '전체 해제' : '전체 선택'}
+          </button>
+          <button
+            onClick={handleBulkStatusChange}
+            disabled={selectedOrderGroups.size === 0}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              backgroundColor: selectedOrderGroups.size === 0 ? '#ccc' : '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: selectedOrderGroups.size === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            ⏩ 상태 진행 ({selectedOrderGroups.size})
           </button>
           <button
             onClick={handleBulkDelete}
@@ -453,7 +700,7 @@ export function Admin() {
               </tr>
             </thead>
             <tbody>
-              {orderGroups.map((orderGroup) => {
+              {getFilteredAndSortedOrders().map((orderGroup) => {
                 const totalQuantity = orderGroup.line_items.reduce((sum, item) => sum + item.quantity, 0);
 
                 return (

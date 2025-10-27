@@ -4,6 +4,7 @@ import { generateQRBitmap } from '../utils/qrUtils';
 import { getPricingSettings, calculatePlatePrice, formatPrice } from '../utils/pricing';
 import type { PricingSettings } from '../utils/api';
 import { useEffect, useState } from 'react';
+import { AvailabilityBanner } from './AvailabilityBanner';
 
 interface RightPanelProps {
   onCheckout: () => void;
@@ -89,6 +90,9 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
   // 가격 설정 상태
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
 
+  // 주문 가능 정보 모달 상태
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+
   // 가격 설정 로드
   useEffect(() => {
     getPricingSettings().then(setPricingSettings);
@@ -160,7 +164,11 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              updatePlateQuantity(plate.id, plate.quantity - 1);
+              if (plate.quantity === 1) {
+                removePlate(plate.id);
+              } else {
+                updatePlateQuantity(plate.id, plate.quantity - 1);
+              }
             }}
             style={{
               width: '26px',
@@ -218,7 +226,7 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
               flex: 1,
               border: 'none',
               borderRadius: '0',
-              backgroundColor: '#4A90E2',
+              backgroundColor: '#999',
               color: 'white',
               fontSize: '16px',
               fontWeight: 600,
@@ -230,8 +238,8 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3A7BC8'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4A90E2'}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#777'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#999'}
           >
             복사
           </button>
@@ -449,35 +457,68 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
           </div>
         )}
 
-        {/* 주문하기 버튼 */}
-        <button
-          onClick={onCheckout}
-          disabled={plates.length === 0}
-          style={{
-            width: '100%',
-            padding: '14px',
-            backgroundColor: plates.length === 0 ? '#ccc' : '#FF6B6B',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: plates.length === 0 ? 'not-allowed' : 'pointer',
-            fontSize: '18px',
-            fontWeight: 700,
-            transition: 'all 0.2s'
-          }}
-          onMouseOver={(e) => {
-            if (plates.length > 0) {
-              e.currentTarget.style.backgroundColor = '#FF5252';
-            }
-          }}
-          onMouseOut={(e) => {
-            if (plates.length > 0) {
-              e.currentTarget.style.backgroundColor = '#FF6B6B';
-            }
-          }}
-        >
-          주문하기
-        </button>
+        {/* 주문하기 버튼 + 정보 아이콘 */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+          <button
+            onClick={onCheckout}
+            disabled={plates.length === 0}
+            style={{
+              flex: 1,
+              padding: '14px',
+              backgroundColor: plates.length === 0 ? '#ccc' : '#FF6B6B',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: plates.length === 0 ? 'not-allowed' : 'pointer',
+              fontSize: '18px',
+              fontWeight: 700,
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => {
+              if (plates.length > 0) {
+                e.currentTarget.style.backgroundColor = '#FF5252';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (plates.length > 0) {
+                e.currentTarget.style.backgroundColor = '#FF6B6B';
+              }
+            }}
+          >
+            주문하기
+          </button>
+
+          {/* 주문 가능 정보 아이콘 */}
+          <button
+            onClick={() => setShowAvailabilityModal(true)}
+            style={{
+              width: '48px',
+              padding: '14px',
+              backgroundColor: '#4A90E2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '20px',
+              fontWeight: 700,
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#357ABD';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#4A90E2';
+            }}
+          >
+            ⓘ
+          </button>
+        </div>
+
+        {/* 주문 가능 정보 모달 */}
+        {showAvailabilityModal && <AvailabilityBanner onClose={() => setShowAvailabilityModal(false)} />}
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ class PricingSettingResponse(BaseModel):
     base_price: float
     text_price: float
     image_price: float
+    announcement_message: str | None = None
 
     class Config:
         from_attributes = True
@@ -24,6 +25,7 @@ class PricingSettingUpdate(BaseModel):
     base_price: float
     text_price: float
     image_price: float
+    announcement_message: str | None = None
 
 
 @router.get("", response_model=PricingSettingResponse)
@@ -53,7 +55,8 @@ def update_pricing_settings(
         setting = PricingSetting(
             base_price=pricing_update.base_price,
             text_price=pricing_update.text_price,
-            image_price=pricing_update.image_price
+            image_price=pricing_update.image_price,
+            announcement_message=pricing_update.announcement_message
         )
         db.add(setting)
     else:
@@ -61,6 +64,7 @@ def update_pricing_settings(
         setting.base_price = pricing_update.base_price
         setting.text_price = pricing_update.text_price
         setting.image_price = pricing_update.image_price
+        setting.announcement_message = pricing_update.announcement_message
 
     db.commit()
     db.refresh(setting)
