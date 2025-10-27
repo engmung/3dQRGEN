@@ -1,9 +1,17 @@
+import { useState, useEffect } from 'react';
 import { useDesignStore } from '../store/useDesignStore';
 import type { QRType } from '../store/useDesignStore';
 import { AVAILABLE_FONTS, type FontKey } from '../utils/fontLoader';
 import { QRTypeSelector } from './QRTypeSelector';
 import { WiFiForm } from './forms/WiFiForm';
 import { EmailForm } from './forms/EmailForm';
+import { ColorGuideModal } from './ColorGuideModal';
+import { getPricingSettings } from '../utils/pricing';
+
+interface ColorInfo {
+  name: string;
+  value: string;
+}
 
 const inputStyle = {
   width: '100%',
@@ -33,7 +41,37 @@ export function EditPanel() {
   const removePlate = useDesignStore((state) => state.removePlate);
   const selectPlate = useDesignStore((state) => state.selectPlate);
 
+  const [showColorGuide, setShowColorGuide] = useState(false);
+  const [availableColors, setAvailableColors] = useState<ColorInfo[]>([]);
+  const [allowedCombinations, setAllowedCombinations] = useState<Array<{plate: string, qr: string}>>([]);
+  const [colorWarningMessage, setColorWarningMessage] = useState<string>('');
+
   const selectedPlate = plates.find(p => p.id === selectedPlateId);
+
+  // 색상 팔레트 로드
+  useEffect(() => {
+    const loadColorPalette = async () => {
+      try {
+        const settings = await getPricingSettings();
+        setAvailableColors(JSON.parse(settings.available_colors || '[]'));
+        setAllowedCombinations(JSON.parse(settings.allowed_combinations || '[]'));
+        setColorWarningMessage(settings.color_warning_message || '');
+      } catch (error) {
+        console.error('Failed to load color palette:', error);
+      }
+    };
+
+    loadColorPalette();
+  }, []);
+
+  // 색상 조합이 허용되는지 확인 (순서 무관)
+  const isCombinationAllowed = (plateColor: string, qrColor: string) => {
+    return allowedCombinations.some(combo =>
+      combo.colors.length === 2 &&
+      combo.colors.some(c => c.toLowerCase() === plateColor.toLowerCase()) &&
+      combo.colors.some(c => c.toLowerCase() === qrColor.toLowerCase())
+    );
+  };
 
   if (!selectedPlate) {
     return null;
@@ -370,9 +408,42 @@ export function EditPanel() {
         )}
       </div>
 
+      {showColorGuide && (
+        <ColorGuideModal
+          availableColors={availableColors}
+          allowedCombinations={allowedCombinations}
+          colorWarningMessage={colorWarningMessage}
+          onClose={() => setShowColorGuide(false)}
+        />
+      )}
+
       {/* 색상 설정 */}
       <div style={sectionStyle}>
-        <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>색상</h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+          <h3 style={{ margin: 0, fontSize: '16px' }}>색상</h3>
+          <button
+            onClick={() => setShowColorGuide(true)}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              background: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.background = '#45a049')}
+            onMouseOut={(e) => (e.currentTarget.style.background = '#4CAF50')}
+            title="색상 안내"
+          >
+            ?
+          </button>
+        </div>
 
         <div style={{ marginBottom: '15px' }}>
           <label style={labelStyle}>판 색상</label>
@@ -382,6 +453,19 @@ export function EditPanel() {
             onChange={(e) => updatePlate(selectedPlate.id, { plateColor: e.target.value })}
             style={{ ...inputStyle, height: '40px', cursor: 'pointer' }}
           />
+          {!isColorAvailable(selectedPlate.plateColor, 'plate') && (
+            <div style={{
+              marginTop: '8px',
+              padding: '8px',
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffc107',
+              borderRadius: '4px',
+              fontSize: '12px',
+              color: '#856404',
+            }}>
+              ⚠️ {colorWarningMessage || '선택하신 색상은 출력 불가합니다.'}
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: '15px' }}>
@@ -392,6 +476,19 @@ export function EditPanel() {
             onChange={(e) => updatePlate(selectedPlate.id, { qrColor: e.target.value })}
             style={{ ...inputStyle, height: '40px', cursor: 'pointer' }}
           />
+          {!isColorAvailable(selectedPlate.qrColor, 'qr') && (
+            <div style={{
+              marginTop: '8px',
+              padding: '8px',
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffc107',
+              borderRadius: '4px',
+              fontSize: '12px',
+              color: '#856404',
+            }}>
+              ⚠️ {colorWarningMessage || '선택하신 색상은 출력 불가합니다.'}
+            </div>
+          )}
         </div>
       </div>
 

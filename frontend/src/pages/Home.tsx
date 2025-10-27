@@ -83,6 +83,23 @@ export function Home() {
       // 가격 설정 가져오기
       const pricingSettings = await getPricingSettings();
 
+      // 색상 조합 검증
+      const allowedCombinations = JSON.parse(pricingSettings.allowed_combinations || '[]');
+      const invalidPlates = plates.filter(plate => {
+        return !allowedCombinations.some((combo: {colors: string[]}) =>
+          combo.colors.includes(plate.plateColor) &&
+          combo.colors.includes(plate.qrColor)
+        );
+      });
+
+      if (invalidPlates.length > 0) {
+        throw new Error(
+          '일부 제품의 색상 조합이 출력 불가능합니다.\n\n' +
+          '장바구니에서 허용된 색상 조합으로 변경해주세요.\n\n' +
+          '허용된 조합은 색상 안내(?) 버튼에서 확인하실 수 있습니다.'
+        );
+      }
+
       console.log(`[OrderGroup] Preparing ${plates.length} plates for submission...`);
 
       // 1. 모든 plate에 대해 OBJ 파일 생성 및 LineItem 데이터 준비

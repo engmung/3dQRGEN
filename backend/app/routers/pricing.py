@@ -15,6 +15,9 @@ class PricingSettingResponse(BaseModel):
     text_price: float
     image_price: float
     announcement_message: str | None = None
+    available_colors: str
+    allowed_combinations: str
+    color_warning_message: str
 
     class Config:
         from_attributes = True
@@ -26,6 +29,9 @@ class PricingSettingUpdate(BaseModel):
     text_price: float
     image_price: float
     announcement_message: str | None = None
+    available_colors: str | None = None
+    allowed_combinations: str | None = None
+    color_warning_message: str | None = None
 
 
 @router.get("", response_model=PricingSettingResponse)
@@ -56,7 +62,10 @@ def update_pricing_settings(
             base_price=pricing_update.base_price,
             text_price=pricing_update.text_price,
             image_price=pricing_update.image_price,
-            announcement_message=pricing_update.announcement_message
+            announcement_message=pricing_update.announcement_message,
+            available_colors=pricing_update.available_colors,
+            allowed_combinations=pricing_update.allowed_combinations,
+            color_warning_message=pricing_update.color_warning_message
         )
         db.add(setting)
     else:
@@ -65,6 +74,14 @@ def update_pricing_settings(
         setting.text_price = pricing_update.text_price
         setting.image_price = pricing_update.image_price
         setting.announcement_message = pricing_update.announcement_message
+
+        # 색상 필드는 제공된 경우에만 업데이트
+        if pricing_update.available_colors is not None:
+            setting.available_colors = pricing_update.available_colors
+        if pricing_update.allowed_combinations is not None:
+            setting.allowed_combinations = pricing_update.allowed_combinations
+        if pricing_update.color_warning_message is not None:
+            setting.color_warning_message = pricing_update.color_warning_message
 
     db.commit()
     db.refresh(setting)

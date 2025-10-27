@@ -56,20 +56,17 @@ services:
       timeout: 10s
       retries: 3
 
-  # Cloudflare Tunnel (선택적)
-  # 사용하려면 주석을 해제하고 TUNNEL_TOKEN을 설정하세요
-  # cloudflared:
-  #   image: cloudflare/cloudflared:latest
-  #   container_name: qr-platform-tunnel
-  #   restart: unless-stopped
-  #   command: tunnel --no-autoupdate run
-  #   environment:
-  #     - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-  #   depends_on:
-  #     - frontend
-  #     - backend
-  #   networks:
-  #     - qr-platform
+  # Cloudflare Tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: qr-platform-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token eyJhIjoiYWJmZGZiYmRiNDIwZjg3NDUxOTA4ODlmNGI0NjA2NTkiLCJ0IjoiNzQ1NTMxNWMtNWFjZi00MzBhLTk1YjctMWVjMjQyMDQ4NDk4IiwicyI6IlltVTBPV1k1TlRNdE5HSmhNeTAwWW1JeExXRXhPV0V0T0RBM05tRm1aRGRoWmpreCJ9
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - qr-platform
 
 networks:
   qr-platform:

@@ -9,7 +9,11 @@
       "Bash(git log:*)",
       "Bash(npm run build:*)",
       "Bash(git commit:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(git rm:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(scp:*)"
     ],
     "deny": [],
     "ask": []
