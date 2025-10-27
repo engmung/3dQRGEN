@@ -37,7 +37,7 @@ services:
       args:
         # 빌드 타임 환경변수
         - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
-        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:3747}
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-}
         - VITE_DEV_MODE=${VITE_DEV_MODE:-false}
     container_name: qr-platform-frontend
     restart: unless-stopped
