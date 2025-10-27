@@ -4,6 +4,7 @@ import { fetchMyOrderGroups, cancelOrderGroup, type OrderGroupDetail } from '../
 import { formatPrice } from '../utils/pricing';
 import { getStatusText, getStatusColor } from '../utils/orderHelpers';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
+import { AvailabilityBanner } from '../components/AvailabilityBanner';
 
 export const MyOrders = () => {
   const { getToken } = useAuth();
@@ -11,6 +12,7 @@ export const MyOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrderGroup, setSelectedOrderGroup] = useState<OrderGroupDetail | null>(null);
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
 
   useEffect(() => {
     loadOrderGroups();
@@ -79,7 +81,27 @@ export const MyOrders = () => {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '30px' }}>내 주문 내역</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <h1 style={{ margin: 0 }}>내 주문 내역</h1>
+        <button
+          onClick={() => setShowAvailabilityModal(true)}
+          style={{
+            width: '48px',
+            height: '48px',
+            backgroundColor: '#4A90E2',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '20px',
+            fontWeight: 'bold',
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#357ABD'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4A90E2'}
+        >
+          ⓘ
+        </button>
+      </div>
 
       {orderGroups.length === 0 ? (
         <div
@@ -325,6 +347,43 @@ export const MyOrders = () => {
                             {item.qr_url}
                           </td>
                         </tr>
+                        {(item.customization?.plateColor || item.customization?.qrColor) && (
+                          <tr>
+                            <td style={{ padding: '4px 0', color: '#666' }}>색상</td>
+                            <td style={{ padding: '4px 0' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {item.customization?.plateColor && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div
+                                      style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        backgroundColor: item.customization.plateColor,
+                                        border: '2px solid #ddd',
+                                        borderRadius: '4px',
+                                      }}
+                                    />
+                                    <span style={{ fontSize: '13px' }}>색상1</span>
+                                  </div>
+                                )}
+                                {item.customization?.qrColor && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div
+                                      style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        backgroundColor: item.customization.qrColor,
+                                        border: '2px solid #ddd',
+                                        borderRadius: '4px',
+                                      }}
+                                    />
+                                    <span style={{ fontSize: '13px' }}>색상2 (QR, 이미지, 텍스트)</span>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
                         {item.customization?.text && (
                           <tr>
                             <td style={{ padding: '4px 0', color: '#666' }}>텍스트</td>
@@ -376,6 +435,11 @@ export const MyOrders = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 주문 가능 정보 모달 */}
+      {showAvailabilityModal && (
+        <AvailabilityBanner onClose={() => setShowAvailabilityModal(false)} />
       )}
     </div>
   );

@@ -243,6 +243,7 @@ export interface PricingSettings {
   base_price: number;
   text_price: number;
   image_price: number;
+  announcement_message?: string;
 }
 
 /**
