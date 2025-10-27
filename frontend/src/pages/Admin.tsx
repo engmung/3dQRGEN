@@ -5,6 +5,8 @@ import { formatPrice, getPricingSettings, invalidatePricingCache } from '../util
 import { ProductionCalendar } from '../components/ProductionCalendar';
 import { getStatusText, getStatusColor } from '../utils/orderHelpers';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
+import { ColorPaletteEditor } from '../components/ColorPaletteEditor';
+import { ColorCombinationEditor } from '../components/ColorCombinationEditor';
 
 const ADMIN_EMAILS = ['lsh678902@gmail.com'];
 
@@ -503,6 +505,53 @@ export function Admin() {
           </div>
         )}
       </div>
+
+      {/* 색상 팔레트 관리 섹션 */}
+      {editingPricing && (
+        <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '2px solid #FF9800' }}>
+          <h2 style={{ margin: '0 0 20px 0', fontSize: '20px' }}>🎨 색상 팔레트 관리</h2>
+
+          <ColorPaletteEditor
+            colors={JSON.parse(newPricing.available_colors || '[]')}
+            onChange={(colors) => setNewPricing({
+              ...newPricing,
+              available_colors: JSON.stringify(colors)
+            })}
+            label="사용 가능한 색상 (출력 가능)"
+          />
+
+          <ColorCombinationEditor
+            colors={JSON.parse(newPricing.available_colors || '[]')}
+            combinations={JSON.parse(newPricing.allowed_combinations || '[]')}
+            onChange={(combinations) => setNewPricing({
+              ...newPricing,
+              allowed_combinations: JSON.stringify(combinations)
+            })}
+          />
+
+          <div style={{ marginBottom: '25px' }}>
+            <h4 style={{ marginBottom: '12px', fontSize: '15px', fontWeight: 600 }}>⚠️ 색상 경고 메시지</h4>
+            <textarea
+              value={newPricing.color_warning_message || ''}
+              onChange={(e) => setNewPricing({ ...newPricing, color_warning_message: e.target.value })}
+              placeholder="예: 선택하신 색상 조합은 QR 인식이 어려울 수 있습니다. 주문 시 가장 유사한 허용 조합으로 변환됩니다."
+              style={{
+                width: '100%',
+                padding: '10px',
+                fontSize: '14px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                minHeight: '80px',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+              }}
+            />
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              * 사용자가 허용되지 않은 색상 조합을 선택했을 때 표시되는 메시지입니다.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 생산 일정 관리 섹션 */}
       <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '2px solid #2196F3' }}>
