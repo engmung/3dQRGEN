@@ -178,7 +178,7 @@ export const MyOrders = () => {
                         >
                           상세보기
                         </button>
-                        {orderGroup.status === 'pending' && (
+                        {(orderGroup.status === 'pending' || orderGroup.status === 'paid') && (
                           <button
                             onClick={() => handleCancelOrderGroup(orderGroup.group_uuid)}
                             style={{

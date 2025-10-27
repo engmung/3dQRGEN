@@ -7,6 +7,9 @@ export function getStatusText(status: string): string {
   const statusMap: Record<string, string> = {
     pending: '입금 대기',
     paid: '입금 완료',
+    in_production: '제작 중',
+    production_completed: '제작 완료',
+    shipped: '배송 중',
     completed: '배송 완료',
     failed: '취소됨',
   };
@@ -15,10 +18,13 @@ export function getStatusText(status: string): string {
 
 export function getStatusColor(status: string): string {
   const colorMap: Record<string, string> = {
-    pending: '#ffc107',
-    paid: '#28a745',
-    completed: '#007bff',
-    failed: '#dc3545',
+    pending: '#ffc107',           // 노란색 - 입금 대기
+    paid: '#17a2b8',              // 청록색 - 입금 완료
+    in_production: '#fd7e14',     // 주황색 - 제작 중
+    production_completed: '#6610f2', // 보라색 - 제작 완료
+    shipped: '#007bff',           // 파란색 - 배송 중
+    completed: '#28a745',         // 초록색 - 배송 완료
+    failed: '#dc3545',            // 빨간색 - 취소됨
   };
   return colorMap[status] || '#6c757d';
 }

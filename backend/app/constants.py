@@ -3,15 +3,26 @@
 
 class OrderStatus:
     """Order status constants"""
-    PENDING = "pending"
-    PAID = "paid"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    PENDING = "pending"                      # 입금 대기
+    PAID = "paid"                            # 입금 완료 / 제작 대기
+    IN_PRODUCTION = "in_production"          # 제작 중
+    PRODUCTION_COMPLETED = "production_completed"  # 제작 완료 / 배송 대기
+    SHIPPED = "shipped"                      # 배송 중
+    COMPLETED = "completed"                  # 배송 완료
+    FAILED = "failed"                        # 취소됨
 
     @classmethod
     def all(cls) -> list[str]:
         """Return all valid statuses"""
-        return [cls.PENDING, cls.PAID, cls.COMPLETED, cls.FAILED]
+        return [
+            cls.PENDING,
+            cls.PAID,
+            cls.IN_PRODUCTION,
+            cls.PRODUCTION_COMPLETED,
+            cls.SHIPPED,
+            cls.COMPLETED,
+            cls.FAILED
+        ]
 
     @classmethod
     def validate(cls, status: str) -> bool:
