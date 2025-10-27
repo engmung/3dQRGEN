@@ -1,0 +1,14 @@
+# 프로덕션 환경변수
+.env.production
+
+# 데이터베이스
+*.db
+*.db-shm
+*.db-wal
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
