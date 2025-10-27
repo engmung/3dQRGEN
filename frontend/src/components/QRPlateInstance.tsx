@@ -291,6 +291,66 @@ export const QRPlateInstance = ({
     }).filter(Boolean);
   }, [imageRegion, imageGeometriesArray, config.images]);
 
+  // QR transform 계산 (memoized for performance)
+  // ⚠️ IMPORTANT: early return 전에 배치 (Hook 순서 유지)
+  const qrTransform = useMemo(() => {
+    if (!qrRegion) return null;
+
+    // Quaternion 계산 (법선 + Up 벡터 사용)
+    const quaternion = getQuaternionFromNormalAndUp(
+      qrRegion.normal,
+      qrRegion.upVector
+    );
+
+    // Right 벡터 계산 (upVector × normal)
+    const rightVector = new THREE.Vector3()
+      .crossVectors(qrRegion.upVector, qrRegion.normal)
+      .normalize();
+
+    // QR 크기를 고려한 높이/좌우 오프셋 제한
+    const qrHalfSize = config.qrSize / 2;
+    const PLATE_WIDTH = 60; // mm (판 너비)
+
+    let clampedHeightOffset = config.qrHeightOffset;
+    let clampedHorizontalOffset = config.qrHorizontalOffset;
+
+    // 높이 제한 (상단, 하단 모두 제한)
+    if (qrRegion.topBoundary !== null && qrRegion.bottomBoundary !== null) {
+      const maxOffset = qrRegion.topBoundary - qrHalfSize; // 상단: QR 상단이 경계를 넘지 않도록
+      const minOffset = qrRegion.bottomBoundary + qrHalfSize; // 하단: QR 하단이 경계를 넘지 않도록
+      clampedHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.qrHeightOffset));
+    }
+
+    // 좌우 제한 (판 너비 기준)
+    const maxHorizontalOffset = (PLATE_WIDTH - config.qrSize) / 2;
+    const minHorizontalOffset = -(PLATE_WIDTH - config.qrSize) / 2;
+    clampedHorizontalOffset = Math.max(
+      minHorizontalOffset,
+      Math.min(maxHorizontalOffset, config.qrHorizontalOffset)
+    );
+
+    // QR 위치 계산
+    // 1. 법선 방향으로 0.01mm만큼 offset (Z-fighting 방지하면서 표면에 거의 붙임)
+    // 2. upVector 방향으로 clampedHeightOffset 만큼 offset (면을 따라 위아래 이동, 제한 적용)
+    // 3. rightVector 방향으로 clampedHorizontalOffset 만큼 offset (면을 따라 좌우 이동, 제한 적용)
+    const position = qrRegion.center.clone()
+      .add(qrRegion.normal.clone().multiplyScalar(0.01))
+      .add(qrRegion.upVector.clone().multiplyScalar(clampedHeightOffset))
+      .add(rightVector.multiplyScalar(clampedHorizontalOffset));
+
+    return { quaternion, position, rightVector };
+  }, [qrRegion, config.qrSize, config.qrHeightOffset, config.qrHorizontalOffset]);
+
+  // Cleanup geometries on unmount
+  // ⚠️ CRITICAL: Must be before ANY early return (Hook order must be consistent)
+  useEffect(() => {
+    return () => {
+      baseGeometry?.dispose();
+      textGeometry?.dispose();
+      imageGeometriesArray?.forEach(geo => geo?.dispose());
+    };
+  }, [baseGeometry, textGeometry, imageGeometriesArray]);
+
   useEffect(() => {
     if (onGeometriesReady && geometryDataRef.current) {
       onGeometriesReady(geometryDataRef.current);
@@ -312,47 +372,9 @@ export const QRPlateInstance = ({
     return null;
   }
 
-  // Quaternion 계산 (법선 + Up 벡터 사용)
-  const qrQuaternion = getQuaternionFromNormalAndUp(
-    qrRegion.normal,
-    qrRegion.upVector
-  );
+  if (!qrTransform) return null;
 
-  // Right 벡터 계산 (upVector × normal)
-  const rightVector = new THREE.Vector3()
-    .crossVectors(qrRegion.upVector, qrRegion.normal)
-    .normalize();
-
-  // QR 크기를 고려한 높이/좌우 오프셋 제한
-  const qrHalfSize = config.qrSize / 2;
-  const PLATE_WIDTH = 60; // mm (판 너비)
-
-  let clampedHeightOffset = config.qrHeightOffset;
-  let clampedHorizontalOffset = config.qrHorizontalOffset;
-
-  // 높이 제한 (상단, 하단 모두 제한)
-  if (qrRegion.topBoundary !== null && qrRegion.bottomBoundary !== null) {
-    const maxOffset = qrRegion.topBoundary - qrHalfSize; // 상단: QR 상단이 경계를 넘지 않도록
-    const minOffset = qrRegion.bottomBoundary + qrHalfSize; // 하단: QR 하단이 경계를 넘지 않도록
-    clampedHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.qrHeightOffset));
-  }
-
-  // 좌우 제한 (판 너비 기준)
-  const maxHorizontalOffset = (PLATE_WIDTH - config.qrSize) / 2;
-  const minHorizontalOffset = -(PLATE_WIDTH - config.qrSize) / 2;
-  clampedHorizontalOffset = Math.max(
-    minHorizontalOffset,
-    Math.min(maxHorizontalOffset, config.qrHorizontalOffset)
-  );
-
-  // QR 위치 계산
-  // 1. 법선 방향으로 0.01mm만큼 offset (Z-fighting 방지하면서 표면에 거의 붙임)
-  // 2. upVector 방향으로 clampedHeightOffset 만큼 offset (면을 따라 위아래 이동, 제한 적용)
-  // 3. rightVector 방향으로 clampedHorizontalOffset 만큼 offset (면을 따라 좌우 이동, 제한 적용)
-  const qrPosition = qrRegion.center.clone()
-    .add(qrRegion.normal.clone().multiplyScalar(0.01))
-    .add(qrRegion.upVector.clone().multiplyScalar(clampedHeightOffset))
-    .add(rightVector.multiplyScalar(clampedHorizontalOffset));
+  const { quaternion: qrQuaternion, position: qrPosition } = qrTransform;
 
   // 텍스트 위치/회전 계산 (textRegion이 있을 때만)
   let textPosition: THREE.Vector3 | null = null;

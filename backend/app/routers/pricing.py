@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
 from app.models.pricing import PricingSetting
+from app.services.pricing_service import get_pricing_settings as get_pricing_service
 from app.auth import get_admin_user
 
 router = APIRouter(prefix="/api/pricing", tags=["pricing"])
@@ -26,23 +27,11 @@ class PricingSettingUpdate(BaseModel):
 
 
 @router.get("", response_model=PricingSettingResponse)
-def get_pricing_settings(db: Session = Depends(get_db)):
+def get_pricing(db: Session = Depends(get_db)):
     """
     현재 가격 설정 조회 (인증 불필요)
     """
-    setting = db.query(PricingSetting).first()
-
-    if not setting:
-        # 기본 설정이 없으면 생성
-        setting = PricingSetting(
-            base_price=20000.0,
-            text_price=5000.0,
-            image_price=5000.0
-        )
-        db.add(setting)
-        db.commit()
-        db.refresh(setting)
-
+    setting = get_pricing_service(db, create_if_missing=True)
     return setting
 
 

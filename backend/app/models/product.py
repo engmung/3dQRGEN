@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, Float, DateTime
-from datetime import datetime
 from app.database import Base
+from app.utils.datetime_utils import get_kst_now
 
 
 class Product(Base):
@@ -18,8 +18,8 @@ class Product(Base):
     base_price = Column(Float, default=0.0)  # 기본 가격 (옵션)
 
     # 메타데이터
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_kst_now)
+    updated_at = Column(DateTime, default=get_kst_now, onupdate=get_kst_now)
 
     def __repr__(self):
         return f"<Product(sku='{self.sku}', name='{self.name}', category='{self.category}')>"

@@ -3,6 +3,8 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import { fetchAllOrderGroups, getOrderGroupDownloadUrl, deleteOrderGroup, updateOrderGroupStatus, updatePricingSettings, type OrderGroupDetail, type PricingSettings } from '../utils/api';
 import { formatPrice, getPricingSettings, invalidatePricingCache } from '../utils/pricing';
 import { ProductionCalendar } from '../components/ProductionCalendar';
+import { getStatusText, getStatusColor } from '../utils/orderHelpers';
+import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
 
 const ADMIN_EMAILS = ['lsh678902@gmail.com'];
 
@@ -188,26 +190,6 @@ export function Admin() {
     } catch (err: any) {
       alert('일괄 삭제 실패: ' + err.message);
     }
-  };
-
-  const getStatusText = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      pending: '입금 대기',
-      paid: '입금 완료',
-      completed: '배송 완료',
-      failed: '취소됨',
-    };
-    return statusMap[status] || status;
-  };
-
-  const getStatusColor = (status: string) => {
-    const colorMap: { [key: string]: string } = {
-      pending: '#ffc107',
-      paid: '#28a745',
-      completed: '#007bff',
-      failed: '#dc3545',
-    };
-    return colorMap[status] || '#6c757d';
   };
 
   // 클립보드 복사 함수
@@ -610,30 +592,11 @@ export function Admin() {
       {/* 주문 상세 모달 */}
       {selectedOrderGroupDetail && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
+          style={MODAL_OVERLAY}
           onClick={() => setSelectedOrderGroupDetail(null)}
         >
           <div
-            style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '8px',
-              maxWidth: '800px',
-              width: '90%',
-              maxHeight: '90vh',
-              overflow: 'auto',
-            }}
+            style={MODAL_CONTENT_LARGE}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 style={{ marginTop: 0, marginBottom: '20px' }}>주문 상세 정보</h2>

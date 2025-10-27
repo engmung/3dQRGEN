@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { fetchAllProductionSchedule, updateProductionDate, createProductionDate, fetchDateOrders, type ProductionScheduleDate } from '../utils/api';
+import { MODAL_OVERLAY, MODAL_CONTENT } from '../styles/modalStyles';
+import { BUTTON_PRIMARY, BUTTON_SECONDARY } from '../styles/buttonStyles';
 
 interface ProductionCalendarProps {
   onReload?: () => void;
@@ -28,9 +30,13 @@ export function ProductionCalendar({ onReload }: ProductionCalendarProps) {
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
 
-      console.log(`📅 [ProductionCalendar] Loading schedules: ${startDate} ~ ${endDate}`);
+      if (import.meta.env.DEV) {
+        console.log(`📅 [ProductionCalendar] Loading schedules: ${startDate} ~ ${endDate}`);
+      }
       const data = await fetchAllProductionSchedule(token, startDate, endDate);
-      console.log(`📅 [ProductionCalendar] Loaded ${data.length} schedules:`, data.map(d => `${d.date}(${d.is_available})`));
+      if (import.meta.env.DEV) {
+        console.log(`📅 [ProductionCalendar] Loaded ${data.length} schedules:`, data.map(d => `${d.date}(${d.is_available})`));
+      }
       setSchedules(data);
       setLoading(false);
     } catch (err) {
@@ -300,28 +306,16 @@ export function ProductionCalendar({ onReload }: ProductionCalendarProps) {
       {showModal && selectedDate && (
         <div
           style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
+            ...MODAL_OVERLAY,
             zIndex: 2000
           }}
           onClick={() => setShowModal(false)}
         >
           <div
             style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '8px',
+              ...MODAL_CONTENT,
               maxWidth: '600px',
               width: '90%',
-              maxHeight: '80vh',
-              overflow: 'auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -462,28 +456,13 @@ export function ProductionCalendar({ onReload }: ProductionCalendarProps) {
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowModal(false)}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
+                style={BUTTON_SECONDARY}
               >
                 취소
               </button>
               <button
                 onClick={handleSave}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
+                style={BUTTON_PRIMARY}
               >
                 저장
               </button>

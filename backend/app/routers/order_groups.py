@@ -10,6 +10,8 @@ from app.models.production_schedule import ProductionSchedule
 from app.schemas.order_group import OrderGroupCreateResponse, OrderGroupResponse
 from app.services import storage
 from app.services.telegram import send_order_notification
+from app.services.pricing_service import calculate_product_price, get_pricing_settings, validate_price
+from app.constants import OrderStatus, PRICE_TOLERANCE
 from app.config import settings
 from app.auth import get_current_user_id, get_admin_user
 from typing import List
@@ -24,32 +26,6 @@ import tempfile
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-def calculate_line_item_price(customization_data: dict, pricing: PricingSetting) -> float:
-    """
-    라인 아이템 단가 계산 (orders.py의 calculate_expected_price와 동일)
-
-    Args:
-        customization_data: 판 설정 데이터 (text, images 포함)
-        pricing: 현재 가격 설정
-
-    Returns:
-        단가 (unit_price)
-    """
-    price = pricing.base_price
-
-    # 텍스트 추가 비용
-    text_content = customization_data.get('text', '')
-    if text_content and text_content.strip():
-        price += pricing.text_price
-
-    # 이미지 추가 비용
-    images = customization_data.get('images', [])
-    if images and len(images) > 0:
-        price += pricing.image_price * len(images)
-
-    return price
 
 
 def serialize_order_group(order_group: OrderGroup) -> dict:
@@ -153,9 +129,7 @@ async def create_order_group(
         schedules_to_update[alloc_date] = (schedule, alloc_qty)
 
     # 4. 가격 설정 가져오기
-    pricing_settings = db.query(PricingSetting).first()
-    if not pricing_settings:
-        raise HTTPException(status_code=500, detail="Pricing settings not found")
+    pricing_settings = get_pricing_settings(db)
 
     # 5. OrderGroup 생성 (production_date는 NULL)
     group_uuid = str(uuid.uuid4())
@@ -194,12 +168,12 @@ async def create_order_group(
             raise HTTPException(status_code=400, detail=f"Invalid line item #{i}: missing required fields")
 
         # 가격 계산
-        unit_price = calculate_line_item_price(customization, pricing_settings)
+        unit_price = calculate_product_price(customization, pricing_settings)
         item_total_price = unit_price * quantity
 
         # 가격 검증 (클라이언트가 보낸 가격과 비교) - 선택적
         client_unit_price = item_data.get('unit_price')
-        if client_unit_price and abs(client_unit_price - unit_price) > 1:
+        if client_unit_price and not validate_price(client_unit_price, unit_price, PRICE_TOLERANCE):
             raise HTTPException(
                 status_code=400,
                 detail=f"Line item #{i} price mismatch. Expected: {unit_price}, Received: {client_unit_price}"
@@ -359,9 +333,8 @@ async def update_order_group_status(
     """
     주문 그룹 상태 업데이트 (관리자 전용)
     """
-    valid_statuses = ['pending', 'paid', 'completed', 'failed']
-    if status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    if not OrderStatus.validate(status):
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(OrderStatus.all())}")
 
     order_group = db.query(OrderGroup).filter(OrderGroup.group_uuid == group_uuid).first()
     if not order_group:
@@ -391,13 +364,13 @@ async def cancel_order_group(
         raise HTTPException(status_code=403, detail="Not authorized to cancel this order")
 
     # pending 상태만 취소 가능
-    if order_group.status != 'pending':
+    if order_group.status != OrderStatus.PENDING:
         raise HTTPException(
             status_code=400,
             detail=f"Cannot cancel order in '{order_group.status}' status. Only 'pending' orders can be cancelled."
         )
 
-    order_group.status = 'failed'
+    order_group.status = OrderStatus.FAILED
     db.commit()
 
     return {"message": "Order group cancelled"}
@@ -488,9 +461,7 @@ async def download_order_group_files(
                     continue
 
                 # 디렉토리 내 모든 .obj와 .mtl 파일 찾기 (이미 의미있는 파일명으로 저장됨)
-                import glob
-                obj_files = glob.glob(os.path.join(line_item_dir, "*.obj"))
-                mtl_files = glob.glob(os.path.join(line_item_dir, "*.mtl"))
+                obj_files, mtl_files = storage.find_model_files(line_item_dir)
 
                 # OBJ 파일 추가
                 for obj_path in obj_files:
@@ -544,9 +515,7 @@ async def download_line_item_files(
         raise HTTPException(status_code=404, detail="Line item files not found")
 
     # 디렉토리 내 .obj, .mtl 파일 찾기 (이미 의미있는 파일명으로 저장됨)
-    import glob
-    obj_files = glob.glob(os.path.join(line_item_dir, "*.obj"))
-    mtl_files = glob.glob(os.path.join(line_item_dir, "*.mtl"))
+    obj_files, mtl_files = storage.find_model_files(line_item_dir)
 
     if not obj_files:
         raise HTTPException(status_code=404, detail="OBJ file not found")

@@ -6,6 +6,8 @@ from app.models.pricing import PricingSetting
 from app.schemas.order import OrderResponse
 from app.services import storage
 from app.services.telegram import send_order_notification
+from app.services.pricing_service import calculate_product_price, get_pricing_settings, validate_price
+from app.constants import OrderStatus, PRICE_TOLERANCE
 from app.config import settings
 from app.auth import get_current_user_id, get_current_user_email, get_admin_user
 import json
@@ -16,32 +18,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-def calculate_expected_price(customization_data: dict, pricing: PricingSetting) -> float:
-    """
-    서버 측에서 판 가격을 계산합니다.
-
-    Args:
-        customization_data: 판 설정 데이터 (textContent, images 포함)
-        pricing: 현재 가격 설정
-
-    Returns:
-        계산된 가격
-    """
-    price = pricing.base_price
-
-    # 텍스트 추가 비용
-    text_content = customization_data.get('text', '')
-    if text_content and text_content.strip():
-        price += pricing.text_price
-
-    # 이미지 추가 비용
-    images = customization_data.get('images', [])
-    if images and len(images) > 0:
-        price += pricing.image_price * len(images)
-
-    return price
 
 
 def serialize_order(order) -> dict:
@@ -97,14 +73,12 @@ async def create_order(
         raise HTTPException(status_code=400, detail="Invalid customization JSON")
 
     # 2. 가격 검증 (서버 측 계산과 비교)
-    pricing_settings = db.query(PricingSetting).first()
-    if not pricing_settings:
-        raise HTTPException(status_code=500, detail="Pricing settings not found")
+    pricing_settings = get_pricing_settings(db)
 
-    expected_price = calculate_expected_price(customization_data, pricing_settings)
+    expected_price = calculate_product_price(customization_data, pricing_settings)
 
-    # 가격 차이 허용 범위: 1원 (부동소수점 오차 고려)
-    if abs(price - expected_price) > 1:
+    # 가격 차이 허용 범위 검증
+    if not validate_price(price, expected_price, PRICE_TOLERANCE):
         raise HTTPException(
             status_code=400,
             detail=f"Price mismatch. Expected: {expected_price}, Received: {price}"
@@ -242,11 +216,11 @@ async def cancel_my_order(
         )
 
     # pending 상태만 취소 가능
-    if order.status != "pending":
+    if order.status != OrderStatus.PENDING:
         status_messages = {
-            "paid": "입금이 확인되어 제작이 시작되었습니다. 취소가 불가능합니다.",
-            "completed": "이미 배송이 완료된 주문입니다.",
-            "failed": "이미 취소된 주문입니다."
+            OrderStatus.PAID: "입금이 확인되어 제작이 시작되었습니다. 취소가 불가능합니다.",
+            OrderStatus.COMPLETED: "이미 배송이 완료된 주문입니다.",
+            OrderStatus.FAILED: "이미 취소된 주문입니다."
         }
         message = status_messages.get(order.status, "이 주문은 취소할 수 없습니다.")
         raise HTTPException(
@@ -255,7 +229,7 @@ async def cancel_my_order(
         )
 
     # 상태를 failed로 변경
-    order.status = "failed"
+    order.status = OrderStatus.FAILED
     db.commit()
     db.refresh(order)
 
@@ -278,11 +252,10 @@ async def update_order_status(
     status: pending, paid, completed, failed 중 하나
     """
     # 유효한 상태 값 확인
-    valid_statuses = ["pending", "paid", "completed", "failed"]
-    if status not in valid_statuses:
+    if not OrderStatus.validate(status):
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+            detail=f"Invalid status. Must be one of: {', '.join(OrderStatus.all())}"
         )
 
     # 주문 조회

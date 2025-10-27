@@ -1,16 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Date, JSON, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone, timedelta
 from app.database import Base
+from app.utils.datetime_utils import get_kst_now
 import uuid
-
-# 한국 시간대 (KST = UTC+9)
-KST = timezone(timedelta(hours=9))
-
-
-def get_kst_now():
-    """현재 한국 시간을 반환합니다 (timezone 정보 제거)."""
-    return datetime.now(KST).replace(tzinfo=None)
 
 
 class OrderLineItem(Base):
@@ -25,7 +17,7 @@ class OrderLineItem(Base):
     order_group_id = Column(Integer, ForeignKey('order_groups.id', ondelete='CASCADE'), nullable=False, index=True)
 
     # Product Info
-    product_sku = Column(String(50), nullable=False)  # 'QR-PLATE-BASE'
+    product_sku = Column(String(50), ForeignKey('products.sku'), nullable=False, index=True)  # 'QR-PLATE-BASE'
 
     # QR Data
     qr_url = Column(String(500), nullable=False)
@@ -37,8 +29,8 @@ class OrderLineItem(Base):
     total_price = Column(Float, nullable=False)  # unit_price * quantity
 
     # Production Schedule (제품별 날짜)
-    production_date = Column(Date, nullable=True, index=True)  # DEPRECATED (하위 호환용)
-    production_dates = Column(JSON, nullable=True)  # 🔥 신규! {"2025-11-01": 3, "2025-11-02": 2}
+    production_date = Column(Date, nullable=True, index=False)  # DEPRECATED (하위 호환용)
+    production_dates = Column(JSON, nullable=True)  # 신규! {"2025-11-01": 3, "2025-11-02": 2}
 
     # Files
     obj_file_path = Column(String(255))  # /storage/order_groups/{group_uuid}/{line_item_uuid}/model.obj

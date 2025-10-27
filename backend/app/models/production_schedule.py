@@ -1,15 +1,8 @@
 from sqlalchemy import Column, Integer, Date, Boolean, DateTime
 from sqlalchemy.orm import validates
-from datetime import datetime, timezone, timedelta, date
+from datetime import date
 from app.database import Base
-
-# 한국 시간대 (KST = UTC+9)
-KST = timezone(timedelta(hours=9))
-
-
-def get_kst_now():
-    """현재 한국 시간을 반환합니다 (timezone 정보 제거)."""
-    return datetime.now(KST).replace(tzinfo=None)
+from app.utils.datetime_utils import get_kst_now
 
 
 class ProductionSchedule(Base):

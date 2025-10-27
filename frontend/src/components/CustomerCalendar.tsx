@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchAvailableDates, type ProductionScheduleDate } from '../utils/api';
+import { COLORS } from '../styles/colors';
+import { SPACING } from '../styles/spacing';
 
 interface CustomerCalendarProps {
   totalQuantity: number; // 주문하려는 총 제품 개수 (표시용)
@@ -89,8 +91,8 @@ export function CustomerCalendar({ totalQuantity, readOnly = true }: CustomerCal
           badge = '⚡ 마감임박';
         } else {
           // 예약 가능
-          bgColor = '#66bb6a';
-          textColor = '#fff';
+          bgColor = COLORS.success;
+          textColor = COLORS.text.white;
         }
       } else if (isPast) {
         bgColor = '#f5f5f5';
@@ -228,13 +230,13 @@ export function CustomerCalendar({ totalQuantity, readOnly = true }: CustomerCal
       </div>
 
       {/* 범례 */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '15px', fontSize: '12px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: SPACING.md, marginBottom: SPACING.lg, fontSize: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '20px', height: '20px', backgroundColor: '#66bb6a', border: '1px solid #ccc' }}></div>
+          <div style={{ width: '20px', height: '20px', backgroundColor: COLORS.success, border: `1px solid ${COLORS.border.medium}` }}></div>
           <span>선택 가능</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '20px', height: '20px', backgroundColor: '#e0e0e0', border: '1px solid #ccc' }}></div>
+          <div style={{ width: '20px', height: '20px', backgroundColor: '#e0e0e0', border: `1px solid ${COLORS.border.medium}` }}></div>
           <span>선택 불가</span>
         </div>
       </div>

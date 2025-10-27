@@ -1,15 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, Float, DateTime, JSON
-from datetime import datetime, timezone, timedelta
 from app.database import Base
+from app.utils.datetime_utils import get_kst_now
 import uuid
-
-# 한국 시간대 (KST = UTC+9)
-KST = timezone(timedelta(hours=9))
-
-def get_kst_now():
-    """현재 한국 시간을 반환합니다 (timezone 정보 제거)."""
-    # SQLite는 naive datetime을 사용하므로 timezone 정보를 제거
-    return datetime.now(KST).replace(tzinfo=None)
 
 
 class Order(Base):
@@ -36,11 +28,10 @@ class Order(Base):
 
     # Payment & Status
     status = Column(String(20), default="pending")  # pending, paid, completed, failed
-    payment_id = Column(String(100))  # Lemon Squeezy order ID
+    payment_id = Column(String(100))  # TODO: Implement payment integration or remove
     price = Column(Float, default=0.0)  # 주문 가격 (원)
 
     # Download
-    download_token = Column(String(255))
     stl_file_path = Column(String(255))
 
     # Timestamps

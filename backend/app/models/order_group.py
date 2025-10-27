@@ -1,16 +1,8 @@
 from sqlalchemy import Column, Integer, String, Text, Float, DateTime, Date
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone, timedelta
 from app.database import Base
+from app.utils.datetime_utils import get_kst_now
 import uuid
-
-# 한국 시간대 (KST = UTC+9)
-KST = timezone(timedelta(hours=9))
-
-
-def get_kst_now():
-    """현재 한국 시간을 반환합니다 (timezone 정보 제거)."""
-    return datetime.now(KST).replace(tzinfo=None)
 
 
 class OrderGroup(Base):
@@ -33,7 +25,7 @@ class OrderGroup(Base):
     delivery_message = Column(Text)
 
     # Production Schedule (DEPRECATED - LineItem별로 이동됨)
-    production_date = Column(Date, nullable=True, index=True)  # 하위호환용 (사용 안 함)
+    production_date = Column(Date, nullable=True, index=False)  # 하위호환용 (사용 안 함)
 
     # Payment & Status
     status = Column(String(20), default="pending")  # pending, paid, processing, shipped, completed, cancelled

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { QRPlateInstance } from "./QRPlateInstance";
@@ -8,6 +8,7 @@ import type { GLBRegions } from "../utils/glbLoader";
 import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { applyMaterialToObject, disposeObject } from "../utils/materialFactory";
 
 interface Scene3DProps {
   onGltfsLoaded?: (gltfs: {
@@ -34,6 +35,58 @@ interface Scene3DProps {
   ) => void;
 }
 
+/**
+ * Phone model component (size reference)
+ * Fixed hook violation by moving useLoader to top level
+ */
+const PhoneModel = () => {
+  const phoneModel = useLoader(OBJLoader, "/models/Phone.obj");
+
+  const processedPhoneModel = useMemo(() => {
+    const cloned = phoneModel.clone();
+    applyMaterialToObject(cloned, "#333333");
+    cloned.scale.set(34, 34, 34);
+    cloned.rotation.set(0.0, 1.18, 0.0);
+    cloned.position.set(30, 3, -97);
+    return cloned;
+  }, [phoneModel]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      disposeObject(processedPhoneModel);
+    };
+  }, [processedPhoneModel]);
+
+  return <primitive object={processedPhoneModel} />;
+};
+
+/**
+ * Pin model component (preview only)
+ * Fixed hook violation by moving useLoader to top level
+ */
+const PinModel = ({ color }: { color: string }) => {
+  const pinGltf = useLoader(GLTFLoader, "/models/BASE1_parts/pin.glb");
+
+  const processedPinModel = useMemo(() => {
+    const cloned = pinGltf.scene.clone();
+    applyMaterialToObject(cloned, color);
+    cloned.scale.set(1, 1, 1);
+    cloned.rotation.set(0, 0, 4.36);
+    cloned.position.set(-0.8, 93.2, 0);
+    return cloned;
+  }, [pinGltf, color]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      disposeObject(processedPinModel);
+    };
+  }, [processedPinModel]);
+
+  return <primitive object={processedPinModel} />;
+};
+
 export const Scene3D = ({
   onGltfsLoaded,
   onQRGeometriesReady,
@@ -47,16 +100,6 @@ export const Scene3D = ({
   // 카메라 위치 상태
   const cameraPos = { x: 150, y: 120, z: 150 };
   const targetY = 50;
-
-  // 폰 모델 고정 값
-  const phonePos = { x: 30, y: 3, z: -97 };
-  const phoneRotation = { x: 0.0, y: 1.18, z: 0.0 };
-  const phoneScale = 34;
-
-  // Pin 모델 고정 값 (미리보기 전용)
-  const pinPos = { x: -0.8, y: 93.2, z: 0 };
-  const pinRotation = { x: 0, y: 0, z: 4.36 };
-  const pinScale = 1;
 
   return (
     <>
@@ -90,26 +133,7 @@ export const Scene3D = ({
         </mesh>
 
         {/* 폰 모델 (크기 비교용) */}
-        <primitive
-          object={(() => {
-            const obj = useLoader(OBJLoader, "/models/Phone.obj");
-            obj.traverse((child) => {
-              if (child instanceof THREE.Mesh) {
-                child.material = new THREE.MeshStandardMaterial({
-                  color: "#333333",
-                  metalness: 0.3,
-                  roughness: 0.7,
-                });
-                child.castShadow = true;
-                child.receiveShadow = true;
-              }
-            });
-            return obj;
-          })()}
-          position={[phonePos.x, phonePos.y, phonePos.z]}
-          rotation={[phoneRotation.x, phoneRotation.y, phoneRotation.z]}
-          scale={phoneScale}
-        />
+        <PhoneModel />
 
         {/* Pin 모델 (미리보기 전용) - 선택된 판이 있을 때만 표시 */}
         {selectedPlateId &&
@@ -117,31 +141,7 @@ export const Scene3D = ({
             const selectedPlate = plates.find((p) => p.id === selectedPlateId);
             if (!selectedPlate) return null;
 
-            return (
-              <primitive
-                object={(() => {
-                  const gltf = useLoader(
-                    GLTFLoader,
-                    "/models/BASE1_parts/pin.glb"
-                  );
-                  gltf.scene.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                      child.material = new THREE.MeshStandardMaterial({
-                        color: selectedPlate.plateColor,
-                        metalness: 0.3,
-                        roughness: 0.7,
-                      });
-                      child.castShadow = true;
-                      child.receiveShadow = true;
-                    }
-                  });
-                  return gltf.scene;
-                })()}
-                position={[pinPos.x, pinPos.y, pinPos.z]}
-                rotation={[pinRotation.x, pinRotation.y, pinRotation.z]}
-                scale={pinScale}
-              />
-            );
+            return <PinModel color={selectedPlate.plateColor} />;
           })()}
 
         {/* 선택된 QR 판만 중앙에 렌더링 */}

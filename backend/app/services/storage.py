@@ -3,9 +3,14 @@ import os
 import json
 import shutil
 import aiofiles
+import glob
+import logging
 from fastapi import UploadFile
 from app.config import settings
 from datetime import datetime
+from typing import Tuple, List
+
+logger = logging.getLogger(__name__)
 
 
 async def save_order_model(
@@ -160,3 +165,83 @@ def check_file_exists(file_path: str) -> bool:
         파일 존재 여부
     """
     return os.path.exists(file_path)
+
+
+def find_model_files(directory: str) -> Tuple[List[str], List[str]]:
+    """
+    Find all OBJ and MTL files in directory.
+
+    Consolidates duplicate glob logic from:
+    - routers/order_groups.py (Lines 491-493, 547-549)
+    - routers/downloads.py (Lines 34-42)
+
+    Args:
+        directory: Directory path to search
+
+    Returns:
+        Tuple of (obj_files, mtl_files)
+    """
+    obj_files = glob.glob(os.path.join(directory, "*.obj"))
+    mtl_files = glob.glob(os.path.join(directory, "*.mtl"))
+    return obj_files, mtl_files
+
+
+def sanitize_email(email: str) -> str:
+    """
+    Sanitize email for use in filename.
+
+    Args:
+        email: Email address
+
+    Returns:
+        Sanitized email string safe for filenames
+    """
+    return email.replace("@", "_").replace(".", "_")
+
+
+def sanitize_customer_name(name: str) -> str:
+    """
+    Sanitize customer name for use in filename.
+
+    Args:
+        name: Customer name
+
+    Returns:
+        Sanitized name string safe for filenames
+    """
+    return name.replace(" ", "_").replace("/", "-").replace("\\", "-")
+
+
+async def delete_order_files(order_uuid: str) -> bool:
+    """
+    Delete all files associated with an order.
+
+    Consolidates logic from routers/orders.py (Lines 322-335)
+
+    Args:
+        order_uuid: Order UUID
+
+    Returns:
+        True if files were deleted, False if directory not found
+    """
+    order_dir = os.path.join(settings.storage_path, order_uuid)
+
+    if not os.path.exists(order_dir):
+        return False
+
+    try:
+        # Delete all files in directory
+        for filename in os.listdir(order_dir):
+            file_path = os.path.join(order_dir, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                logger.warning(f"Failed to delete file {file_path}: {e}")
+
+        # Remove directory
+        os.rmdir(order_dir)
+        return True
+    except Exception as e:
+        logger.warning(f"Failed to delete order directory {order_dir}: {e}")
+        return False
