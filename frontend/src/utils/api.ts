@@ -4,7 +4,8 @@
 
 import { fetchWithRetry } from './fetchWithRetry';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Nginx 프록시를 통한 백엔드 접근 (빈 문자열이면 상대 경로 사용)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 /**
  * Clerk JWT 토큰을 가져오는 함수
