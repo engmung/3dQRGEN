@@ -7,9 +7,78 @@ const fontCache = new Map<string, Font>();
 // Promise 캐시 (동시 요청 방지)
 const fontLoadingPromises = new Map<string, Promise<Font>>();
 
-// 사용 가능한 폰트 목록 (임시: Pretendard만)
+// 사용 가능한 폰트 목록
 export const AVAILABLE_FONTS = {
-  'Pretendard-Regular': { name: 'Pretendard', label: 'Pretendard (한글/English)', file: 'Pretendard-Regular.ttf' },
+  // Pretendard (한글 + 영문)
+  'Pretendard-Regular': {
+    name: 'Pretendard',
+    label: 'Pretendard Regular',
+    file: 'Pretendard/Pretendard-Regular.ttf'
+  },
+  'Pretendard-Bold': {
+    name: 'Pretendard',
+    label: 'Pretendard Bold',
+    file: 'Pretendard/Pretendard-Bold.ttf'
+  },
+  'Pretendard-ExtraBold': {
+    name: 'Pretendard',
+    label: 'Pretendard ExtraBold',
+    file: 'Pretendard/Pretendard-ExtraBold.ttf'
+  },
+
+  // Roboto (영문)
+  'Roboto-Regular': {
+    name: 'Roboto',
+    label: 'Roboto Regular',
+    file: 'Roboto/Roboto-Regular.ttf'
+  },
+  'Roboto-Bold': {
+    name: 'Roboto',
+    label: 'Roboto Bold',
+    file: 'Roboto/Roboto-Bold.ttf'
+  },
+  'Roboto-Italic': {
+    name: 'Roboto',
+    label: 'Roboto Italic',
+    file: 'Roboto/Roboto-Italic.ttf'
+  },
+  'Roboto-BoldItalic': {
+    name: 'Roboto',
+    label: 'Roboto Bold Italic',
+    file: 'Roboto/Roboto-BoldItalic.ttf'
+  },
+  'Roboto-Condensed': {
+    name: 'Roboto Condensed',
+    label: 'Roboto Condensed',
+    file: 'Roboto/Roboto_Condensed-Regular.ttf'
+  },
+  'Roboto-CondensedItalic': {
+    name: 'Roboto Condensed',
+    label: 'Roboto Condensed Italic',
+    file: 'Roboto/Roboto_Condensed-Italic.ttf'
+  },
+  'Roboto-CondensedBoldItalic': {
+    name: 'Roboto Condensed',
+    label: 'Roboto Condensed Bold Italic',
+    file: 'Roboto/Roboto_Condensed-BoldItalic.ttf'
+  },
+
+  // 어그로체 (한글, 디자인)
+  'AggroB': {
+    name: '어그로체',
+    label: '어그로 Bold',
+    file: '어그로체/SB 어그로 B.ttf'
+  },
+  'AggroM': {
+    name: '어그로체',
+    label: '어그로 Medium',
+    file: '어그로체/SB 어그로 M.ttf'
+  },
+  'AggroL': {
+    name: '어그로체',
+    label: '어그로 Light',
+    file: '어그로체/SB 어그로 L.ttf'
+  },
 } as const;
 
 export type FontKey = keyof typeof AVAILABLE_FONTS;

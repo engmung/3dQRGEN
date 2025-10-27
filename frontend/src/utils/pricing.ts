@@ -5,6 +5,9 @@
 import { fetchPricingSettings, type PricingSettings } from './api';
 import type { QRPlateConfig } from '../store/useDesignStore';
 
+// Re-export PricingSettings
+export type { PricingSettings };
+
 // 가격 설정 캐싱
 let cachedPricingSettings: PricingSettings | null = null;
 let lastFetchTime = 0;
