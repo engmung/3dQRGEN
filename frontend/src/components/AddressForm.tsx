@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import DaumPostcode from 'react-daum-postcode';
-import { formatPrice } from '../utils/pricing';
+import { formatPrice, calculatePlatePrice, getPricingSettings } from '../utils/pricing';
 import { CustomerCalendar } from './CustomerCalendar';
+import type { QRPlateConfig } from '../store/useDesignStore';
+import { getQRTypeLabel } from '../utils/qrHelpers';
 
 export interface AddressFormData {
   customerName: string;
@@ -14,10 +16,17 @@ export interface AddressFormData {
   // productionDate 제거됨 (서버가 자동 배분)
 }
 
+interface CartItem {
+  id: string;
+  plateConfig: QRPlateConfig;
+  quantity: number;
+}
+
 interface AddressFormProps {
   initialData: Partial<AddressFormData>;
   price: number;
   totalQuantity: number; // 총 제품 개수
+  cartItems: CartItem[]; // 추가: 가격 상세를 위해 필요
   onSubmit: (data: AddressFormData) => void;
   onCancel: () => void;
 }
@@ -28,9 +37,15 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   initialData,
   price,
   totalQuantity,
+  cartItems,
   onSubmit,
   onCancel,
 }) => {
+  const [pricingSettings, setPricingSettings] = useState<any>(null);
+
+  useEffect(() => {
+    getPricingSettings().then(setPricingSettings);
+  }, []);
   // localStorage에서 저장된 데이터 불러오기
   const loadSavedData = (): Partial<AddressFormData> => {
     try {
@@ -302,30 +317,77 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             </div>
           </div>
 
-          {/* 가격 및 입금 정보 (전체 너비) */}
+          {/* 가격 상세 및 입금 정보 (전체 너비) */}
           <div
             style={{
               marginBottom: '20px',
               padding: '20px',
-              backgroundColor: '#fff9e6',
+              backgroundColor: '#faf9f7',
               borderRadius: '8px',
-              border: '3px solid #ffc107',
+              border: '2px solid #e5e0db',
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}
           >
-            {/* 주문 금액 */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px',
-              paddingBottom: '15px',
-              borderBottom: '2px dashed #ffc107'
-            }}>
-              <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#333' }}>💰 주문 금액</span>
-              <span style={{ fontSize: '28px', fontWeight: 'bold', color: '#d32f2f' }}>
-                {formatPrice(price)}
-              </span>
+            {/* 주문 금액 상세 */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: 700, color: '#333' }}>
+                💰 주문 금액 상세
+              </h3>
+
+              {pricingSettings && cartItems.map((item, index) => {
+                const itemPrice = calculatePlatePrice(item.plateConfig, pricingSettings);
+                const itemTotal = itemPrice * item.quantity;
+
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      marginBottom: '12px',
+                      padding: '12px',
+                      backgroundColor: '#fff',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e0db',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: 600, color: '#333' }}>
+                        #{index + 1} {getQRTypeLabel(item.plateConfig.qrType)} QR × {item.quantity}개
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#FF6B6B' }}>
+                        {formatPrice(itemTotal)}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '12px', color: '#666', paddingLeft: '8px' }}>
+                      <div>기본: {formatPrice(pricingSettings.base_price)}</div>
+                      {item.plateConfig.text && item.plateConfig.text.trim().length > 0 && (
+                        <div>+ 텍스트: {formatPrice(pricingSettings.text_price)}</div>
+                      )}
+                      {item.plateConfig.images.length > 0 && (
+                        <div>+ 이미지 {item.plateConfig.images.length}개: {formatPrice(pricingSettings.image_price * item.plateConfig.images.length)}</div>
+                      )}
+                      <div style={{ marginTop: '4px', color: '#333', fontWeight: 600 }}>
+                        = {formatPrice(itemPrice)} × {item.quantity}개
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* 총 결제 금액 */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '15px',
+                paddingTop: '15px',
+                borderTop: '2px solid #e5e0db'
+              }}>
+                <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#333' }}>총 결제 금액</span>
+                <span style={{ fontSize: '28px', fontWeight: 'bold', color: '#FF6B6B' }}>
+                  {formatPrice(price)}
+                </span>
+              </div>
             </div>
 
             {/* 입금 계좌 */}
@@ -334,7 +396,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 fontSize: '16px',
                 fontWeight: 'bold',
                 marginBottom: '12px',
-                color: '#d32f2f',
+                color: '#333',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -347,7 +409,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 padding: '15px',
                 backgroundColor: 'white',
                 borderRadius: '6px',
-                border: '2px solid #ffc107',
+                border: '1px solid #e5e0db',
                 marginBottom: '12px'
               }}>
                 <div style={{
@@ -358,12 +420,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 }}>
                   <div>
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>은행명</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#000' }}>국민은행</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#000' }}>신한은행</div>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText('국민은행');
+                      navigator.clipboard.writeText('신한은행');
                       alert('은행명이 복사되었습니다');
                     }}
                     style={{
@@ -389,13 +451,13 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                   <div>
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>계좌번호</div>
                     <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#000', fontFamily: 'monospace' }}>
-                      123-456-789012
+                      110-548-406070
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText('123-456-789012');
+                      navigator.clipboard.writeText('110-548-406070');
                       alert('계좌번호가 복사되었습니다');
                     }}
                     style={{
@@ -419,12 +481,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 }}>
                   <div>
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>예금주</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#000' }}>홍길동</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#000' }}>이승훈</div>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText('홍길동');
+                      navigator.clipboard.writeText('이승훈');
                       alert('예금주명이 복사되었습니다');
                     }}
                     style={{
@@ -446,7 +508,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  const accountInfo = `국민은행 123-456-789012 (예금주: 홍길동)\n입금액: ${formatPrice(price)}`;
+                  const accountInfo = `신한은행 110-548-406070 (예금주: 이승훈)\n입금액: ${formatPrice(price)}`;
                   navigator.clipboard.writeText(accountInfo);
                   alert('전체 입금 정보가 복사되었습니다');
                 }}
@@ -469,12 +531,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               {/* 안내 메시지 */}
               <div style={{
                 padding: '12px',
-                backgroundColor: '#e3f2fd',
+                backgroundColor: '#f5f3f0',
                 borderRadius: '6px',
-                border: '1px solid #90caf9'
+                border: '1px solid #e5e0db'
               }}>
-                <div style={{ fontSize: '13px', color: '#1976d2', lineHeight: '1.6' }}>
-                  ℹ️ <strong>주문 진행 안내</strong><br />
+                <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
+                  ℹ️ <strong style={{ color: '#333' }}>주문 진행 안내</strong><br />
                   • 입금 확인 후 생산이 시작됩니다<br />
                   • 입금자명은 주문자명과 동일하게 해주세요<br />
                   • 주문 진행 상황은 '내 주문' 메뉴에서 확인 가능합니다<br />
@@ -490,12 +552,14 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               type="button"
               onClick={onCancel}
               style={{
-                padding: '10px 20px',
-                backgroundColor: '#6c757d',
+                padding: '12px 24px',
+                backgroundColor: '#999',
                 color: 'white',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 600,
               }}
             >
               취소
@@ -503,12 +567,14 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             <button
               type="submit"
               style={{
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
+                padding: '12px 24px',
+                backgroundColor: '#FF6B6B',
                 color: 'white',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 600,
               }}
             >
               주문하기

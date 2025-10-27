@@ -6,7 +6,6 @@ class OrderStatus:
     PENDING = "pending"                      # 입금 대기
     PAID = "paid"                            # 입금 완료 / 제작 대기
     IN_PRODUCTION = "in_production"          # 제작 중
-    PRODUCTION_COMPLETED = "production_completed"  # 제작 완료 / 배송 대기
     SHIPPED = "shipped"                      # 배송 중
     COMPLETED = "completed"                  # 배송 완료
     FAILED = "failed"                        # 취소됨
@@ -18,7 +17,6 @@ class OrderStatus:
             cls.PENDING,
             cls.PAID,
             cls.IN_PRODUCTION,
-            cls.PRODUCTION_COMPLETED,
             cls.SHIPPED,
             cls.COMPLETED,
             cls.FAILED

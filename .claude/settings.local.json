@@ -7,7 +7,8 @@
       "Bash(powershell:*)",
       "Bash(python:*)",
       "Bash(git log:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

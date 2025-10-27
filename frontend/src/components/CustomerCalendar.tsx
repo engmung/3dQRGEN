@@ -1,22 +1,33 @@
 import { useState, useEffect } from 'react';
 import { fetchAvailableDates, type ProductionScheduleDate } from '../utils/api';
-import { COLORS } from '../styles/colors';
-import { SPACING } from '../styles/spacing';
 
 interface CustomerCalendarProps {
   totalQuantity: number; // 주문하려는 총 제품 개수 (표시용)
   readOnly?: boolean; // 읽기 전용 모드 (선택 불가)
 }
 
+interface DateAllocation {
+  date: string;
+  allocated: number;
+  remainingAfterAllocation: number;
+}
+
+interface ScheduleViewItem {
+  date: string;
+  reserved: number;
+  capacity: number;
+  percentage: number;
+  isMyOrder: boolean;
+}
+
 export function CustomerCalendar({ totalQuantity, readOnly = true }: CustomerCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [schedules, setSchedules] = useState<ProductionScheduleDate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadSchedules();
-  }, [currentDate]);
+  }, []);
 
   const loadSchedules = async () => {
     try {
@@ -31,125 +42,67 @@ export function CustomerCalendar({ totalQuantity, readOnly = true }: CustomerCal
     }
   };
 
-  // 이전/다음 달로 이동
-  const goToPrevMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  // 가능한 날짜만 필터링 (오늘 이후 + is_available=true)
+  const getAvailableDates = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return schedules
+      .filter(s => s.is_available && s.date >= today)
+      .slice(0, 10); // 최대 10개만 표시
   };
 
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  // 주문 수량을 날짜별로 분배 계산
+  const calculateDistribution = (): { distribution: DateAllocation[]; hasEnoughCapacity: boolean } => {
+    const availableDates = getAvailableDates();
+    const distribution: DateAllocation[] = [];
+
+    let remainingQuantity = totalQuantity;
+
+    for (const schedule of availableDates) {
+      if (remainingQuantity <= 0) break;
+
+      const canAllocate = Math.min(remainingQuantity, schedule.available_slots);
+
+      distribution.push({
+        date: schedule.date,
+        allocated: canAllocate,
+        remainingAfterAllocation: schedule.available_slots - canAllocate,
+      });
+
+      remainingQuantity -= canAllocate;
+    }
+
+    return { distribution, hasEnoughCapacity: remainingQuantity <= 0 };
   };
 
-  // 읽기 전용 모드에서는 날짜 클릭 불가
-  const handleDateClick = (dateStr: string) => {
-    // 읽기 전용 모드 - 아무 동작 안 함
-    return;
+  // 전체 현황 표시용 데이터
+  const getFullScheduleView = (myOrderDates: string[]): ScheduleViewItem[] => {
+    const availableDates = getAvailableDates();
+
+    return availableDates.map(schedule => ({
+      date: schedule.date,
+      reserved: schedule.reserved_quantity,
+      capacity: schedule.max_capacity,
+      percentage: (schedule.reserved_quantity / schedule.max_capacity) * 100,
+      isMyOrder: myOrderDates.includes(schedule.date),
+    }));
   };
 
-  // 캘린더 렌더링
-  const renderCalendar = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // 날짜 포맷팅 - 긴 형식: "10월 28일 (화)"
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+    return `${month}월 ${day}일 (${dayOfWeek})`;
+  };
 
-    const weeks = [];
-    let days = [];
-
-    // 빈 칸 채우기 (이전 달)
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<td key={`empty-${i}`} style={{ padding: '8px', border: '1px solid #e0e0e0' }}></td>);
-    }
-
-    // 날짜 채우기
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const schedule = schedules.find(s => s.date === dateStr);
-      const today = new Date().toISOString().split('T')[0];
-      const isToday = dateStr === today;
-      const isPast = dateStr < today;
-
-      let bgColor = '#fff';
-      let textColor = '#333';
-      let cursor = 'default';
-      let badge = '';  // 뱃지 텍스트
-
-      if (schedule) {
-        if (!schedule.is_available) {
-          // 주문 불가
-          bgColor = '#e0e0e0';
-          textColor = '#999';
-        } else if (schedule.available_slots === 0) {
-          // 마감
-          bgColor = '#ef5350';
-          textColor = '#fff';
-          badge = '🔥 마감';
-        } else if (schedule.available_slots <= 2) {
-          // 마감 임박
-          bgColor = '#ffeb3b';
-          textColor = '#333';
-          badge = '⚡ 마감임박';
-        } else {
-          // 예약 가능
-          bgColor = COLORS.success;
-          textColor = COLORS.text.white;
-        }
-      } else if (isPast) {
-        bgColor = '#f5f5f5';
-        textColor = '#999';
-      }
-
-      const border = '1px solid #e0e0e0';
-
-      days.push(
-        <td
-          key={day}
-          style={{
-            padding: '8px',
-            border,
-            backgroundColor: bgColor,
-            color: textColor,
-            cursor,
-            textAlign: 'center',
-            verticalAlign: 'top',
-            minWidth: '80px',
-            minHeight: '60px',
-            position: 'relative',
-            fontWeight: isToday ? 'bold' : 'normal',
-          }}
-        >
-          <div style={{ fontSize: '16px', marginBottom: '4px' }}>
-            {day}
-            {isToday && <span style={{ fontSize: '10px', marginLeft: '2px' }}>📍</span>}
-          </div>
-          {badge && (
-            <div style={{ fontSize: '10px', fontWeight: 'bold' }}>
-              {badge}
-            </div>
-          )}
-          {schedule && schedule.is_available && !badge && (
-            <div style={{ fontSize: '10px' }}>
-              {schedule.available_slots}자리
-            </div>
-          )}
-        </td>
-      );
-
-      if ((firstDay + day) % 7 === 0) {
-        weeks.push(<tr key={`week-${weeks.length}`}>{days}</tr>);
-        days = [];
-      }
-    }
-
-    // 마지막 주 처리
-    if (days.length > 0) {
-      while (days.length < 7) {
-        days.push(<td key={`empty-end-${days.length}`} style={{ padding: '8px', border: '1px solid #e0e0e0' }}></td>);
-      }
-      weeks.push(<tr key={`week-${weeks.length}`}>{days}</tr>);
-    }
-
-    return weeks;
+  // 날짜 포맷팅 - 짧은 형식: "10/28 (화)"
+  const formatDateShort = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+    return `${month}/${day} (${dayOfWeek})`;
   };
 
   if (loading) {
@@ -162,106 +115,178 @@ export function CustomerCalendar({ totalQuantity, readOnly = true }: CustomerCal
 
   if (error) {
     return (
-      <div style={{ padding: '20px', backgroundColor: '#ffebee', color: '#c62828', borderRadius: '8px', border: '1px solid #ef5350' }}>
+      <div style={{ padding: '20px', backgroundColor: '#fff5f5', color: '#c62828', borderRadius: '8px', border: '1px solid #e5e0db' }}>
         <strong>⚠️ 날짜 로드 실패</strong>
         <div style={{ fontSize: '14px', marginTop: '8px' }}>{error}</div>
       </div>
     );
   }
 
+  const { distribution, hasEnoughCapacity } = calculateDistribution();
+  const myOrderDates = distribution.map(d => d.date);
+  const fullSchedule = getFullScheduleView(myOrderDates);
+
   return (
-    <div>
-      {/* 헤더 */}
-      <div style={{ marginBottom: '15px' }}>
-        <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333', fontWeight: 'bold' }}>
-          📅 현재 예약 현황
+    <div style={{
+      backgroundColor: '#f8f6f3',
+      padding: '20px',
+      borderRadius: '8px',
+      border: '1px solid #e5e0db',
+    }}>
+      {/* 상단: 전체 생산 현황 */}
+      <div style={{
+        backgroundColor: '#faf9f7',
+        padding: '16px',
+        borderRadius: '8px',
+        border: '1px solid #e5e0db',
+        marginBottom: '20px',
+      }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: '#333', fontWeight: 'bold' }}>
+          📊 전체 생산 현황
         </h3>
-        <div style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>
-          주문 수량: <strong style={{ color: '#2196F3', fontSize: '15px' }}>{totalQuantity}개</strong>
-        </div>
-        <div style={{ fontSize: '12px', color: '#888', backgroundColor: '#f0f8ff', padding: '8px', borderRadius: '4px', border: '1px solid #d0e8ff' }}>
-          💡 주문하시면 가능한 가장 빠른 날짜부터 자동으로 배정됩니다.
-        </div>
+
+        {fullSchedule.length === 0 ? (
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
+            color: '#999',
+            backgroundColor: '#fff',
+            borderRadius: '6px',
+            border: '1px solid #e5e0db'
+          }}>
+            현재 예약 가능한 날짜가 없습니다.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {fullSchedule.map((schedule) => {
+              const percentage = schedule.percentage;
+
+              let badge = '';
+              let barColor = '#4CAF50';  // 기본: 초록
+
+              if (percentage >= 100) {
+                badge = '🔥 마감';
+                barColor = '#ef5350';
+              } else if (percentage >= 80) {
+                badge = '⚡ 마감임박';
+                barColor = '#ffc107';
+              } else if (percentage < 50) {
+                badge = '✨ 여유';
+              }
+
+              return (
+                <div
+                  key={schedule.date}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '6px',
+                    backgroundColor: schedule.isMyOrder ? '#fffbf0' : '#fff',
+                    border: schedule.isMyOrder ? '1px solid #ffd700' : '1px solid #e5e0db',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <span style={{
+                    minWidth: '90px',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    color: '#333',
+                  }}>
+                    {formatDateShort(schedule.date)}
+                  </span>
+
+                  {/* 프로그레스 바 */}
+                  <div style={{
+                    width: '120px',
+                    height: '16px',
+                    backgroundColor: '#e0e0e0',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: `${Math.min(percentage, 100)}%`,
+                      height: '100%',
+                      backgroundColor: barColor,
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+
+                  <span style={{ fontSize: '13px', color: '#666' }}>
+                    {schedule.reserved}/{schedule.capacity} 예약
+                  </span>
+
+                  {badge && (
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                      {badge}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* 월 이동 버튼 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            goToPrevMonth();
-          }}
-          type="button"
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#2196F3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
-          }}
-        >
-          ← 이전달
-        </button>
-        <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#333' }}>
-          {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
-        </h4>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            goToNextMonth();
-          }}
-          type="button"
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#2196F3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
-          }}
-        >
-          다음달 →
-        </button>
-      </div>
+      {/* 하단: 회원님 주문 배정 */}
+      <div style={{
+        backgroundColor: '#f0f8ff',
+        padding: '16px',
+        borderRadius: '8px',
+        border: '1px solid #b3d9ff',
+      }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: '#333', fontWeight: 'bold' }}>
+          📦 회원님 주문 배정
+        </h3>
 
-      {/* 범례 */}
-      <div style={{ display: 'flex', gap: SPACING.md, marginBottom: SPACING.lg, fontSize: '12px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '20px', height: '20px', backgroundColor: COLORS.success, border: `1px solid ${COLORS.border.medium}` }}></div>
-          <span>선택 가능</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '20px', height: '20px', backgroundColor: '#e0e0e0', border: `1px solid ${COLORS.border.medium}` }}></div>
-          <span>선택 불가</span>
-        </div>
-      </div>
-
-      {/* 캘린더 테이블 */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
-        <thead>
-          <tr>
-            {['일', '월', '화', '수', '목', '금', '토'].map((day, i) => (
-              <th key={day} style={{
-                padding: '10px 8px',
-                border: '1px solid #e0e0e0',
-                backgroundColor: '#f8f8f8',
-                color: i === 0 ? '#f44336' : i === 6 ? '#2196F3' : '#333',
-                fontSize: '14px',
-                fontWeight: 'bold',
-              }}>
-                {day}
-              </th>
+        {distribution.length === 0 ? (
+          <div style={{ padding: '12px', color: '#999', textAlign: 'center' }}>
+            배정 가능한 날짜가 없습니다.
+          </div>
+        ) : (
+          <>
+            {distribution.map((item) => (
+              <div
+                key={item.date}
+                style={{
+                  padding: '8px 0',
+                  fontSize: '15px',
+                  color: '#333',
+                  fontWeight: 600,
+                }}
+              >
+                🔜 {formatDate(item.date)} ─── <strong style={{ color: '#FF6B6B' }}>{item.allocated}개</strong> 생산 예정
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>{renderCalendar()}</tbody>
-      </table>
 
+            <div style={{
+              fontSize: '12px',
+              color: '#666',
+              marginTop: '12px',
+              paddingTop: '12px',
+              borderTop: '1px solid #d0e8ff',
+              lineHeight: '1.6',
+            }}>
+              💡 모든 제품 완성 후 한 번에 배송
+            </div>
+          </>
+        )}
+
+        {!hasEnoughCapacity && (
+          <div style={{
+            padding: '12px',
+            backgroundColor: '#fff5f5',
+            border: '1px solid #ef5350',
+            borderRadius: '6px',
+            color: '#c62828',
+            marginTop: '12px',
+            fontSize: '13px',
+            fontWeight: 600,
+          }}>
+            ⚠️ 주문 수량({totalQuantity}개)이 현재 가능한 용량을 초과합니다. 관리자에게 문의해주세요.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

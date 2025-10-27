@@ -33,12 +33,14 @@ export function Header() {
             fontSize: '18px',
             fontWeight: currentPath === '/' ? 600 : 400
           }}>홈</a>
-          <a href="/debug" style={{
-            textDecoration: 'none',
-            color: currentPath === '/debug' ? '#000' : '#666',
-            fontSize: '18px',
-            fontWeight: currentPath === '/debug' ? 600 : 400
-          }}>디버그</a>
+          {isAdmin && (
+            <a href="/debug" style={{
+              textDecoration: 'none',
+              color: currentPath === '/debug' ? '#000' : '#666',
+              fontSize: '18px',
+              fontWeight: currentPath === '/debug' ? 600 : 400
+            }}>디버그</a>
+          )}
           <SignedIn>
             <a href="/my-orders" style={{
               textDecoration: 'none',

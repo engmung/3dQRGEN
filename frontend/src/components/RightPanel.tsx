@@ -322,16 +322,66 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
               {renderControls(plate)}
             </div>
 
-            {/* 가격 표시 (카드 바깥 아래) */}
+            {/* 가격 상세 표시 (카드 바깥 아래) */}
             {pricingSettings && (
               <div style={{
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#333',
-                textAlign: 'right',
-                padding: '4px 4px',
+                fontSize: '12px',
+                color: '#666',
+                padding: '6px 8px',
+                backgroundColor: '#f9f9f9',
+                border: '1px solid #e5e0db',
+                borderRadius: '4px',
               }}>
-                {formatPrice(calculatePlatePrice(plate, pricingSettings))} × {plate.quantity}개 = {formatPrice(calculatePlatePrice(plate, pricingSettings) * plate.quantity)}
+                {/* 기본 가격 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                  <span>기본</span>
+                  <span>{formatPrice(pricingSettings.base_price)}</span>
+                </div>
+
+                {/* 텍스트 추가 가격 */}
+                {plate.text && plate.text.trim().length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span>+ 텍스트</span>
+                    <span>{formatPrice(pricingSettings.text_price)}</span>
+                  </div>
+                )}
+
+                {/* 이미지 추가 가격 */}
+                {plate.images.length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span>+ 이미지 {plate.images.length}개</span>
+                    <span>{formatPrice(pricingSettings.image_price * plate.images.length)}</span>
+                  </div>
+                )}
+
+                {/* 개당 가격 */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  paddingTop: '4px',
+                  marginTop: '4px',
+                  borderTop: '1px solid #e0e0e0',
+                  fontWeight: 600,
+                  color: '#333',
+                }}>
+                  <span>개당</span>
+                  <span>{formatPrice(calculatePlatePrice(plate, pricingSettings))}</span>
+                </div>
+
+                {/* 총 가격 (수량 포함) */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  paddingTop: '4px',
+                  marginTop: '4px',
+                  borderTop: '1px solid #e0e0e0',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: '#FF6B6B',
+                }}>
+                  <span>× {plate.quantity}개</span>
+                  <span>{formatPrice(calculatePlatePrice(plate, pricingSettings) * plate.quantity)}</span>
+                </div>
               </div>
             )}
           </div>
