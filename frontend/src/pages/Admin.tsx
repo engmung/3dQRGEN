@@ -108,15 +108,60 @@ export function Admin() {
     }
   };
 
+  const handleStartProduction = async (groupUuid: string) => {
+    if (!confirm('제작을 시작하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      await updateOrderGroupStatus(groupUuid, 'in_production', token);
+      alert('제작 시작으로 표시되었습니다.');
+      await loadOrderGroups();
+    } catch (err: any) {
+      alert('상태 업데이트 실패: ' + err.message);
+    }
+  };
+
+  const handleCompleteProduction = async (groupUuid: string) => {
+    if (!confirm('제작을 완료하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      await updateOrderGroupStatus(groupUuid, 'production_completed', token);
+      alert('제작 완료로 표시되었습니다.');
+      await loadOrderGroups();
+    } catch (err: any) {
+      alert('상태 업데이트 실패: ' + err.message);
+    }
+  };
+
+  const handleStartShipping = async (groupUuid: string) => {
+    if (!confirm('배송을 시작하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      await updateOrderGroupStatus(groupUuid, 'shipped', token);
+      alert('배송 시작으로 표시되었습니다.');
+      await loadOrderGroups();
+    } catch (err: any) {
+      alert('상태 업데이트 실패: ' + err.message);
+    }
+  };
+
   const handleCompleteOrder = async (groupUuid: string) => {
-    if (!confirm('이 주문을 제작 완료로 표시하시겠습니까?')) {
+    if (!confirm('배송을 완료하시겠습니까?')) {
       return;
     }
 
     try {
       const token = await getToken();
       await updateOrderGroupStatus(groupUuid, 'completed', token);
-      alert('주문이 제작 완료로 표시되었습니다.');
+      alert('배송 완료로 표시되었습니다.');
       await loadOrderGroups();
     } catch (err: any) {
       alert('상태 업데이트 실패: ' + err.message);
@@ -517,13 +562,14 @@ export function Admin() {
                         >
                           📋 상세보기
                         </button>
+                        {/* 입금 대기 → 입금 확인 */}
                         {orderGroup.status === 'pending' && (
                           <button
                             onClick={() => handleConfirmPayment(orderGroup.group_uuid)}
                             style={{
                               padding: '4px 8px',
                               fontSize: '12px',
-                              backgroundColor: '#4CAF50',
+                              backgroundColor: '#17a2b8',
                               color: 'white',
                               border: 'none',
                               borderRadius: '4px',
@@ -533,13 +579,31 @@ export function Admin() {
                             💰 입금 확인
                           </button>
                         )}
+                        {/* 입금 완료 → 제작 시작 */}
                         {orderGroup.status === 'paid' && (
                           <button
-                            onClick={() => handleCompleteOrder(orderGroup.group_uuid)}
+                            onClick={() => handleStartProduction(orderGroup.group_uuid)}
                             style={{
                               padding: '4px 8px',
                               fontSize: '12px',
-                              backgroundColor: '#1976d2',
+                              backgroundColor: '#fd7e14',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            🔨 제작 시작
+                          </button>
+                        )}
+                        {/* 제작 중 → 제작 완료 */}
+                        {orderGroup.status === 'in_production' && (
+                          <button
+                            onClick={() => handleCompleteProduction(orderGroup.group_uuid)}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '12px',
+                              backgroundColor: '#6610f2',
                               color: 'white',
                               border: 'none',
                               borderRadius: '4px',
@@ -549,7 +613,42 @@ export function Admin() {
                             ✅ 제작 완료
                           </button>
                         )}
-                        {(orderGroup.status === 'pending' || orderGroup.status === 'paid') && (
+                        {/* 제작 완료 → 배송 시작 */}
+                        {orderGroup.status === 'production_completed' && (
+                          <button
+                            onClick={() => handleStartShipping(orderGroup.group_uuid)}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '12px',
+                              backgroundColor: '#007bff',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            🚚 배송 시작
+                          </button>
+                        )}
+                        {/* 배송 중 → 배송 완료 */}
+                        {orderGroup.status === 'shipped' && (
+                          <button
+                            onClick={() => handleCompleteOrder(orderGroup.group_uuid)}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '12px',
+                              backgroundColor: '#28a745',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            📦 배송 완료
+                          </button>
+                        )}
+                        {/* 취소 버튼 (완료/취소 상태가 아닐 때만) */}
+                        {orderGroup.status !== 'completed' && orderGroup.status !== 'failed' && (
                           <button
                             onClick={() => handleCancelOrder(orderGroup.group_uuid)}
                             style={{
