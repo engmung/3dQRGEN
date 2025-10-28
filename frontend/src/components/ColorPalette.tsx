@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { HexColorPicker } from 'react-colorful';
 import { useDesignStore } from '../store/useDesignStore';
 import { getPricingSettings } from '../utils/pricing';
 import { ColorGuideModal } from './ColorGuideModal';
@@ -27,6 +28,16 @@ export const ColorPalette = () => {
   const [showBgPicker, setShowBgPicker] = useState(false);
   const [showColorGuide, setShowColorGuide] = useState(false);
 
+  // 통합 색상 모달 상태
+  const [showColorModal, setShowColorModal] = useState(false);
+  const [activeColorTab, setActiveColorTab] = useState<'plate' | 'qr' | 'bg'>('plate');
+  const [colorModalPos, setColorModalPos] = useState(() => {
+    const saved = localStorage.getItem('colorPickerModalPosition');
+    return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+  });
+  const [isDraggingModal, setIsDraggingModal] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
   // 색상 시스템 (API에서 로드)
   const [availableColors, setAvailableColors] = useState<ColorInfo[]>([]);
   const [allowedCombinations, setAllowedCombinations] = useState<ColorCombination[]>([]);
@@ -38,6 +49,50 @@ export const ColorPalette = () => {
 
   // 선택된 판이 없으면 배경 색상만 표시
   const selectedPlate = selectedPlateId ? plates.find(p => p.id === selectedPlateId) : null;
+
+  // 모달 위치 변경 시 localStorage 저장
+  useEffect(() => {
+    localStorage.setItem('colorPickerModalPosition', JSON.stringify(colorModalPos));
+  }, [colorModalPos]);
+
+  // 드래그 시 스크롤 방지 (강화)
+  useEffect(() => {
+    if (isDraggingModal) {
+      const preventScroll = (e: TouchEvent) => e.preventDefault();
+      document.addEventListener('touchmove', preventScroll, { passive: false });
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      return () => {
+        document.removeEventListener('touchmove', preventScroll);
+        document.body.style.overflow = '';
+        document.body.style.touchAction = '';
+      };
+    }
+  }, [isDraggingModal]);
+
+  // 모달 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!showColorModal) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // 모달 내부 클릭이 아니면 닫기
+      if (!target.closest('[data-color-modal]')) {
+        setShowColorModal(false);
+      }
+    };
+
+    // 약간의 딜레이 후 이벤트 리스너 등록 (모달 열릴 때 바로 닫히는 것 방지)
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showColorModal]);
 
   // 색상 팔레트 로드
   useEffect(() => {
@@ -122,10 +177,10 @@ export const ColorPalette = () => {
       <div
         style={{
           position: 'absolute',
-          top: isMobile ? '10px' : '20px',
+          top: isMobile ? '50%' : '20px',
           left: isMobile ? 'auto' : '50%',
           right: isMobile ? '10px' : 'auto',
-          transform: isMobile ? 'none' : 'translateX(-50%)',
+          transform: isMobile ? 'translateY(-50%)' : 'translateX(-50%)',
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
           gap: isMobile ? '6px' : '12px',
@@ -133,8 +188,9 @@ export const ColorPalette = () => {
           padding: isMobile ? '6px' : '10px 20px',
           borderRadius: isMobile ? '20px' : '50px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          zIndex: 100,
+          zIndex: 10,
           backdropFilter: 'blur(10px)',
+          userSelect: 'none',
         }}
       >
       {/* 판 색상 */}
@@ -181,7 +237,7 @@ export const ColorPalette = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                zIndex: 1000,
+                zIndex: 20,
                 maxHeight: '80vh',
                 overflowY: 'auto',
               } : {
@@ -196,7 +252,7 @@ export const ColorPalette = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                zIndex: 1000,
+                zIndex: 20,
                 minWidth: '200px',
               }}
             >
@@ -245,36 +301,30 @@ export const ColorPalette = () => {
               }}
             />
 
-            {/* 자유 색상 섹션 */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
+            {/* 자유 색상 버튼 */}
+            <button
+              onClick={() => {
+                setShowColorModal(true);
+                setActiveColorTab('plate');
+                setShowPlatePicker(false);
               }}
+              style={{
+                padding: '10px 12px',
+                border: '1px solid #4CAF50',
+                borderRadius: '4px',
+                backgroundColor: 'white',
+                color: '#4CAF50',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                outline: 'none',
+                transition: 'background 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f8f4'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
             >
-              <div
-                style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  fontWeight: 600,
-                }}
-              >
-                자유 색상 (미리보기용)
-              </div>
-              <input
-                type="color"
-                value={selectedPlate.plateColor}
-                onChange={(e) => updateSelectedPlateColor(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '40px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
+              🎨 자유 색상 (미리보기용)
+            </button>
           </div>
           </>
         )}
@@ -325,7 +375,7 @@ export const ColorPalette = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                zIndex: 1000,
+                zIndex: 20,
                 maxHeight: '80vh',
                 overflowY: 'auto',
               } : {
@@ -340,7 +390,7 @@ export const ColorPalette = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                zIndex: 1000,
+                zIndex: 20,
                 minWidth: '200px',
               }}
             >
@@ -396,36 +446,30 @@ export const ColorPalette = () => {
               }}
             />
 
-            {/* 자유 색상 섹션 */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
+            {/* 자유 색상 버튼 */}
+            <button
+              onClick={() => {
+                setShowColorModal(true);
+                setActiveColorTab('qr');
+                setShowQrPicker(false);
               }}
+              style={{
+                padding: '10px 12px',
+                border: '1px solid #4CAF50',
+                borderRadius: '4px',
+                backgroundColor: 'white',
+                color: '#4CAF50',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                outline: 'none',
+                transition: 'background 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f8f4'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
             >
-              <div
-                style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  fontWeight: 600,
-                }}
-              >
-                자유 색상 (미리보기용)
-              </div>
-              <input
-                type="color"
-                value={selectedPlate.qrColor}
-                onChange={(e) => updateSelectedQrColor(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '40px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
+              🎨 자유 색상 (미리보기용)
+            </button>
           </div>
           </>
         )}
@@ -467,31 +511,104 @@ export const ColorPalette = () => {
               top: '0',
               right: '40px',
               background: 'white',
-              padding: '10px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              padding: '16px',
+              borderRadius: '12px',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              zIndex: 20,
+              minWidth: '200px',
             } : {
               position: 'absolute',
               top: '50px',
               left: '50%',
               transform: 'translateX(-50%)',
               background: 'white',
-              padding: '10px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              padding: '16px',
+              borderRadius: '12px',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              zIndex: 20,
+              minWidth: '200px',
             }}
           >
-            <input
-              type="color"
-              value={backgroundColor}
-              onChange={(e) => setBackgroundColor(e.target.value)}
+            {/* 배경 색상 프리셋 */}
+            {[
+              { name: '흰색', value: '#FFFFFF' },
+              { name: '회색', value: '#808080' },
+              { name: '검정', value: '#000000' },
+            ].map((color) => (
+              <button
+                key={color.value}
+                onClick={() => {
+                  setBackgroundColor(color.value);
+                  setShowBgPicker(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  border: backgroundColor === color.value ? '2px solid #333' : '1px solid #ddd',
+                  borderRadius: '4px',
+                  backgroundColor: backgroundColor === color.value ? '#f5f5f5' : 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: backgroundColor === color.value ? 600 : 400,
+                  whiteSpace: 'nowrap',
+                  outline: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    backgroundColor: color.value,
+                    border: '1px solid #ccc',
+                  }}
+                />
+                {color.name}
+              </button>
+            ))}
+
+            {/* 구분선 */}
+            <div
               style={{
-                width: '100px',
-                height: '40px',
-                border: 'none',
-                cursor: 'pointer',
+                width: '100%',
+                height: '1px',
+                background: '#ddd',
+                margin: '4px 0',
               }}
             />
+
+            {/* 자유 색상 버튼 */}
+            <button
+              onClick={() => {
+                setShowColorModal(true);
+                setActiveColorTab('bg');
+                setShowBgPicker(false);
+              }}
+              style={{
+                padding: '10px 12px',
+                border: '1px solid #4CAF50',
+                borderRadius: '4px',
+                backgroundColor: 'white',
+                color: '#4CAF50',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                outline: 'none',
+                transition: 'background 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f8f4'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+            >
+              🎨 자유 색상
+            </button>
           </div>
         )}
       </div>
@@ -534,6 +651,102 @@ export const ColorPalette = () => {
       >
         {selectedPlate && !isCombinationAllowed(selectedPlate.plateColor, selectedPlate.qrColor) ? '!' : '?'}
       </button>
+
+      {/* 색상 안내 모달 */}
+      {showColorGuide && (
+        <ColorGuideModal
+          onClose={() => setShowColorGuide(false)}
+          currentPlateColor={selectedPlate?.plateColor}
+          currentQrColor={selectedPlate?.qrColor}
+        />
+      )}
+
+      {/* 통합 색상 선택 모달 (판, QR, 배경 모두 여기서 처리) */}
+      {showColorModal && (
+          <div
+            data-color-modal
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: `translate(calc(-50% + ${colorModalPos.x}px), calc(-50% + ${colorModalPos.y}px))`,
+              backgroundColor: 'white',
+              padding: '12px',
+              paddingTop: '20px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+              userSelect: 'none',
+              zIndex: 2000,
+            }}
+            onMouseDown={(e) => {
+              setIsDraggingModal(true);
+              setDragStart({ x: e.clientX - colorModalPos.x, y: e.clientY - colorModalPos.y });
+            }}
+            onMouseMove={(e) => {
+              if (isDraggingModal) {
+                setColorModalPos({
+                  x: e.clientX - dragStart.x,
+                  y: e.clientY - dragStart.y,
+                });
+              }
+            }}
+            onMouseUp={() => setIsDraggingModal(false)}
+            onMouseLeave={() => setIsDraggingModal(false)}
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              setIsDraggingModal(true);
+              setDragStart({ x: touch.clientX - colorModalPos.x, y: touch.clientY - colorModalPos.y });
+            }}
+            onTouchMove={(e) => {
+              if (isDraggingModal) {
+                const touch = e.touches[0];
+                setColorModalPos({
+                  x: touch.clientX - dragStart.x,
+                  y: touch.clientY - dragStart.y,
+                });
+              }
+            }}
+            onTouchEnd={() => setIsDraggingModal(false)}
+          >
+          {/* 드래그 핸들 영역 */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '20px',
+              cursor: isDraggingModal ? 'grabbing' : 'grab',
+              borderTopLeftRadius: '12px',
+              borderTopRightRadius: '12px',
+            }}
+          />
+
+          {/* HexColorPicker만 표시 */}
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
+            <HexColorPicker
+              color={
+                activeColorTab === 'plate' && selectedPlate ? selectedPlate.plateColor :
+                activeColorTab === 'qr' && selectedPlate ? selectedPlate.qrColor :
+                backgroundColor
+              }
+              onChange={(color) => {
+                if (activeColorTab === 'plate' && selectedPlate) {
+                  updateSelectedPlateColor(color);
+                } else if (activeColorTab === 'qr' && selectedPlate) {
+                  updateSelectedQrColor(color);
+                } else {
+                  setBackgroundColor(color);
+                }
+              }}
+              style={{ width: '150px', height: '150px' }}
+            />
+          </div>
+          </div>
+      )}
     </div>
 
     </>

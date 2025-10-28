@@ -17,8 +17,8 @@ type PanelHeight = "closed" | "half" | "full";
 
 const PANEL_HEIGHTS = {
   closed: 200,
-  half: 40,    // 하단에서 40% 올라온 위치
-  full: 95,    // 하단에서 95% 올라온 위치 (거의 전체 화면)
+  half: 40,    // 상단에서 40% 내려온 위치
+  full: 100,   // 전체 화면
 };
 
 export function MobileLayout({
@@ -159,10 +159,11 @@ export function MobileLayout({
           borderTopLeftRadius: "20px",
           borderTopRightRadius: "20px",
           boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
-          transition: isDragging ? "none" : "top 0.3s ease-out",
+          transition: isDragging ? "none" : "top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          zIndex: 100,
         }}
       >
         {/* 핸들 바 */}
@@ -204,13 +205,20 @@ export function MobileLayout({
                 padding: "6px 16px",
                 fontSize: "14px",
                 fontWeight: 600,
-                border: activeTab === "edit" ? "none" : "1px solid rgba(255, 255, 255, 0.8)",
+                border:
+                  activeTab === "edit"
+                    ? "none"
+                    : "1px solid rgba(255, 255, 255, 0.8)",
                 borderRadius: "16px",
-                backgroundColor: activeTab === "edit" ? "#333" : "rgba(255, 255, 255, 0.5)",
+                backgroundColor:
+                  activeTab === "edit" ? "#333" : "rgba(255, 255, 255, 0.5)",
                 color: activeTab === "edit" ? "#fff" : "#333",
                 cursor: "pointer",
                 transition: "all 0.2s",
-                textShadow: activeTab === "edit" ? "none" : "0 0 4px rgba(255,255,255,0.9)",
+                textShadow:
+                  activeTab === "edit"
+                    ? "none"
+                    : "0 0 4px rgba(255,255,255,0.9)",
               }}
             >
               ✏️ 편집
@@ -221,13 +229,20 @@ export function MobileLayout({
                 padding: "6px 16px",
                 fontSize: "14px",
                 fontWeight: 600,
-                border: activeTab === "cart" ? "none" : "1px solid rgba(255, 255, 255, 0.8)",
+                border:
+                  activeTab === "cart"
+                    ? "none"
+                    : "1px solid rgba(255, 255, 255, 0.8)",
                 borderRadius: "16px",
-                backgroundColor: activeTab === "cart" ? "#333" : "rgba(255, 255, 255, 0.5)",
+                backgroundColor:
+                  activeTab === "cart" ? "#333" : "rgba(255, 255, 255, 0.5)",
                 color: activeTab === "cart" ? "#fff" : "#333",
                 cursor: "pointer",
                 transition: "all 0.2s",
-                textShadow: activeTab === "cart" ? "none" : "0 0 4px rgba(255,255,255,0.9)",
+                textShadow:
+                  activeTab === "cart"
+                    ? "none"
+                    : "0 0 4px rgba(255,255,255,0.9)",
               }}
             >
               🛒 장바구니
@@ -274,7 +289,7 @@ export function MobileLayout({
                 height: "100%",
                 overflow: "auto",
                 WebkitOverflowScrolling: "touch",
-                backgroundColor: "rgba(255, 255, 255, 0.25)",
+                backgroundColor: "rgba(255, 255, 255, 0.7)",
               }}
             >
               <RightPanel onCheckout={onCheckout} />

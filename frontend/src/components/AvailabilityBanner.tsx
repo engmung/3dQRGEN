@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { fetchAvailableDates, fetchPricingSettings, type ProductionScheduleDate, type PricingSettings } from '../utils/api';
 import { MODAL_OVERLAY } from '../styles/modalStyles';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 interface AvailabilityBannerProps {
   onClose?: () => void;
 }
 
 export const AvailabilityBanner = ({ onClose }: AvailabilityBannerProps) => {
+  const isMobile = useIsMobile();
   const [totalSlots, setTotalSlots] = useState<number>(0);
   const [totalCapacity, setTotalCapacity] = useState<number>(0);
   const [soldCount, setSoldCount] = useState<number>(0);
@@ -50,37 +52,69 @@ export const AvailabilityBanner = ({ onClose }: AvailabilityBannerProps) => {
 
   return (
     <div
-      style={MODAL_OVERLAY}
+      style={isMobile ? {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: 10000,
+      } : MODAL_OVERLAY}
       onClick={onClose}
     >
       <div
-        style={{
+        style={isMobile ? {
+          position: 'absolute',
+          top: '50%',
+          left: '75%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '12px',
+          width: '50%',
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+        } : {
           backgroundColor: 'white',
           padding: '30px',
           borderRadius: '12px',
           maxWidth: '500px',
-          width: '90%',
+          width: 'auto',
+          maxHeight: '80vh',
+          overflowY: 'auto',
           boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px', textAlign: 'center' }}>
+        <h2 style={{
+          marginTop: 0,
+          marginBottom: isMobile ? '15px' : '20px',
+          fontSize: isMobile ? '18px' : '20px',
+          textAlign: 'center'
+        }}>
           📢 주문 가능 정보
         </h2>
 
         {/* 주문 가능 수량 표시 */}
         <div style={{
-          marginBottom: '20px',
-          padding: '20px',
+          marginBottom: isMobile ? '15px' : '20px',
+          padding: isMobile ? '15px' : '20px',
           backgroundColor: totalSlots > 10 ? '#e8f5e9' : totalSlots > 0 ? '#fff3e0' : '#ffebee',
           border: `2px solid ${totalSlots > 10 ? '#4CAF50' : totalSlots > 0 ? '#FF9800' : '#f44336'}`,
           borderRadius: '8px',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginBottom: '10px', color: totalSlots > 10 ? '#2e7d32' : totalSlots > 0 ? '#e65100' : '#c62828' }}>
+          <div style={{
+            fontSize: isMobile ? '28px' : '32px',
+            fontWeight: 700,
+            marginBottom: '10px',
+            color: totalSlots > 10 ? '#2e7d32' : totalSlots > 0 ? '#e65100' : '#c62828'
+          }}>
             {totalSlots}개 남음
           </div>
-          <div style={{ fontSize: '18px', color: '#666' }}>
+          <div style={{ fontSize: isMobile ? '16px' : '18px', color: '#666' }}>
             ({soldCount}/{totalCapacity})
           </div>
         </div>
@@ -88,11 +122,11 @@ export const AvailabilityBanner = ({ onClose }: AvailabilityBannerProps) => {
         {/* 공지사항 */}
         {announcement && (
           <div style={{
-            marginBottom: '20px',
-            padding: '15px',
+            marginBottom: isMobile ? '15px' : '20px',
+            padding: isMobile ? '12px' : '15px',
             backgroundColor: '#f5f5f5',
             borderRadius: '8px',
-            fontSize: '14px',
+            fontSize: isMobile ? '13px' : '14px',
             lineHeight: '1.6',
             whiteSpace: 'pre-wrap',
             color: '#333',
@@ -105,13 +139,13 @@ export const AvailabilityBanner = ({ onClose }: AvailabilityBannerProps) => {
           <button
             onClick={onClose}
             style={{
-              padding: '10px 30px',
+              padding: isMobile ? '8px 24px' : '10px 30px',
               backgroundColor: '#4A90E2',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '15px',
+              fontSize: isMobile ? '14px' : '15px',
               fontWeight: 'bold',
             }}
           >
