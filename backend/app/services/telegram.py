@@ -15,7 +15,9 @@ async def send_order_notification(
     customer_postal_code: str,
     stand_name: str,
     qr_url: str,
-    price: float
+    price: float,
+    product_total: float = None,
+    shipping_fee: float = 5000
 ):
     """
     주문 생성 시 텔레그램으로 알림 전송
@@ -28,7 +30,9 @@ async def send_order_notification(
         customer_postal_code: 우편번호
         stand_name: 거치대 이름
         qr_url: QR 코드 URL
-        price: 주문 금액
+        price: 총 주문 금액 (제품 합계 + 배송비)
+        product_total: 제품 합계 (배송비 제외)
+        shipping_fee: 배송비 (기본값: 5000원)
     """
     if not settings.telegram_bot_token or not settings.telegram_chat_id:
         logger.warning("Telegram bot token or chat ID not configured. Skipping notification.")
@@ -38,7 +42,15 @@ async def send_order_notification(
         logger.info(f"Sending Telegram notification for order {order_uuid}")
         bot = Bot(token=settings.telegram_bot_token)
 
-        # 메시지 포맷
+        # 메시지 포맷 (배송비 포함)
+        if product_total is not None:
+            price_info = f"""💰 <b>금액</b>
+• 제품 합계: {product_total:,.0f}원
+• 배송비: {shipping_fee:,.0f}원
+• 총 금액: {price:,.0f}원"""
+        else:
+            price_info = f"• 금액: {price:,.0f}원"
+
         message = f"""
 🔔 <b>새 주문 알림</b>
 
@@ -53,7 +65,8 @@ async def send_order_notification(
 🛒 <b>주문 내용</b>
 • 거치대: {stand_name}
 • QR URL: {qr_url}
-• 금액: {price:,.0f}원
+
+{price_info}
 
 ⚠️ 입금 확인 후 상태를 변경해주세요.
 """

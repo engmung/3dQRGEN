@@ -254,8 +254,11 @@ async def create_order_group(
 
         total_price += item_total_price
 
-    # 7. OrderGroup total_price 업데이트
-    order_group.total_price = total_price
+    # 7. 배송비 추가 및 OrderGroup total_price 업데이트
+    SHIPPING_FEE = 5000
+    product_total = total_price
+    total_price_with_shipping = total_price + SHIPPING_FEE
+    order_group.total_price = total_price_with_shipping
 
     # 8. 날짜별 예약량 증가
     for target_date, (schedule, total_qty) in schedules_to_update.items():
@@ -264,7 +267,7 @@ async def create_order_group(
     db.commit()
     db.refresh(order_group)
 
-    # 7. 텔레그램 알림 전송 (백그라운드)
+    # 9. 텔레그램 알림 전송 (백그라운드)
     background_tasks.add_task(
         send_order_notification,
         order_uuid=group_uuid,  # group_uuid 전달
@@ -274,7 +277,9 @@ async def create_order_group(
         customer_postal_code=customer_postal_code,
         stand_name=f"{len(line_items_data)}개 제품",  # line item 개수
         qr_url="다중 주문",
-        price=total_price
+        price=total_price_with_shipping,
+        product_total=product_total,
+        shipping_fee=SHIPPING_FEE
     )
 
     # 9. 응답 (배분 결과 포함)

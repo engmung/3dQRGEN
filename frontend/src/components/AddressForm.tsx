@@ -26,6 +26,8 @@ interface CartItem {
 interface AddressFormProps {
   initialData: Partial<AddressFormData>;
   price: number;
+  productTotal: number; // 제품 합계 (택배비 제외)
+  shippingFee: number; // 택배비
   totalQuantity: number; // 총 제품 개수
   cartItems: CartItem[]; // 추가: 가격 상세를 위해 필요
   onSubmit: (data: AddressFormData) => void;
@@ -37,6 +39,8 @@ const STORAGE_KEY = 'addressFormData';
 export const AddressForm: React.FC<AddressFormProps> = ({
   initialData,
   price,
+  productTotal,
+  shippingFee,
   totalQuantity,
   cartItems,
   onSubmit,
@@ -451,7 +455,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 );
               })}
 
-              {/* 총 결제 금액 */}
+              {/* 제품 합계 */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -461,7 +465,51 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 borderTop: '2px solid #e5e0db'
               }}>
                 <span style={{
-                  fontSize: isMobile ? '15px' : '20px',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: 600,
+                  color: '#666'
+                }}>제품 합계</span>
+                <span style={{
+                  fontSize: isMobile ? '16px' : '18px',
+                  fontWeight: 600,
+                  color: '#666'
+                }}>
+                  {formatPrice(productTotal)}
+                </span>
+              </div>
+
+              {/* 배송비 */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '8px'
+              }}>
+                <span style={{
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: 600,
+                  color: '#666'
+                }}>배송비</span>
+                <span style={{
+                  fontSize: isMobile ? '16px' : '18px',
+                  fontWeight: 600,
+                  color: '#666'
+                }}>
+                  {formatPrice(shippingFee)}
+                </span>
+              </div>
+
+              {/* 총 결제 금액 */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '12px',
+                paddingTop: '12px',
+                borderTop: '2px solid #333'
+              }}>
+                <span style={{
+                  fontSize: isMobile ? '16px' : '20px',
                   fontWeight: 'bold',
                   color: '#333'
                 }}>총 결제 금액</span>
