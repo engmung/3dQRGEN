@@ -35,6 +35,7 @@ interface Scene3DProps {
       zScale: number;
     }
   ) => void;
+  onLoadingComplete?: () => void;
 }
 
 /**
@@ -92,6 +93,7 @@ const PinModel = ({ color }: { color: string }) => {
 export const Scene3D = ({
   onGltfsLoaded,
   onQRGeometriesReady,
+  onLoadingComplete,
 }: Scene3DProps = {}) => {
   const plates = useDesignStore((state) => state.plates);
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
@@ -99,6 +101,14 @@ export const Scene3D = ({
   const isMobile = useIsMobile();
 
   const [glbRegions, setGlbRegions] = useState<GLBRegions | null>(null);
+  const [isGlbLoaded, setIsGlbLoaded] = useState(false);
+
+  // GLB 로딩 완료 시 상위에 알림
+  useEffect(() => {
+    if (isGlbLoaded && onLoadingComplete) {
+      onLoadingComplete();
+    }
+  }, [isGlbLoaded, onLoadingComplete]);
 
   // 카메라 위치 - PC와 모바일 다르게
   const cameraPos = isMobile
@@ -165,7 +175,10 @@ export const Scene3D = ({
                 <GLBBaseParts
                   plateColor={selectedPlate.plateColor}
                   position={[0, 0, 0]}
-                  onRegionsLoaded={(regions) => setGlbRegions(regions)}
+                  onRegionsLoaded={(regions) => {
+                    setGlbRegions(regions);
+                    setIsGlbLoaded(true);
+                  }}
                   onGltfsLoaded={onGltfsLoaded}
                 />
 

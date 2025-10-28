@@ -122,13 +122,17 @@ export const ColorPalette = () => {
 
   // 색상 조합이 허용되는지 확인 (순서 무관, 같은 색상 불가)
   const isCombinationAllowed = (plateColor: string, qrColor: string): boolean => {
-    // 같은 색상은 불가
-    if (plateColor === qrColor) return false;
+    // 같은 색상은 불가 (대소문자 무시)
+    if (plateColor.toUpperCase() === qrColor.toUpperCase()) return false;
+
+    // 대소문자 무시하고 비교
+    const plateUpper = plateColor.toUpperCase();
+    const qrUpper = qrColor.toUpperCase();
 
     return allowedCombinations.some(combo =>
       combo.colors.length === 2 &&
-      combo.colors.includes(plateColor) &&
-      combo.colors.includes(qrColor)
+      combo.colors.some(c => c.toUpperCase() === plateUpper) &&
+      combo.colors.some(c => c.toUpperCase() === qrUpper)
     );
   };
 
@@ -535,57 +539,7 @@ export const ColorPalette = () => {
               minWidth: '200px',
             }}
           >
-            {/* 배경 색상 프리셋 */}
-            {[
-              { name: '흰색', value: '#FFFFFF' },
-              { name: '회색', value: '#808080' },
-              { name: '검정', value: '#000000' },
-            ].map((color) => (
-              <button
-                key={color.value}
-                onClick={() => {
-                  setBackgroundColor(color.value);
-                  setShowBgPicker(false);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 12px',
-                  border: backgroundColor === color.value ? '2px solid #333' : '1px solid #ddd',
-                  borderRadius: '4px',
-                  backgroundColor: backgroundColor === color.value ? '#f5f5f5' : 'white',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: backgroundColor === color.value ? 600 : 400,
-                  whiteSpace: 'nowrap',
-                  outline: 'none',
-                }}
-              >
-                <div
-                  style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    backgroundColor: color.value,
-                    border: '1px solid #ccc',
-                  }}
-                />
-                {color.name}
-              </button>
-            ))}
-
-            {/* 구분선 */}
-            <div
-              style={{
-                width: '100%',
-                height: '1px',
-                background: '#ddd',
-                margin: '4px 0',
-              }}
-            />
-
-            {/* 자유 색상 버튼 */}
+            {/* 자유 색상 버튼만 표시 */}
             <button
               onClick={() => {
                 setShowColorModal(true);
@@ -658,6 +612,9 @@ export const ColorPalette = () => {
           onClose={() => setShowColorGuide(false)}
           currentPlateColor={selectedPlate?.plateColor}
           currentQrColor={selectedPlate?.qrColor}
+          availableColors={availableColors}
+          allowedCombinations={allowedCombinations}
+          colorWarningMessage={colorWarningMessage}
         />
       )}
 
