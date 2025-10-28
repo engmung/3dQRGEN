@@ -66,21 +66,28 @@ export const OrderModal = ({
   };
 
   return (
-    <div style={MODAL_OVERLAY} onClick={onClose}>
+    <div style={{
+      ...MODAL_OVERLAY,
+      zIndex: isMobile ? 10000 : 1000,
+      alignItems: 'center',
+      padding: isMobile ? '0' : '20px',
+    }} onClick={onClose}>
       <div
         style={{
           ...MODAL_CONTENT_LARGE,
           backgroundColor: COLORS.background.white,
           color: COLORS.text.primary,
-          borderRadius: '12px',
-          maxHeight: '95vh',
+          borderRadius: isMobile ? '0' : '12px',
+          height: isMobile ? '100vh' : 'auto',
+          maxHeight: isMobile ? '100vh' : '95vh',
           overflowY: 'auto',
           overflowX: 'hidden',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
           display: 'flex',
           flexDirection: 'column',
-          width: isMobile ? '95vw' : '90vw',
-          maxWidth: isMobile ? '95vw' : '1200px',
+          width: isMobile ? '100vw' : '90vw',
+          maxWidth: isMobile ? '100vw' : '1200px',
+          padding: isMobile ? '0' : '30px',
         }}
         onClick={(e) => e.stopPropagation()}
       >

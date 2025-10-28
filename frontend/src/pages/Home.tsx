@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { Scene3D } from '../components/Scene3D';
 import { LeftPanel } from '../components/LeftPanel';
@@ -17,9 +17,34 @@ import type { AddressFormData } from '../components/AddressForm';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
-export function Home() {
+interface HomeProps {
+  onLoadingComplete?: () => void;
+}
+
+export function Home({ onLoadingComplete }: HomeProps = {}) {
   const { user } = useUser();
   const isMobile = useIsMobile();
+
+  // 전역 기본 색상 설정
+  const setGlobalPlateColor = useDesignStore((state) => state.setGlobalPlateColor);
+  const setGlobalQrColor = useDesignStore((state) => state.setGlobalQrColor);
+
+  // 앱 시작 시 API에서 첫 번째 색상 조합을 가져와 전역 색상 설정
+  useEffect(() => {
+    const loadDefaultColors = async () => {
+      try {
+        const settings = await getPricingSettings();
+        const combinations = JSON.parse(settings.allowed_combinations || '[]');
+        if (combinations.length > 0 && combinations[0].colors?.length === 2) {
+          setGlobalPlateColor(combinations[0].colors[0]);
+          setGlobalQrColor(combinations[0].colors[1]);
+        }
+      } catch (error) {
+        console.error('Failed to load default colors:', error);
+      }
+    };
+    loadDefaultColors();
+  }, [setGlobalPlateColor, setGlobalQrColor]);
 
   // GLB 파츠 데이터 저장 (주문 시 OBJ 생성용)
   const [gltfs, setGltfs] = useState<{
@@ -240,16 +265,23 @@ export function Home() {
             });
           }}
           onCheckout={handleCheckout}
+          onLoadingComplete={onLoadingComplete}
         />
 
         {/* 주문 모달 */}
-        {isOrderModalOpen && (
-          <OrderModal
-            plates={plates}
-            onClose={() => setIsOrderModalOpen(false)}
-            onSubmit={handleOrderSubmit}
-          />
-        )}
+        <OrderModal
+          isOpen={isOrderModalOpen}
+          onClose={() => setIsOrderModalOpen(false)}
+          cartItems={plates.map(plate => ({
+            id: plate.id,
+            plateConfig: plate,
+            quantity: plate.quantity,
+            geometries: qrGeometriesMap.get(plate.id) || null,
+            addedAt: new Date(),
+          }))}
+          customerEmail={user?.primaryEmailAddress?.emailAddress || ''}
+          onSubmit={handleOrderSubmit}
+        />
       </>
     );
   }
@@ -280,6 +312,7 @@ export function Home() {
               return newMap;
             });
           }}
+          onLoadingComplete={onLoadingComplete}
         />
         {/* 색상 팔레트 (3D 씬 영역 상단 중앙) */}
         <ColorPalette />

@@ -18,7 +18,11 @@ import * as THREE from 'three';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
-export function HomeDebug() {
+interface HomeDebugProps {
+  onLoadingComplete?: () => void;
+}
+
+export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
   const [gltfs, setGltfs] = useState<{
     back: any;
     brige: any;
@@ -172,6 +176,7 @@ export function HomeDebug() {
               return newMap;
             });
           }}
+          onLoadingComplete={onLoadingComplete}
         />
 
         {/* 상단 색상 팔레트 (선택된 판이 있을 때만 표시) */}

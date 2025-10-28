@@ -11,7 +11,11 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 
 const ADMIN_EMAILS = ['lsh678902@gmail.com'];
 
-export function Admin() {
+interface AdminProps {
+  onLoadingComplete?: () => void;
+}
+
+export function Admin({ onLoadingComplete }: AdminProps = {}) {
   const isMobile = useIsMobile();
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
@@ -74,6 +78,13 @@ export function Admin() {
     loadOrderGroups();
     loadPricingSettings();
   }, [isLoaded, isAdmin]);
+
+  // 페이지 로딩 완료 시 알림
+  useEffect(() => {
+    if (!loading && onLoadingComplete) {
+      onLoadingComplete();
+    }
+  }, [loading, onLoadingComplete]);
 
   // 가격 설정 저장
   const handleSavePricing = async () => {

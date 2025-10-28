@@ -189,13 +189,13 @@ export const useDesignStore = create<DesignStore>()(
         globalQrColor: '#000000',
         backgroundColor: '#D2B48C',
 
-  // 새 판 추가 (기본 색상 사용)
+  // 새 판 추가 (전역 기본 색상 사용)
   addPlate: () => {
-    const { plates } = get();
+    const { plates, globalPlateColor, globalQrColor } = get();
     const newPlate = createDefaultPlate(
       generateUUID(),
-      '#ffffff',  // 기본 흰색
-      '#000000',  // 기본 검정색
+      globalPlateColor,
+      globalQrColor,
       plates.length
     );
     set({ plates: [...plates, newPlate], selectedPlateId: newPlate.id });

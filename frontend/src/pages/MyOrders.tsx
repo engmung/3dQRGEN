@@ -6,7 +6,11 @@ import { getStatusText, getStatusColor } from '../utils/orderHelpers';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
-export const MyOrders = () => {
+interface MyOrdersProps {
+  onLoadingComplete?: () => void;
+}
+
+export const MyOrders = ({ onLoadingComplete }: MyOrdersProps = {}) => {
   const isMobile = useIsMobile();
   const { getToken } = useAuth();
   const [orderGroups, setOrderGroups] = useState<OrderGroupDetail[]>([]);
@@ -17,6 +21,13 @@ export const MyOrders = () => {
   useEffect(() => {
     loadOrderGroups();
   }, []);
+
+  // 페이지 로딩 완료 시 알림
+  useEffect(() => {
+    if (!loading && onLoadingComplete) {
+      onLoadingComplete();
+    }
+  }, [loading, onLoadingComplete]);
 
   const loadOrderGroups = async () => {
     try {

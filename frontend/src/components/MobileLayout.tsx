@@ -4,12 +4,32 @@ import { RightPanel } from "./RightPanel";
 import { Scene3D } from "./Scene3D";
 import { ColorPalette } from "./ColorPalette";
 import { useSwipeGesture } from "../hooks/useSwipeGesture";
-import type { GLTFResult } from "../types/gltf";
+import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'three';
 
 interface MobileLayoutProps {
-  onGltfsLoaded: (gltfs: GLTFResult[]) => void;
-  onQRGeometriesReady: (plateId: string, geometries: any[]) => void;
+  onGltfsLoaded: (gltfs: {
+    back: GLTF;
+    brige: GLTF;
+    front: GLTF;
+    pin: GLTF;
+  }) => void;
+  onQRGeometriesReady: (plateId: string, geometries: {
+    qr: THREE.BufferGeometry | null;
+    text: THREE.BufferGeometry | null;
+    image: THREE.BufferGeometry | null;
+    images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
+    qrPosition: THREE.Vector3;
+    qrQuaternion: THREE.Quaternion;
+    textPosition: THREE.Vector3 | null;
+    textQuaternion: THREE.Quaternion | null;
+    imagePosition: THREE.Vector3 | null;
+    imageQuaternion: THREE.Quaternion | null;
+    qrColor: string;
+    zScale: number;
+  }) => void;
   onCheckout: () => void;
+  onLoadingComplete?: () => void;
 }
 
 type TabType = "edit" | "cart";
@@ -25,6 +45,7 @@ export function MobileLayout({
   onGltfsLoaded,
   onQRGeometriesReady,
   onCheckout,
+  onLoadingComplete,
 }: MobileLayoutProps) {
   const [activeTab, setActiveTab] = useState<TabType>("edit");
   const [panelHeight, setPanelHeight] = useState<PanelHeight>("closed");
@@ -143,6 +164,7 @@ export function MobileLayout({
         <Scene3D
           onGltfsLoaded={onGltfsLoaded}
           onQRGeometriesReady={onQRGeometriesReady}
+          onLoadingComplete={onLoadingComplete}
         />
         <ColorPalette />
       </div>

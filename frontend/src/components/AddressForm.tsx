@@ -140,12 +140,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     <div
       style={{
         backgroundColor: 'white',
-        padding: isMobile ? '15px' : '30px',
+        padding: isMobile ? '8px' : '30px',
       }}
     >
       <h2 style={{
         marginTop: 0,
-        marginBottom: isMobile ? '15px' : '20px',
+        marginBottom: isMobile ? '10px' : '20px',
         color: '#333',
         fontSize: isMobile ? '16px' : '20px',
         fontWeight: 700
@@ -154,17 +154,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       </h2>
 
         <form onSubmit={handleSubmit}>
-          {/* 좌우 2단 레이아웃 (모바일에서는 1단) */}
+          {/* 고객 정보 입력 */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: isMobile ? '15px' : '30px',
-            marginBottom: isMobile ? '15px' : '20px'
+            marginBottom: isMobile ? '10px' : '20px'
           }}>
-            {/* 좌측: 고객 정보 입력 */}
-            <div>
           {/* 이름 */}
-          <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+          <div style={{ marginBottom: isMobile ? '8px' : '15px' }}>
             <label style={{
               display: 'block',
               marginBottom: '5px',
@@ -179,16 +174,17 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
               style={{
                 width: '100%',
-                padding: isMobile ? '6px' : '8px',
+                padding: isMobile ? '4px 6px' : '8px',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
-                fontSize: isMobile ? '14px' : '16px',
+                fontSize: isMobile ? '13px' : '16px',
+                boxSizing: 'border-box',
               }}
             />
           </div>
 
           {/* 이메일 (읽기 전용) */}
-          <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+          <div style={{ marginBottom: isMobile ? '8px' : '15px' }}>
             <label style={{
               display: 'block',
               marginBottom: '5px',
@@ -203,17 +199,18 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               readOnly
               style={{
                 width: '100%',
-                padding: isMobile ? '6px' : '8px',
+                padding: isMobile ? '4px 6px' : '8px',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
                 backgroundColor: '#f5f5f5',
-                fontSize: isMobile ? '14px' : '16px',
+                fontSize: isMobile ? '13px' : '16px',
+                boxSizing: 'border-box',
               }}
             />
           </div>
 
           {/* 전화번호 */}
-          <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+          <div style={{ marginBottom: isMobile ? '8px' : '15px' }}>
             <label style={{
               display: 'block',
               marginBottom: '5px',
@@ -225,20 +222,38 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             <input
               type="tel"
               value={formData.customerPhone}
-              onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 추출
+                let formatted = value;
+
+                // 자동 하이픈 추가
+                if (value.length <= 3) {
+                  formatted = value;
+                } else if (value.length <= 7) {
+                  formatted = `${value.slice(0, 3)}-${value.slice(3)}`;
+                } else if (value.length <= 11) {
+                  formatted = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7)}`;
+                } else {
+                  formatted = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7, 11)}`;
+                }
+
+                setFormData({ ...formData, customerPhone: formatted });
+              }}
               placeholder="010-1234-5678"
+              maxLength={13}
               style={{
                 width: '100%',
-                padding: isMobile ? '6px' : '8px',
+                padding: isMobile ? '4px 6px' : '8px',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
-                fontSize: isMobile ? '14px' : '16px',
+                fontSize: isMobile ? '13px' : '16px',
+                boxSizing: 'border-box',
               }}
             />
           </div>
 
           {/* 우편번호 */}
-          <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+          <div style={{ marginBottom: isMobile ? '8px' : '15px' }}>
             <label style={{
               display: 'block',
               marginBottom: '5px',
@@ -255,11 +270,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                 placeholder="우편번호"
                 style={{
                   flex: 1,
-                  padding: isMobile ? '6px' : '8px',
+                  padding: isMobile ? '4px 6px' : '8px',
                   border: '1px solid #ccc',
                   borderRadius: '4px',
                   backgroundColor: '#f5f5f5',
-                  fontSize: isMobile ? '14px' : '16px',
+                  fontSize: isMobile ? '13px' : '16px',
+                  boxSizing: 'border-box',
                 }}
               />
               <button
@@ -282,7 +298,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
           </div>
 
           {/* 주소 */}
-          <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+          <div style={{ marginBottom: isMobile ? '8px' : '15px' }}>
             <label style={{
               display: 'block',
               marginBottom: '5px',
@@ -298,17 +314,18 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               placeholder="우편번호 검색 후 자동 입력됩니다"
               style={{
                 width: '100%',
-                padding: isMobile ? '6px' : '8px',
+                padding: isMobile ? '4px 6px' : '8px',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
                 backgroundColor: '#f5f5f5',
-                fontSize: isMobile ? '14px' : '16px',
+                fontSize: isMobile ? '13px' : '16px',
+                boxSizing: 'border-box',
               }}
             />
           </div>
 
           {/* 상세주소 */}
-          <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+          <div style={{ marginBottom: isMobile ? '8px' : '15px' }}>
             <label style={{
               display: 'block',
               marginBottom: '5px',
@@ -324,16 +341,17 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               placeholder="상세주소를 입력해주세요"
               style={{
                 width: '100%',
-                padding: isMobile ? '6px' : '8px',
+                padding: isMobile ? '4px 6px' : '8px',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
-                fontSize: isMobile ? '14px' : '16px',
+                fontSize: isMobile ? '13px' : '16px',
+                boxSizing: 'border-box',
               }}
             />
           </div>
 
           {/* 배송 메시지 */}
-          <div style={{ marginBottom: isMobile ? '12px' : '15px' }}>
+          <div style={{ marginBottom: isMobile ? '8px' : '15px' }}>
             <label style={{
               display: 'block',
               marginBottom: '5px',
@@ -349,31 +367,33 @@ export const AddressForm: React.FC<AddressFormProps> = ({
               rows={isMobile ? 2 : 3}
               style={{
                 width: '100%',
-                padding: isMobile ? '6px' : '8px',
+                padding: isMobile ? '4px 6px' : '8px',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
                 fontFamily: 'inherit',
                 resize: 'vertical',
-                fontSize: isMobile ? '14px' : '16px',
+                fontSize: isMobile ? '13px' : '16px',
+                boxSizing: 'border-box',
               }}
             />
           </div>
-            </div>
+          </div>
 
-            {/* 우측: 캘린더 (읽기 전용) */}
-            <div>
-              <CustomerCalendar
-                totalQuantity={totalQuantity}
-                readOnly={true}
-              />
-            </div>
+          {/* 캘린더 (읽기 전용) */}
+          <div style={{
+            marginBottom: isMobile ? '10px' : '20px'
+          }}>
+            <CustomerCalendar
+              totalQuantity={totalQuantity}
+              readOnly={true}
+            />
           </div>
 
           {/* 가격 상세 및 입금 정보 (전체 너비) */}
           <div
             style={{
-              marginBottom: isMobile ? '15px' : '20px',
-              padding: isMobile ? '12px' : '20px',
+              marginBottom: isMobile ? '10px' : '20px',
+              padding: isMobile ? '10px' : '20px',
               backgroundColor: '#faf9f7',
               borderRadius: '8px',
               border: '2px solid #e5e0db',
@@ -400,22 +420,22 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                     key={item.id}
                     style={{
                       marginBottom: '12px',
-                      padding: '12px',
+                      padding: isMobile ? '10px' : '12px',
                       backgroundColor: '#fff',
                       borderRadius: '6px',
                       border: '1px solid #e5e0db',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 600, color: '#333' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '5px' }}>
+                      <span style={{ fontWeight: 600, color: '#333', fontSize: isMobile ? '14px' : '16px' }}>
                         #{index + 1} {getQRTypeLabel(item.plateConfig.qrType)} QR × {item.quantity}개
                       </span>
-                      <span style={{ fontWeight: 700, color: '#FF6B6B' }}>
+                      <span style={{ fontWeight: 700, color: '#FF6B6B', fontSize: isMobile ? '16px' : '18px' }}>
                         {formatPrice(itemTotal)}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '12px', color: '#666', paddingLeft: '8px' }}>
+                    <div style={{ fontSize: isMobile ? '11px' : '12px', color: '#666', paddingLeft: isMobile ? '4px' : '8px' }}>
                       <div>기본: {formatPrice(pricingSettings.base_price)}</div>
                       {item.plateConfig.text && item.plateConfig.text.trim().length > 0 && (
                         <div>+ 텍스트: {formatPrice(pricingSettings.text_price)}</div>
@@ -494,13 +514,14 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                       alert('은행명이 복사되었습니다');
                     }}
                     style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
+                      padding: isMobile ? '10px 16px' : '6px 12px',
+                      fontSize: isMobile ? '14px' : '12px',
                       backgroundColor: '#4CAF50',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      minWidth: isMobile ? '70px' : 'auto',
                     }}
                   >
                     📋 복사
@@ -522,17 +543,18 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText('110-548-406070');
+                      navigator.clipboard.writeText('110548406070');
                       alert('계좌번호가 복사되었습니다');
                     }}
                     style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
+                      padding: isMobile ? '10px 16px' : '6px 12px',
+                      fontSize: isMobile ? '14px' : '12px',
                       backgroundColor: '#4CAF50',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      minWidth: isMobile ? '70px' : 'auto',
                     }}
                   >
                     📋 복사
@@ -555,13 +577,14 @@ export const AddressForm: React.FC<AddressFormProps> = ({
                       alert('예금주명이 복사되었습니다');
                     }}
                     style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
+                      padding: isMobile ? '10px 16px' : '6px 12px',
+                      fontSize: isMobile ? '14px' : '12px',
                       backgroundColor: '#4CAF50',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      minWidth: isMobile ? '70px' : 'auto',
                     }}
                   >
                     📋 복사
