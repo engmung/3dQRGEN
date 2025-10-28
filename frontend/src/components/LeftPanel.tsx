@@ -6,6 +6,7 @@ import { QRTypeSelector } from './QRTypeSelector';
 import { WiFiForm } from './forms/WiFiForm';
 import { EmailForm } from './forms/EmailForm';
 import { getPricingSettings, calculatePlatePrice, formatPrice, type PricingSettings } from '../utils/pricing';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 type TabType = 'qr' | 'text' | 'image';
 
@@ -18,13 +19,6 @@ const inputStyle = {
   fontSize: '16px'
 };
 
-const labelStyle = {
-  display: 'block',
-  marginBottom: '8px',
-  fontWeight: 600,
-  fontSize: '16px'
-};
-
 const sectionStyle = {
   marginBottom: '20px'
 };
@@ -32,6 +26,18 @@ const sectionStyle = {
 export function LeftPanel() {
   const [activeTab, setActiveTab] = useState<TabType>('qr');
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
+  const isMobile = useIsMobile();
+
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '8px',
+    fontWeight: 600,
+    fontSize: '16px',
+    color: '#333',
+    ...(isMobile && {
+      textShadow: '0 0 8px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.9)'
+    })
+  };
 
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
   const plates = useDesignStore((state) => state.plates);
@@ -47,12 +53,12 @@ export function LeftPanel() {
 
   const tabButtonStyle = (isActive: boolean) => ({
     flex: 1,
-    padding: '12px',
+    padding: isMobile ? '10px 8px' : '12px',
     backgroundColor: isActive ? '#fff' : '#f0ede9',
     border: 'none',
     borderRight: '1px solid #e5e0db',
     cursor: 'pointer',
-    fontSize: '18px',
+    fontSize: isMobile ? '15px' : '18px',
     fontWeight: isActive ? 600 : 400,
     transition: 'all 0.2s',
     outline: 'none',
@@ -60,24 +66,35 @@ export function LeftPanel() {
 
   return (
     <div style={{
-      width: '40%',
-      height: 'calc(100vh - 60px)',
-      backgroundColor: '#f8f6f3',
-      borderRight: '1px solid #e5e0db',
+      width: isMobile ? '100%' : '40%',
+      height: isMobile ? 'auto' : 'calc(100vh - 60px)',
+      backgroundColor: isMobile ? 'transparent' : '#f8f6f3',
+      borderRight: isMobile ? 'none' : '1px solid #e5e0db',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: isMobile ? 'visible' : 'hidden'
     }}>
       {/* 탭 헤더 */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
+      <div style={{
+        display: 'flex',
+        borderBottom: '1px solid #ddd',
+        gap: isMobile ? '8px' : '0',
+        padding: isMobile ? '8px' : '0'
+      }}>
         <button
-          style={tabButtonStyle(activeTab === 'qr')}
+          style={{
+            ...tabButtonStyle(activeTab === 'qr'),
+            borderRadius: isMobile ? '8px' : '0'
+          }}
           onClick={() => setActiveTab('qr')}
         >
           QR
         </button>
         <button
-          style={tabButtonStyle(activeTab === 'text')}
+          style={{
+            ...tabButtonStyle(activeTab === 'text'),
+            borderRadius: isMobile ? '8px' : '0'
+          }}
           onClick={() => setActiveTab('text')}
         >
           텍스트
@@ -85,7 +102,8 @@ export function LeftPanel() {
         <button
           style={{
             ...tabButtonStyle(activeTab === 'image'),
-            borderRight: 'none'
+            borderRight: 'none',
+            borderRadius: isMobile ? '8px' : '0'
           }}
           onClick={() => setActiveTab('image')}
         >
@@ -98,8 +116,8 @@ export function LeftPanel() {
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        padding: '20px',
-        backgroundColor: '#fff',
+        padding: isMobile ? '0 12px 0 12px' : '20px',
+        backgroundColor: isMobile ? 'transparent' : '#fff',
         position: 'relative'
       }}>
         {/* 선택 안 된 경우 오버레이 */}
@@ -169,7 +187,16 @@ export function LeftPanel() {
 
             {/* QR 설정 */}
             <div style={sectionStyle}>
-              <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '20px', fontWeight: 600 }}>QR 설정</h3>
+              <h3 style={{
+                marginTop: 0,
+                marginBottom: '15px',
+                fontSize: '20px',
+                fontWeight: 600,
+                color: '#333',
+                ...(isMobile && {
+                  textShadow: '0 0 8px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.9)'
+                })
+              }}>QR 설정</h3>
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={labelStyle}>QR 크기 (mm): {selectedPlate.qrSize.toFixed(1)}</label>
@@ -177,6 +204,8 @@ export function LeftPanel() {
                   type="range"
                   value={selectedPlate.qrSize}
                   onInput={(e) => updatePlate(selectedPlate.id, { qrSize: Number(e.currentTarget.value) })}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
                   min="20"
                   max="60"
                   step="0.1"
@@ -190,6 +219,8 @@ export function LeftPanel() {
                   type="range"
                   value={selectedPlate.qrThickness}
                   onInput={(e) => updatePlate(selectedPlate.id, { qrThickness: Number(e.currentTarget.value) })}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
                   min="1"
                   max="3"
                   step="0.01"
@@ -203,6 +234,8 @@ export function LeftPanel() {
                   type="range"
                   value={selectedPlate.qrHeightOffset}
                   onInput={(e) => updatePlate(selectedPlate.id, { qrHeightOffset: Number(e.currentTarget.value) })}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
                   min="-50"
                   max="30"
                   step="0.01"
@@ -216,6 +249,8 @@ export function LeftPanel() {
                   type="range"
                   value={selectedPlate.qrHorizontalOffset}
                   onInput={(e) => updatePlate(selectedPlate.id, { qrHorizontalOffset: Number(e.currentTarget.value) })}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
                   min={-(60 - selectedPlate.qrSize) / 2}
                   max={(60 - selectedPlate.qrSize) / 2}
                   step="0.01"
@@ -260,6 +295,8 @@ export function LeftPanel() {
                 type="range"
                 value={selectedPlate.textSize}
                 onInput={(e) => updatePlate(selectedPlate.id, { textSize: Number(e.currentTarget.value) })}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
                 min="5"
                 max="30"
                 step="0.1"
@@ -273,6 +310,8 @@ export function LeftPanel() {
                 type="range"
                 value={selectedPlate.textHeightOffset}
                 onInput={(e) => updatePlate(selectedPlate.id, { textHeightOffset: Number(e.currentTarget.value) })}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
                 min="-50"
                 max="70"
                 step="0.01"
@@ -285,6 +324,8 @@ export function LeftPanel() {
               <input
                 type="range"
                 value={selectedPlate.textHorizontalOffset}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
                 onInput={(e) => updatePlate(selectedPlate.id, { textHorizontalOffset: Number(e.currentTarget.value) })}
                 min="-30"
                 max="30"
@@ -377,7 +418,7 @@ export function LeftPanel() {
               <div key={img.id} style={{
                 marginBottom: '20px',
                 padding: '12px',
-                backgroundColor: '#f5f5f5',
+                backgroundColor: isMobile ? 'rgba(245, 245, 245, 0.3)' : '#f5f5f5',
                 borderRadius: '4px',
                 border: '1px solid #ddd',
               }}>
@@ -415,6 +456,8 @@ export function LeftPanel() {
                     type="range"
                     value={img.size}
                     onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { size: Number(e.currentTarget.value) })}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
                     min="10"
                     max="60"
                     step="0.1"
@@ -428,6 +471,8 @@ export function LeftPanel() {
                     type="range"
                     value={img.heightOffset}
                     onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { heightOffset: Number(e.currentTarget.value) })}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
                     min="-50"
                     max="70"
                     step="0.01"
@@ -441,6 +486,8 @@ export function LeftPanel() {
                     type="range"
                     value={img.horizontalOffset}
                     onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { horizontalOffset: Number(e.currentTarget.value) })}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
                     min="-30"
                     max="30"
                     step="0.01"

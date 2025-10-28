@@ -13,7 +13,12 @@
       "Bash(git rm:*)",
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
-      "Bash(scp:*)"
+      "Bash(scp:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker rm:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []

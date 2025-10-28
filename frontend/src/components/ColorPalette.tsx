@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDesignStore } from '../store/useDesignStore';
 import { getPricingSettings } from '../utils/pricing';
 import { ColorGuideModal } from './ColorGuideModal';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 interface ColorInfo {
   name: string;
@@ -20,6 +21,7 @@ export const ColorPalette = () => {
   const updateSelectedQrColor = useDesignStore((state) => state.updateSelectedQrColor);
   const setBackgroundColor = useDesignStore((state) => state.setBackgroundColor);
 
+  const isMobile = useIsMobile();
   const [showPlatePicker, setShowPlatePicker] = useState(false);
   const [showQrPicker, setShowQrPicker] = useState(false);
   const [showBgPicker, setShowBgPicker] = useState(false);
@@ -112,20 +114,24 @@ export const ColorPalette = () => {
           allowedCombinations={allowedCombinations}
           colorWarningMessage={colorWarningMessage}
           onClose={() => setShowColorGuide(false)}
+          currentPlateColor={selectedPlate?.plateColor}
+          currentQrColor={selectedPlate?.qrColor}
         />
       )}
 
       <div
         style={{
           position: 'absolute',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: isMobile ? '10px' : '20px',
+          left: isMobile ? 'auto' : '50%',
+          right: isMobile ? '10px' : 'auto',
+          transform: isMobile ? 'none' : 'translateX(-50%)',
           display: 'flex',
-          gap: '12px',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '6px' : '12px',
           background: 'rgba(255, 255, 255, 0.95)',
-          padding: '10px 20px',
-          borderRadius: '50px',
+          padding: isMobile ? '6px' : '10px 20px',
+          borderRadius: isMobile ? '20px' : '50px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           zIndex: 100,
           backdropFilter: 'blur(10px)',
@@ -141,13 +147,13 @@ export const ColorPalette = () => {
             setShowBgPicker(false);
           }}
           style={{
-            width: '40px',
-            height: '40px',
-            minWidth: '40px',
-            minHeight: '40px',
+            width: isMobile ? '32px' : '40px',
+            height: isMobile ? '32px' : '40px',
+            minWidth: isMobile ? '32px' : '40px',
+            minHeight: isMobile ? '32px' : '40px',
             borderRadius: '50%',
             background: selectedPlate.plateColor,
-            border: '3px solid #ddd',
+            border: isMobile ? '2px solid #ddd' : '3px solid #ddd',
             cursor: 'pointer',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             transition: 'transform 0.2s',
@@ -161,22 +167,39 @@ export const ColorPalette = () => {
           title="판 색상"
         />
         {showPlatePicker && (
-          <div
-            style={{
-              position: 'fixed',
-              top: '20px',
-              left: '20px',
-              background: 'white',
-              padding: '16px',
-              borderRadius: '12px',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              zIndex: 1000,
-              minWidth: '200px',
-            }}
-          >
+          <>
+            <div
+              style={isMobile ? {
+                position: 'absolute',
+                top: '0',
+                right: '40px',
+                width: '200px',
+                background: 'white',
+                padding: '16px',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                zIndex: 1000,
+                maxHeight: '80vh',
+                overflowY: 'auto',
+              } : {
+                position: 'absolute',
+                top: '50px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'white',
+                padding: '16px',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                zIndex: 1000,
+                minWidth: '200px',
+              }}
+            >
             {availableColors.map((color) => (
               <button
                 key={color.value}
@@ -253,6 +276,7 @@ export const ColorPalette = () => {
               />
             </div>
           </div>
+          </>
         )}
       </div>
       )}
@@ -267,13 +291,13 @@ export const ColorPalette = () => {
             setShowBgPicker(false);
           }}
           style={{
-            width: '40px',
-            height: '40px',
-            minWidth: '40px',
-            minHeight: '40px',
+            width: isMobile ? '32px' : '40px',
+            height: isMobile ? '32px' : '40px',
+            minWidth: isMobile ? '32px' : '40px',
+            minHeight: isMobile ? '32px' : '40px',
             borderRadius: '50%',
             background: selectedPlate.qrColor,
-            border: '3px solid #ddd',
+            border: isMobile ? '2px solid #ddd' : '3px solid #ddd',
             cursor: 'pointer',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             transition: 'transform 0.2s',
@@ -287,22 +311,39 @@ export const ColorPalette = () => {
           title="QR 색상"
         />
         {showQrPicker && (
-          <div
-            style={{
-              position: 'fixed',
-              top: '20px',
-              left: '20px',
-              background: 'white',
-              padding: '16px',
-              borderRadius: '12px',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              zIndex: 1000,
-              minWidth: '200px',
-            }}
-          >
+          <>
+            <div
+              style={isMobile ? {
+                position: 'absolute',
+                top: '0',
+                right: '40px',
+                width: '200px',
+                background: 'white',
+                padding: '16px',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                zIndex: 1000,
+                maxHeight: '80vh',
+                overflowY: 'auto',
+              } : {
+                position: 'absolute',
+                top: '50px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'white',
+                padding: '16px',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                zIndex: 1000,
+                minWidth: '200px',
+              }}
+            >
             {availableColors.map((color) => {
               const isAllowed = selectedPlate && isCombinationAllowed(selectedPlate.plateColor, color.value);
 
@@ -386,6 +427,7 @@ export const ColorPalette = () => {
               />
             </div>
           </div>
+          </>
         )}
       </div>
       )}
@@ -399,13 +441,13 @@ export const ColorPalette = () => {
             setShowQrPicker(false);
           }}
           style={{
-            width: '40px',
-            height: '40px',
-            minWidth: '40px',
-            minHeight: '40px',
+            width: isMobile ? '32px' : '40px',
+            height: isMobile ? '32px' : '40px',
+            minWidth: isMobile ? '32px' : '40px',
+            minHeight: isMobile ? '32px' : '40px',
             borderRadius: '50%',
             background: backgroundColor,
-            border: '3px solid #ddd',
+            border: isMobile ? '2px solid #ddd' : '3px solid #ddd',
             cursor: 'pointer',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             transition: 'transform 0.2s',
@@ -420,7 +462,15 @@ export const ColorPalette = () => {
         />
         {showBgPicker && (
           <div
-            style={{
+            style={isMobile ? {
+              position: 'absolute',
+              top: '0',
+              right: '40px',
+              background: 'white',
+              padding: '10px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+            } : {
               position: 'absolute',
               top: '50px',
               left: '50%',
@@ -446,16 +496,18 @@ export const ColorPalette = () => {
         )}
       </div>
 
-      {/* 색상 안내 버튼 */}
+      {/* 색상 안내 버튼 - 조합 불가능하면 빨간색 느낌표 */}
       <button
         onClick={() => setShowColorGuide(true)}
         style={{
-          width: '40px',
-          height: '40px',
-          minWidth: '40px',
-          minHeight: '40px',
+          width: isMobile ? '32px' : '40px',
+          height: isMobile ? '32px' : '40px',
+          minWidth: isMobile ? '32px' : '40px',
+          minHeight: isMobile ? '32px' : '40px',
           borderRadius: '50%',
-          background: '#4CAF50',
+          background: selectedPlate && !isCombinationAllowed(selectedPlate.plateColor, selectedPlate.qrColor)
+            ? '#FF5252'
+            : '#4CAF50',
           color: 'white',
           border: 'none',
           cursor: 'pointer',
@@ -465,46 +517,25 @@ export const ColorPalette = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '20px',
+          fontSize: isMobile ? '16px' : '20px',
           fontWeight: 'bold',
         }}
         onMouseOver={(e) => {
           e.currentTarget.style.transform = 'scale(1.1)';
-          e.currentTarget.style.background = '#45a049';
+          const isInvalid = selectedPlate && !isCombinationAllowed(selectedPlate.plateColor, selectedPlate.qrColor);
+          e.currentTarget.style.background = isInvalid ? '#E53935' : '#45a049';
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.background = '#4CAF50';
+          const isInvalid = selectedPlate && !isCombinationAllowed(selectedPlate.plateColor, selectedPlate.qrColor);
+          e.currentTarget.style.background = isInvalid ? '#FF5252' : '#4CAF50';
         }}
-        title="색상 안내"
+        title={selectedPlate && !isCombinationAllowed(selectedPlate.plateColor, selectedPlate.qrColor) ? '출력 불가능한 색상 조합' : '색상 안내'}
       >
-        ?
+        {selectedPlate && !isCombinationAllowed(selectedPlate.plateColor, selectedPlate.qrColor) ? '!' : '?'}
       </button>
     </div>
 
-    {/* 색상 조합 경고 배너 */}
-    {selectedPlate && !isCombinationAllowed(selectedPlate.plateColor, selectedPlate.qrColor) && (
-      <div
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          background: '#ff9800',
-          color: 'white',
-          padding: '12px 20px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-          fontSize: '14px',
-          fontWeight: 600,
-          zIndex: 1001,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
-        ⚠️ 이 조합은 출력 불가능합니다
-      </div>
-    )}
     </>
   );
 };

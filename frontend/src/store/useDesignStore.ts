@@ -5,6 +5,19 @@ import type { WiFiData, EmailData } from '../utils/qrGenerator';
 // QR 타입 정의
 export type QRType = 'url' | 'wifi' | 'email';
 
+// UUID 생성 폴리필 (crypto.randomUUID가 없는 환경용)
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // 폴백: 간단한 UUID v4 생성
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 // 유틸리티: File → Base64 DataURL
 async function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -165,7 +178,7 @@ const createDefaultPlate = (
 export const useDesignStore = create<DesignStore>()(
   persist(
     (set, get) => {
-      const initialPlateId = crypto.randomUUID();
+      const initialPlateId = generateUUID();
 
       return {
         // 초기값: 1개 판 (자동 선택)
@@ -180,7 +193,7 @@ export const useDesignStore = create<DesignStore>()(
   addPlate: () => {
     const { plates } = get();
     const newPlate = createDefaultPlate(
-      crypto.randomUUID(),
+      generateUUID(),
       '#ffffff',  // 기본 흰색
       '#000000',  // 기본 검정색
       plates.length
@@ -208,7 +221,7 @@ export const useDesignStore = create<DesignStore>()(
 
     const duplicated: QRPlateConfig = {
       ...original,
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       positionX: plates.length * 120,
     };
 
@@ -244,7 +257,7 @@ export const useDesignStore = create<DesignStore>()(
   addImage: (plateId: string, file: File) => {
     const { plates } = get();
     const newImage: ImageConfig = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       file,
       size: 40,
       heightOffset: 0,

@@ -1,4 +1,5 @@
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 interface ColorInfo {
   name: string;
@@ -14,6 +15,8 @@ interface ColorGuideModalProps {
   allowedCombinations: ColorCombination[];
   colorWarningMessage: string;
   onClose: () => void;
+  currentPlateColor?: string;
+  currentQrColor?: string;
 }
 
 export function ColorGuideModal({
@@ -21,15 +24,53 @@ export function ColorGuideModal({
   allowedCombinations,
   colorWarningMessage,
   onClose,
+  currentPlateColor,
+  currentQrColor,
 }: ColorGuideModalProps) {
+  const isMobile = useIsMobile();
+
+  // 현재 선택된 색상 조합이 허용되는지 확인
+  const isCurrentCombinationValid = () => {
+    if (!currentPlateColor || !currentQrColor) return true;
+    if (currentPlateColor === currentQrColor) return false;
+
+    return allowedCombinations.some(combo =>
+      combo.colors.length === 2 &&
+      combo.colors.includes(currentPlateColor) &&
+      combo.colors.includes(currentQrColor)
+    );
+  };
+
+  const getCurrentColorName = (colorValue: string) => {
+    const color = availableColors.find(c => c.value === colorValue);
+    return color?.name || colorValue;
+  };
   return (
-    <div style={MODAL_OVERLAY} onClick={onClose}>
+    <div
+      style={{
+        ...MODAL_OVERLAY,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+      onClick={onClose}
+    >
       <div
         style={{
-          ...MODAL_CONTENT_LARGE,
-          maxWidth: '700px',
-          maxHeight: '80vh',
-          overflow: 'auto',
+          ...(isMobile ? {
+            width: '90%',
+            maxWidth: '350px',
+            maxHeight: '85vh',
+            margin: 0,
+            borderRadius: '12px',
+            overflow: 'auto',
+            backgroundColor: 'white',
+            padding: '20px',
+          } : {
+            ...MODAL_CONTENT_LARGE,
+            maxWidth: '700px',
+            maxHeight: '80vh',
+            overflow: 'auto',
+          }),
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -66,6 +107,82 @@ export function ColorGuideModal({
             ×
           </button>
         </div>
+
+        {/* 현재 선택된 색상 조합 경고 */}
+        {currentPlateColor && currentQrColor && !isCurrentCombinationValid() && (
+          <section style={{ marginBottom: '25px' }}>
+            <div
+              style={{
+                padding: '16px',
+                backgroundColor: '#ffebee',
+                border: '2px solid #f44336',
+                borderRadius: '8px',
+              }}
+            >
+              <h3 style={{
+                fontSize: '16px',
+                marginBottom: '12px',
+                color: '#c62828',
+                fontWeight: 700,
+              }}>
+                ⚠️ 현재 선택된 색상 조합은 출력이 불가능합니다
+              </h3>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '12px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '6px',
+                      backgroundColor: currentPlateColor,
+                      border: '2px solid #333',
+                    }}
+                  />
+                  <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                    {getCurrentColorName(currentPlateColor)}
+                  </span>
+                </div>
+
+                <span style={{ fontSize: '18px', color: '#999' }}>+</span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '6px',
+                      backgroundColor: currentQrColor,
+                      border: '2px solid #333',
+                    }}
+                  />
+                  <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                    {getCurrentColorName(currentQrColor)}
+                  </span>
+                </div>
+              </div>
+
+              <p style={{
+                margin: 0,
+                fontSize: '14px',
+                color: '#555',
+                lineHeight: '1.5',
+              }}>
+                {currentPlateColor === currentQrColor
+                  ? '같은 색상끼리는 조합할 수 없습니다.'
+                  : '이 색상 조합은 QR 코드 인식이 불가능합니다.'
+                }
+                <br />
+                아래의 허용된 색상 조합을 참고해주세요.
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* 사용 가능한 색상 */}
         <section style={{ marginBottom: '30px' }}>
