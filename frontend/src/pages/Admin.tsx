@@ -7,10 +7,12 @@ import { getStatusText, getStatusColor } from '../utils/orderHelpers';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
 import { ColorPaletteEditor } from '../components/ColorPaletteEditor';
 import { ColorCombinationEditor } from '../components/ColorCombinationEditor';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 const ADMIN_EMAILS = ['lsh678902@gmail.com'];
 
 export function Admin() {
+  const isMobile = useIsMobile();
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const [orderGroups, setOrderGroups] = useState<OrderGroupDetail[]>([]);
@@ -365,10 +367,25 @@ export function Admin() {
   }
 
   return (
-    <div style={{ padding: '40px' }}>
-      <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>관리자 페이지</h1>
-        <a href="/" style={{ textDecoration: 'none', color: '#4CAF50', fontSize: '16px' }}>← 홈으로</a>
+    <div style={{
+      padding: isMobile ? '15px' : '40px',
+      overflow: isMobile ? 'auto' : 'visible',
+    }}>
+      <div style={{
+        marginBottom: isMobile ? '20px' : '30px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <h1 style={{
+          margin: 0,
+          fontSize: isMobile ? '20px' : '32px'
+        }}>관리자 페이지</h1>
+        <a href="/" style={{
+          textDecoration: 'none',
+          color: '#4CAF50',
+          fontSize: isMobile ? '14px' : '16px'
+        }}>← 홈으로</a>
       </div>
 
       {/* 가격 설정 섹션 */}
