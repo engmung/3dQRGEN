@@ -5,6 +5,7 @@ import { getPricingSettings, calculatePlatePrice, formatPrice } from '../utils/p
 import { getQRTypeLabel } from '../utils/qrHelpers';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
 import { COLORS } from '../styles/colors';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 interface PricingSettings {
   base_price: number;
@@ -27,6 +28,7 @@ export const OrderModal = ({
   customerEmail,
   onSubmit,
 }: OrderModalProps) => {
+  const isMobile = useIsMobile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
 
@@ -77,6 +79,8 @@ export const OrderModal = ({
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
           display: 'flex',
           flexDirection: 'column',
+          width: isMobile ? '95vw' : '90vw',
+          maxWidth: isMobile ? '95vw' : '1200px',
         }}
         onClick={(e) => e.stopPropagation()}
       >

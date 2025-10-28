@@ -4,8 +4,10 @@ import { fetchMyOrderGroups, cancelOrderGroup, type OrderGroupDetail } from '../
 import { formatPrice } from '../utils/pricing';
 import { getStatusText, getStatusColor } from '../utils/orderHelpers';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 export const MyOrders = () => {
+  const isMobile = useIsMobile();
   const { getToken } = useAuth();
   const [orderGroups, setOrderGroups] = useState<OrderGroupDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,23 +80,149 @@ export const MyOrders = () => {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h1 style={{ margin: 0 }}>내 주문 내역</h1>
+    <div style={{
+      padding: isMobile ? '15px' : '20px',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: isMobile ? '20px' : '30px'
+      }}>
+        <h1 style={{
+          margin: 0,
+          fontSize: isMobile ? '20px' : '32px'
+        }}>내 주문 내역</h1>
       </div>
 
       {orderGroups.length === 0 ? (
         <div
           style={{
-            padding: '60px',
+            padding: isMobile ? '40px 20px' : '60px',
             textAlign: 'center',
             backgroundColor: '#f8f9fa',
             borderRadius: '8px',
           }}
         >
-          <p style={{ fontSize: '18px', color: '#6c757d' }}>주문 내역이 없습니다.</p>
+          <p style={{
+            fontSize: isMobile ? '16px' : '18px',
+            color: '#6c757d'
+          }}>주문 내역이 없습니다.</p>
+        </div>
+      ) : isMobile ? (
+        /* 모바일: 카드 레이아웃 */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {orderGroups.map((orderGroup) => {
+            const totalQuantity = orderGroup.line_items.reduce((sum, item) => sum + item.quantity, 0);
+
+            return (
+              <div
+                key={orderGroup.id}
+                style={{
+                  backgroundColor: 'white',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  border: '1px solid #dee2e6',
+                }}
+              >
+                {/* 주문번호 및 상태 */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '10px',
+                  paddingBottom: '10px',
+                  borderBottom: '1px solid #eee',
+                }}>
+                  <div style={{ fontSize: '12px', color: '#666', fontFamily: 'monospace' }}>
+                    {orderGroup.group_uuid.substring(0, 8)}...
+                  </div>
+                  <span
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      backgroundColor: getStatusColor(orderGroup.status),
+                      color: 'white',
+                    }}
+                  >
+                    {getStatusText(orderGroup.status)}
+                  </span>
+                </div>
+
+                {/* 주문 정보 */}
+                <div style={{ marginBottom: '10px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ color: '#666' }}>주문일시</span>
+                    <span style={{ fontWeight: '500' }}>
+                      {orderGroup.created_at
+                        ? new Date(orderGroup.created_at).toLocaleDateString('ko-KR')
+                        : '-'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ color: '#666' }}>제품 종류</span>
+                    <span style={{ fontWeight: '500' }}>{orderGroup.line_items.length}개</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ color: '#666' }}>총 수량</span>
+                    <span style={{ fontWeight: '500' }}>{totalQuantity}개</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#666' }}>금액</span>
+                    <span style={{ fontWeight: 'bold', color: '#007bff', fontSize: '15px' }}>
+                      {formatPrice(orderGroup.total_price)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 버튼 */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <button
+                    onClick={() => setSelectedOrderGroup(orderGroup)}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    상세보기
+                  </button>
+                  {(orderGroup.status === 'pending' || orderGroup.status === 'paid') && (
+                    <button
+                      onClick={() => handleCancelOrderGroup(orderGroup.group_uuid)}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        backgroundColor: '#dc3545',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                      }}
+                    >
+                      취소
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
+        /* PC: 테이블 레이아웃 */
         <div style={{ overflowX: 'auto' }}>
           <table
             style={{
@@ -213,7 +341,14 @@ export const MyOrders = () => {
           onClick={() => setSelectedOrderGroup(null)}
         >
           <div
-            style={MODAL_CONTENT_LARGE}
+            style={{
+              ...MODAL_CONTENT_LARGE,
+              width: isMobile ? '95vw' : '90vw',
+              maxWidth: isMobile ? '95vw' : '1200px',
+              padding: isMobile ? '15px' : '30px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 style={{ marginTop: 0, marginBottom: '20px' }}>주문 상세 정보</h2>
