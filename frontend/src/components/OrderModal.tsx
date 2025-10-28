@@ -41,10 +41,12 @@ export const OrderModal = ({
 
   if (!isOpen) return null;
 
-  // 가격 계산 (수량 포함)
-  const totalPrice = pricingSettings
+  // 가격 계산 (수량 포함 + 택배비 5,000원)
+  const SHIPPING_FEE = 5000;
+  const productTotal = pricingSettings
     ? cartItems.reduce((sum, item) => sum + calculatePlatePrice(item.plateConfig, pricingSettings) * item.quantity, 0)
     : 0;
+  const totalPrice = productTotal + SHIPPING_FEE;
 
   // 총 제품 개수 계산 (quantity 합계)
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -96,6 +98,8 @@ export const OrderModal = ({
           <AddressForm
             initialData={{ customerEmail }}
             price={totalPrice}
+            productTotal={productTotal}
+            shippingFee={SHIPPING_FEE}
             totalQuantity={totalQuantity}
             cartItems={cartItems}
             onSubmit={handleSubmit}

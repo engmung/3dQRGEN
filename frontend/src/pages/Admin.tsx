@@ -808,8 +808,18 @@ export function Admin({ onLoadingComplete }: AdminProps = {}) {
                     <td style={{ ...cellStyle, maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {orderGroup.customer_address || '-'}
                     </td>
-                    <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 'bold', color: '#007bff' }}>
-                      {formatPrice(orderGroup.total_price)}
+                    <td style={{ ...cellStyle, textAlign: 'right' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                        <span style={{ fontSize: '11px', color: '#888' }}>
+                          제품: {formatPrice(orderGroup.total_price - 5000)}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#888' }}>
+                          배송: {formatPrice(5000)}
+                        </span>
+                        <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#007bff' }}>
+                          {formatPrice(orderGroup.total_price)}
+                        </span>
+                      </div>
                     </td>
                     <td style={cellStyle}>
                       <span style={{
@@ -996,9 +1006,22 @@ export function Admin({ onLoadingComplete }: AdminProps = {}) {
                     </td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '8px 0', fontWeight: 'bold' }}>총 금액</td>
-                    <td style={{ padding: '8px 0', fontSize: '18px', fontWeight: 'bold', color: '#007bff' }}>
-                      {formatPrice(selectedOrderGroupDetail.total_price)}
+                    <td style={{ padding: '8px 0', fontWeight: 'bold', verticalAlign: 'top' }}>금액 상세</td>
+                    <td style={{ padding: '8px 0' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#666' }}>
+                          <span>제품 합계</span>
+                          <span>{formatPrice(selectedOrderGroupDetail.total_price - 5000)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#666' }}>
+                          <span>배송비</span>
+                          <span>{formatPrice(5000)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', color: '#007bff', paddingTop: '4px', borderTop: '1px solid #eee' }}>
+                          <span>총 금액</span>
+                          <span>{formatPrice(selectedOrderGroupDetail.total_price)}</span>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 </tbody>

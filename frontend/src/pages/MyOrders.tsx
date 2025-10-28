@@ -183,8 +183,20 @@ export const MyOrders = ({ onLoadingComplete }: MyOrdersProps = {}) => {
                     <span style={{ color: '#666' }}>총 수량</span>
                     <span style={{ fontWeight: '500' }}>{totalQuantity}개</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>금액</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                    <span style={{ color: '#888', fontSize: '13px' }}>제품 합계</span>
+                    <span style={{ color: '#888', fontSize: '13px' }}>
+                      {formatPrice(orderGroup.total_price - 5000)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ color: '#888', fontSize: '13px' }}>배송비</span>
+                    <span style={{ color: '#888', fontSize: '13px' }}>
+                      {formatPrice(5000)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '5px', borderTop: '1px solid #eee' }}>
+                    <span style={{ color: '#666', fontWeight: 'bold' }}>총 금액</span>
                     <span style={{ fontWeight: 'bold', color: '#007bff', fontSize: '15px' }}>
                       {formatPrice(orderGroup.total_price)}
                     </span>
@@ -286,8 +298,18 @@ export const MyOrders = ({ onLoadingComplete }: MyOrdersProps = {}) => {
                     <td style={{ padding: '15px', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>
                       {totalQuantity}개
                     </td>
-                    <td style={{ padding: '15px', fontSize: '14px', textAlign: 'right', fontWeight: 'bold' }}>
-                      {formatPrice(orderGroup.total_price)}
+                    <td style={{ padding: '15px', fontSize: '14px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                        <span style={{ fontSize: '12px', color: '#888' }}>
+                          제품: {formatPrice(orderGroup.total_price - 5000)}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#888' }}>
+                          배송: {formatPrice(5000)}
+                        </span>
+                        <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#007bff' }}>
+                          {formatPrice(orderGroup.total_price)}
+                        </span>
+                      </div>
                     </td>
                     <td style={{ padding: '15px', textAlign: 'center' }}>
                       <span
@@ -400,9 +422,22 @@ export const MyOrders = ({ onLoadingComplete }: MyOrdersProps = {}) => {
                     </td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '8px 0', fontWeight: 'bold' }}>총 금액</td>
-                    <td style={{ padding: '8px 0', fontSize: '18px', fontWeight: 'bold', color: '#007bff' }}>
-                      {formatPrice(selectedOrderGroup.total_price)}
+                    <td style={{ padding: '8px 0', fontWeight: 'bold', verticalAlign: 'top' }}>금액 상세</td>
+                    <td style={{ padding: '8px 0' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#666' }}>
+                          <span>제품 합계</span>
+                          <span>{formatPrice(selectedOrderGroup.total_price - 5000)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#666' }}>
+                          <span>배송비</span>
+                          <span>{formatPrice(5000)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', color: '#007bff', paddingTop: '4px', borderTop: '1px solid #eee' }}>
+                          <span>총 금액</span>
+                          <span>{formatPrice(selectedOrderGroup.total_price)}</span>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 </tbody>

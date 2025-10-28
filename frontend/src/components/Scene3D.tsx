@@ -7,6 +7,7 @@ import { useDesignStore } from "../store/useDesignStore";
 import type { GLBRegions } from "../utils/glbLoader";
 import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { applyMaterialToObject, disposeObject } from "../utils/materialFactory";
 import { useIsMobile } from "../hooks/useMediaQuery";
@@ -43,11 +44,15 @@ interface Scene3DProps {
  * Fixed hook violation by moving useLoader to top level
  */
 const PhoneModel = () => {
-  const phoneModel = useLoader(OBJLoader, "/models/Phone.obj");
+  const materials = useLoader(MTLLoader, "/models/Phone.mtl");
+  const phoneModel = useLoader(OBJLoader, "/models/Phone.obj", (loader) => {
+    materials.preload();
+    loader.setMaterials(materials);
+  });
 
   const processedPhoneModel = useMemo(() => {
     const cloned = phoneModel.clone();
-    applyMaterialToObject(cloned, "#333333");
+    // MTL 메테리얼 사용, applyMaterialToObject 제거
     cloned.scale.set(34, 34, 34);
     cloned.rotation.set(0.0, 1.18, 0.0);
     cloned.position.set(30, 3, -97);

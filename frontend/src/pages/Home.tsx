@@ -231,6 +231,10 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
 
       const totalQuantity = lineItemsData.reduce((sum, item) => sum + item.quantity, 0);
 
+      // 제품 합계 계산 (unit_price × quantity)
+      const productTotal = lineItemsData.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+      const shippingFee = 5000;
+
       // 배분 결과 문자열 생성
       const allocationText = Object.entries(response.allocation || {})
         .map(([date, qty]) => `  - ${date}: ${qty}개`)
@@ -240,7 +244,9 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
         `주문이 완료되었습니다!\n` +
         `• 제품 종류: ${response.line_item_count}개\n` +
         `• 총 수량: ${totalQuantity}개\n` +
-        `• 총 금액: ${response.total_price.toLocaleString()}원\n\n` +
+        `• 제품 합계: ${productTotal.toLocaleString()}원\n` +
+        `• 배송비: ${shippingFee.toLocaleString()}원\n` +
+        `• 총 금액: ${(productTotal + shippingFee).toLocaleString()}원\n\n` +
         `📅 제작 일정:\n${allocationText}\n\n` +
         `※ 모든 제품 제작 완료 후 일괄 배송됩니다.\n` +
         `"내 주문" 메뉴에서 확인하실 수 있습니다.`

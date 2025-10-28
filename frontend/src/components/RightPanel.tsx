@@ -103,13 +103,16 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
   // 전체 수량 계산
   const totalQuantity = plates.reduce((sum, plate) => sum + plate.quantity, 0);
 
-  // 전체 가격 계산
-  const totalPrice = pricingSettings
+  // 전체 가격 계산 (제품 합계 + 배송비)
+  const SHIPPING_FEE = 5000;
+  const productTotal = pricingSettings
     ? plates.reduce((sum, plate) => {
         const platePrice = calculatePlatePrice(plate, pricingSettings);
         return sum + (platePrice * plate.quantity);
       }, 0)
     : 0;
+  // 제품이 있을 때만 배송비 추가
+  const totalPrice = plates.length > 0 ? productTotal + SHIPPING_FEE : 0;
 
   const cardStyle = (isSelected: boolean) => ({
     width: '100%',
@@ -458,12 +461,57 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
                 ...(isMobile && { textShadow: '0 0 6px rgba(255,255,255,0.9)' })
               }}>{totalQuantity}개</span>
             </div>
+            {/* 제품 합계 */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: '4px',
+              borderTop: '1px solid #f0f0f0'
+            }}>
+              <span style={{
+                fontSize: '13px',
+                color: '#666',
+                ...(isMobile && { textShadow: '0 0 6px rgba(255,255,255,0.9)' })
+              }}>제품 합계</span>
+              <span style={{
+                fontSize: '13px',
+                color: '#666',
+                ...(isMobile && { textShadow: '0 0 6px rgba(255,255,255,0.9)' })
+              }}>
+                {formatPrice(productTotal)}
+              </span>
+            </div>
+
+            {/* 배송비 */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: '2px'
+            }}>
+              <span style={{
+                fontSize: '13px',
+                color: '#666',
+                ...(isMobile && { textShadow: '0 0 6px rgba(255,255,255,0.9)' })
+              }}>배송비</span>
+              <span style={{
+                fontSize: '13px',
+                color: '#666',
+                ...(isMobile && { textShadow: '0 0 6px rgba(255,255,255,0.9)' })
+              }}>
+                {formatPrice(SHIPPING_FEE)}
+              </span>
+            </div>
+
+            {/* 총 금액 */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               paddingTop: '8px',
-              borderTop: '1px solid #f0f0f0'
+              marginTop: '4px',
+              borderTop: '2px solid #e0e0e0'
             }}>
               <span style={{
                 fontSize: '16px',
