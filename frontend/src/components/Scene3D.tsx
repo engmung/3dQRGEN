@@ -44,8 +44,8 @@ interface Scene3DProps {
  * Fixed hook violation by moving useLoader to top level
  */
 const PhoneModel = () => {
-  const materials = useLoader(MTLLoader, "/models/Phone.mtl");
-  const phoneModel = useLoader(OBJLoader, "/models/Phone.obj", (loader) => {
+  const materials = useLoader(MTLLoader, "/models/Phone.mtl?v=2");
+  const phoneModel = useLoader(OBJLoader, "/models/Phone.obj?v=2", (loader) => {
     materials.preload();
     loader.setMaterials(materials);
   });
