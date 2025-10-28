@@ -5,18 +5,21 @@ import { LeftPanel } from '../components/LeftPanel';
 import { RightPanel } from '../components/RightPanel';
 import { OrderModal } from '../components/OrderModal';
 import { ColorPalette } from '../components/ColorPalette';
+import { MobileLayout } from '../components/MobileLayout';
 import { useDesignStore } from '../store/useDesignStore';
 import { useOBJPreviewStore } from '../store/objPreviewStore';
 import { generateOBJFromCartItem } from '../utils/objGenerator';
 import { generateQRString } from '../utils/qrGenerator';
 import { createOrderGroup, type LineItemData } from '../utils/api';
 import { getPricingSettings, calculatePlatePrice } from '../utils/pricing';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import type { AddressFormData } from '../components/AddressForm';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
 export function Home() {
   const { user } = useUser();
+  const isMobile = useIsMobile();
 
   // GLB 파츠 데이터 저장 (주문 시 OBJ 생성용)
   const [gltfs, setGltfs] = useState<{
@@ -223,6 +226,35 @@ export function Home() {
     }
   };
 
+  // 모바일 레이아웃
+  if (isMobile) {
+    return (
+      <>
+        <MobileLayout
+          onGltfsLoaded={(loadedGltfs) => setGltfs(loadedGltfs)}
+          onQRGeometriesReady={(plateId, geometries) => {
+            setQrGeometriesMap((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(plateId, geometries);
+              return newMap;
+            });
+          }}
+          onCheckout={handleCheckout}
+        />
+
+        {/* 주문 모달 */}
+        {isOrderModalOpen && (
+          <OrderModal
+            plates={plates}
+            onClose={() => setIsOrderModalOpen(false)}
+            onSubmit={handleOrderSubmit}
+          />
+        )}
+      </>
+    );
+  }
+
+  // 데스크톱 레이아웃
   return (
     <div style={{
       display: 'flex',

@@ -5,6 +5,7 @@ import { getPricingSettings, calculatePlatePrice, formatPrice } from '../utils/p
 import type { PricingSettings } from '../utils/api';
 import { useEffect, useState } from 'react';
 import { AvailabilityBanner } from './AvailabilityBanner';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 interface RightPanelProps {
   onCheckout: () => void;
@@ -79,6 +80,7 @@ function QRPreview({ plate }: { plate: QRPlateConfig }) {
 }
 
 export function RightPanel({ onCheckout }: RightPanelProps) {
+  const isMobile = useIsMobile();
   const plates = useDesignStore((state) => state.plates);
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
   const selectPlate = useDesignStore((state) => state.selectPlate);
@@ -278,31 +280,33 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
 
   return (
     <div style={{
-      width: '17%',
-      height: 'calc(100vh - 50px)',
-      backgroundColor: '#fff',
-      borderLeft: '1px solid #e5e0db',
+      width: isMobile ? '100%' : '17%',
+      height: isMobile ? 'auto' : 'calc(100vh - 50px)',
+      backgroundColor: isMobile ? 'transparent' : '#fff',
+      borderLeft: isMobile ? 'none' : '1px solid #e5e0db',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: isMobile ? 'visible' : 'hidden'
     }}>
       {/* 상단: 타이틀 */}
-      <div style={{
-        padding: '15px',
-        borderBottom: '1px solid #e5e0db',
-        fontWeight: 600,
-        fontSize: '18px',
-        backgroundColor: '#f5f3f0'
-      }}>
-        장바구니
-      </div>
+      {!isMobile && (
+        <div style={{
+          padding: '15px',
+          borderBottom: '1px solid #e5e0db',
+          fontWeight: 600,
+          fontSize: '18px',
+          backgroundColor: '#f5f3f0'
+        }}>
+          장바구니
+        </div>
+      )}
 
       {/* 중앙: 카드 리스트 */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        padding: '10px',
+        padding: isMobile ? '12px 20px' : '10px',
         display: 'flex',
         flexDirection: 'column',
         gap: '10px'
@@ -334,11 +338,14 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
             {pricingSettings && (
               <div style={{
                 fontSize: '12px',
-                color: '#666',
+                color: '#333',
                 padding: '6px 8px',
-                backgroundColor: '#f9f9f9',
+                backgroundColor: isMobile ? 'rgba(249, 249, 249, 0.4)' : '#f9f9f9',
                 border: '1px solid #e5e0db',
                 borderRadius: '4px',
+                ...(isMobile && {
+                  textShadow: '0 0 6px rgba(255,255,255,0.9)'
+                })
               }}>
                 {/* 기본 가격 */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
@@ -420,16 +427,16 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
 
       {/* 하단: 총합계 및 주문하기 버튼 */}
       <div style={{
-        padding: '12px',
+        padding: isMobile ? '12px 20px' : '12px',
         borderTop: '2px solid #e5e0db',
-        backgroundColor: '#f9f9f9'
+        backgroundColor: isMobile ? 'rgba(249, 249, 249, 0.4)' : '#f9f9f9'
       }}>
         {/* 총합계 표시 */}
         {pricingSettings && plates.length > 0 && (
           <div style={{
             marginBottom: '12px',
             padding: '12px',
-            backgroundColor: '#fff',
+            backgroundColor: isMobile ? 'rgba(255, 255, 255, 0.4)' : '#fff',
             border: '1px solid #e5e0db',
             borderRadius: '4px'
           }}>
@@ -439,8 +446,17 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
               alignItems: 'center',
               marginBottom: '4px'
             }}>
-              <span style={{ fontSize: '14px', color: '#666' }}>총 수량</span>
-              <span style={{ fontSize: '14px', fontWeight: 600 }}>{totalQuantity}개</span>
+              <span style={{
+                fontSize: '14px',
+                color: '#333',
+                ...(isMobile && { textShadow: '0 0 6px rgba(255,255,255,0.9)' })
+              }}>총 수량</span>
+              <span style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#333',
+                ...(isMobile && { textShadow: '0 0 6px rgba(255,255,255,0.9)' })
+              }}>{totalQuantity}개</span>
             </div>
             <div style={{
               display: 'flex',
@@ -449,8 +465,18 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
               paddingTop: '8px',
               borderTop: '1px solid #f0f0f0'
             }}>
-              <span style={{ fontSize: '16px', fontWeight: 700, color: '#333' }}>총 금액</span>
-              <span style={{ fontSize: '20px', fontWeight: 700, color: '#FF6B6B' }}>
+              <span style={{
+                fontSize: '16px',
+                fontWeight: 700,
+                color: '#333',
+                ...(isMobile && { textShadow: '0 0 8px rgba(255,255,255,0.9)' })
+              }}>총 금액</span>
+              <span style={{
+                fontSize: '20px',
+                fontWeight: 700,
+                color: '#FF6B6B',
+                ...(isMobile && { textShadow: '0 0 8px rgba(255,255,255,0.9)' })
+              }}>
                 {formatPrice(totalPrice)}
               </span>
             </div>
