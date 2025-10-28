@@ -28,6 +28,24 @@ export function Header() {
       position: 'relative',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '1rem' : '2rem' }}>
+        {/* 모바일 햄버거 버튼 */}
+        {isMobile && (
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            {isMenuOpen ? '✕' : '☰'}
+          </button>
+        )}
+
         <h1 style={{ margin: 0, fontSize: isMobile ? '20px' : '28px', fontWeight: 700 }}>
           3D QR DESIGNER
         </h1>
@@ -66,24 +84,6 @@ export function Header() {
             }}>관리자</a>
           )}
           </nav>
-        )}
-
-        {/* 모바일 햄버거 버튼 */}
-        {isMobile && (
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '24px',
-              cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            {isMenuOpen ? '✕' : '☰'}
-          </button>
         )}
       </div>
 

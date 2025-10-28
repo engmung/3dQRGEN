@@ -4,7 +4,6 @@ import { fetchMyOrderGroups, cancelOrderGroup, type OrderGroupDetail } from '../
 import { formatPrice } from '../utils/pricing';
 import { getStatusText, getStatusColor } from '../utils/orderHelpers';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
-import { AvailabilityBanner } from '../components/AvailabilityBanner';
 
 export const MyOrders = () => {
   const { getToken } = useAuth();
@@ -12,7 +11,6 @@ export const MyOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrderGroup, setSelectedOrderGroup] = useState<OrderGroupDetail | null>(null);
-  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
 
   useEffect(() => {
     loadOrderGroups();
@@ -83,24 +81,6 @@ export const MyOrders = () => {
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <h1 style={{ margin: 0 }}>내 주문 내역</h1>
-        <button
-          onClick={() => setShowAvailabilityModal(true)}
-          style={{
-            width: '48px',
-            height: '48px',
-            backgroundColor: '#4A90E2',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '20px',
-            fontWeight: 'bold',
-          }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#357ABD'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4A90E2'}
-        >
-          ⓘ
-        </button>
       </div>
 
       {orderGroups.length === 0 ? (
@@ -437,10 +417,6 @@ export const MyOrders = () => {
         </div>
       )}
 
-      {/* 주문 가능 정보 모달 */}
-      {showAvailabilityModal && (
-        <AvailabilityBanner onClose={() => setShowAvailabilityModal(false)} />
-      )}
     </div>
   );
 };

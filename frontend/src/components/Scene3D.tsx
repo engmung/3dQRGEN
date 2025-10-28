@@ -9,6 +9,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { applyMaterialToObject, disposeObject } from "../utils/materialFactory";
+import { useIsMobile } from "../hooks/useMediaQuery";
 
 interface Scene3DProps {
   onGltfsLoaded?: (gltfs: {
@@ -95,12 +96,18 @@ export const Scene3D = ({
   const plates = useDesignStore((state) => state.plates);
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
   const backgroundColor = useDesignStore((state) => state.backgroundColor);
+  const isMobile = useIsMobile();
 
   const [glbRegions, setGlbRegions] = useState<GLBRegions | null>(null);
 
-  // 카메라 위치 상태
-  const cameraPos = { x: 150, y: 120, z: 150 };
-  const targetY = 50;
+  // 카메라 위치 - PC와 모바일 다르게
+  const cameraPos = isMobile
+    ? { x: 340, y: 216, z: -147 }  // 모바일 초기 위치
+    : { x: 220, y: 135, z: -117 };  // PC 초기 위치
+
+  const cameraTarget = isMobile
+    ? { x: 22.6, y: -3.5, z: -41.1 }  // 모바일 타겟
+    : { x: 0, y: 50, z: 0 };  // PC 타겟
 
   return (
     <>
@@ -110,6 +117,7 @@ export const Scene3D = ({
         gl={{ antialias: true }}
         style={{ background: backgroundColor }}
       >
+
         {/* 조명 */}
         <ambientLight intensity={1.0} />
         <directionalLight
@@ -183,7 +191,7 @@ export const Scene3D = ({
 
         {/* 컨트롤 */}
         <OrbitControls
-          target={[0, targetY, 0]}
+          target={[cameraTarget.x, cameraTarget.y, cameraTarget.z]}
           enableDamping
           dampingFactor={0.05}
           minPolarAngle={Math.PI / 6}
