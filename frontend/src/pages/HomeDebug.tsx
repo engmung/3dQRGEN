@@ -72,7 +72,7 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
       // 1. 메시 수집 (선택된 plate의 색상 적용)
       let allMeshes: any[] = [];
 
-      allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, selectedPlate.plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, selectedPlate.plateColor, true));
       allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, selectedPlate.plateColor));
       allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, selectedPlate.plateColor));
       allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, selectedPlate.plateColor));
@@ -125,7 +125,7 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
         // 1. 메시 수집
         let allMeshes: any[] = [];
 
-        allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plate.plateColor));
+        allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plate.plateColor, true));
         allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plate.plateColor));
         allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plate.plateColor));
         allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plate.plateColor));

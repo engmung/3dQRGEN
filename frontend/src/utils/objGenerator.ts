@@ -152,7 +152,7 @@ export async function generateOBJFromCartItem(
     // 1. GLB 메시 수집
     let allMeshes: CollectedMesh[] = [];
 
-    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', transforms.backTransform, item.plateConfig.plateColor));
+    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', transforms.backTransform, item.plateConfig.plateColor, true));
     allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', transforms.brigeTransform, item.plateConfig.plateColor));
     allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', transforms.frontTransform, item.plateConfig.plateColor));
     allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', transforms.pinTransform, item.plateConfig.plateColor));

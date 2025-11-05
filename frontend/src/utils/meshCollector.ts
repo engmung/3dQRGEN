@@ -14,12 +14,14 @@ export interface CollectedMesh {
  * @param partName - 파츠 이름 ('back', 'brige', 'front', 'pin')
  * @param debugTransform - 디버깅용 transform
  * @param overrideColor - 색상 덮어쓰기 (OBJ export용, 옵션)
+ * @param flipNormals - 법선(면) 뒤집기 (back 파트용, 기본값: false)
  */
 export function collectGLBMeshes(
   gltf: GLTF,
   partName: string,
   debugTransform: Transform,
-  overrideColor?: string
+  overrideColor?: string,
+  flipNormals: boolean = false
 ): CollectedMesh[] {
   const meshes: CollectedMesh[] = [];
 
@@ -54,7 +56,39 @@ export function collectGLBMeshes(
       geo.applyMatrix4(rotMatrix);
       geo.applyMatrix4(debugMatrix);
 
-      // 3. Material 처리 (overrideColor가 있으면 새 material 생성)
+      // 3. 모델 뒤집기 (back 파트 전용 - X축 180도 회전)
+      if (flipNormals) {
+        const position = geo.attributes.position;
+        for (let i = 0; i < position.count; i++) {
+          // X축 기준 180도 회전: Y와 Z를 반전
+          position.setY(i, -position.getY(i));
+          position.setZ(i, -position.getZ(i));
+        }
+        position.needsUpdate = true;
+
+        // 노말도 같이 회전
+        const normals = geo.attributes.normal;
+        if (normals) {
+          for (let i = 0; i < normals.count; i++) {
+            normals.setY(i, -normals.getY(i));
+            normals.setZ(i, -normals.getZ(i));
+          }
+          normals.needsUpdate = true;
+        }
+
+        // 노말이 없으면 자동 생성 후 회전
+        if (!normals) {
+          geo.computeVertexNormals();
+          const newNormals = geo.attributes.normal;
+          for (let i = 0; i < newNormals.count; i++) {
+            newNormals.setY(i, -newNormals.getY(i));
+            newNormals.setZ(i, -newNormals.getZ(i));
+          }
+          newNormals.needsUpdate = true;
+        }
+      }
+
+      // 4. Material 처리 (overrideColor가 있으면 새 material 생성)
       const material = overrideColor
         ? new THREE.MeshStandardMaterial({ color: overrideColor })
         : child.material;
