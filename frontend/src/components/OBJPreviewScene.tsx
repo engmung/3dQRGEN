@@ -47,7 +47,7 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
     let allMeshes: CollectedMesh[] = [];
 
     // 1. GLB 파츠 수집 (plateColor 적용)
-    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plateColor));
+    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plateColor, true));
     allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plateColor));
     allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plateColor));
     allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plateColor));
