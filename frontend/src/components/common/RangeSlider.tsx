@@ -20,6 +20,7 @@ export interface RangeSliderProps {
   required?: boolean;
   showValue?: boolean;
   showMinMax?: boolean;
+  decimals?: number;
   className?: string;
 }
 
@@ -37,6 +38,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
   required = false,
   showValue = true,
   showMinMax = false,
+  decimals = 0,
   className = '',
 }) => {
   const [isFocused, setIsFocused] = React.useState(false);
@@ -60,7 +62,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
 
         {showValue && (
           <div style={styles.valueDisplay}>
-            {value}
+            {value.toFixed(decimals)}
             {unit && <span style={styles.unit}>{unit}</span>}
           </div>
         )}
