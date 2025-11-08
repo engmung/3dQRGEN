@@ -59,7 +59,10 @@ export function calculatePlatePrice(
   plateConfig: QRPlateConfig,
   pricingSettings: PricingSettings
 ): number {
-  let price = pricingSettings.base_price;
+  // 제품 타입에 따라 기본 가격 설정
+  let price = plateConfig.productType === 'card'
+    ? 10000  // 명함 기본가: 10,000원
+    : pricingSettings.base_price;  // 거치대 기본가: 20,000원
 
   // 텍스트가 있으면 추가 요금
   if (plateConfig.text && plateConfig.text.trim().length > 0) {

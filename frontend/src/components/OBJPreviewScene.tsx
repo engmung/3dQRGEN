@@ -7,6 +7,7 @@ import { useDesignStore } from '../store/useDesignStore';
 import {
   collectGLBMeshes,
   collectQRGeometries,
+  collectBusinessCardMeshes,
   applyGlobalRotation,
   alignToGround,
   type CollectedMesh,
@@ -40,44 +41,84 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
   const pinTransform = useOBJPreviewStore((state) => state.pinTransform);
   const globalRotation = useOBJPreviewStore((state) => state.globalRotation);
 
+  // 선택된 plate 가져오기 (productType 확인용)
+  const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
+  const plates = useDesignStore((state) => state.plates);
+  const selectedPlate = plates.find(p => p.id === selectedPlateId) || plates[0];
+
   // 모든 메시 수집 및 변환
   const previewMeshes = useMemo(() => {
-    if (!gltfs) return [];
+    if (!selectedPlate) return [];
 
     let allMeshes: CollectedMesh[] = [];
 
-    // 1. GLB 파츠 수집 (plateColor 적용)
-    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plateColor, true));
-    allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plateColor));
-    allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plateColor));
-    allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plateColor));
+    if (selectedPlate.productType === 'card') {
+      // 명함 모드: GLB 파츠 불필요, 이미 회전되어 있으므로 그대로 바닥에만 붙임
+      if (qrGeometries) {
+        // 명함은 이미 BusinessCard.tsx에서 회전되어 있으므로 빈 transform 전달
+        const emptyTransform = {
+          position: [0, 0, 0] as [number, number, number],
+          rotation: [0, 0, 0] as [number, number, number],
+        };
 
-    // 2. QR/텍스트/이미지 수집 (Front 파츠에 포함)
-    if (qrGeometries) {
-      allMeshes.push(
-        ...collectQRGeometries(
-          qrGeometries.qr,
-          qrGeometries.text,
-          qrGeometries.images,
-          qrGeometries.qrPosition,
-          qrGeometries.qrQuaternion,
-          qrGeometries.textPosition,
-          qrGeometries.textQuaternion,
-          qrGeometries.qrColor,
-          qrGeometries.zScale,
-          frontTransform
-        )
-      );
+        allMeshes.push(
+          ...collectBusinessCardMeshes(
+            selectedPlate.cardWidth,
+            selectedPlate.cardHeight,
+            selectedPlate.cardThickness,
+            selectedPlate.plateColor,
+            qrGeometries.qr,
+            qrGeometries.text,
+            qrGeometries.images,
+            qrGeometries.qrPosition,
+            qrGeometries.qrQuaternion,
+            qrGeometries.textPosition,
+            qrGeometries.textQuaternion,
+            qrGeometries.qrColor,
+            qrGeometries.zScale,
+            emptyTransform
+          )
+        );
+      }
+
+      // 명함은 바닥면 정렬만 수행 (회전 이미 적용됨)
+      allMeshes = alignToGround(allMeshes);
+    } else {
+      // 거치대 모드: GLB 파츠 필요
+      if (!gltfs) return [];
+
+      // 1. GLB 파츠 수집 (plateColor 적용)
+      allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plateColor, true));
+      allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plateColor));
+
+      // 2. QR/텍스트/이미지 수집 (Front 파츠에 포함)
+      if (qrGeometries) {
+        allMeshes.push(
+          ...collectQRGeometries(
+            qrGeometries.qr,
+            qrGeometries.text,
+            qrGeometries.images,
+            qrGeometries.qrPosition,
+            qrGeometries.qrQuaternion,
+            qrGeometries.textPosition,
+            qrGeometries.textQuaternion,
+            qrGeometries.qrColor,
+            qrGeometries.zScale,
+            frontTransform
+          )
+        );
+      }
+
+      // 거치대는 Global rotation 적용 후 바닥면 정렬
+      allMeshes = applyGlobalRotation(allMeshes, globalRotation);
+      allMeshes = alignToGround(allMeshes);
     }
-
-    // 3. Global rotation 적용 (눕히기)
-    allMeshes = applyGlobalRotation(allMeshes, globalRotation);
-
-    // 4. 바닥면 정렬
-    allMeshes = alignToGround(allMeshes);
 
     return allMeshes;
   }, [
+    selectedPlate,
     gltfs,
     plateColor,
     qrGeometries?.qr,
@@ -96,7 +137,8 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
     globalRotation,
   ]);
 
-  if (!gltfs) {
+  // 명함 모드일 때는 GLB 체크 건너뛰기
+  if (selectedPlate?.productType === 'stand' && !gltfs) {
     return (
       <div
         style={{

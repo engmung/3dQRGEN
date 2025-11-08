@@ -9,6 +9,7 @@ import { exportCollectedMeshesToOBJ } from '../utils/objExporter';
 import {
   collectGLBMeshes,
   collectQRGeometries,
+  collectBusinessCardMeshes,
   applyGlobalRotation,
   alignToGround,
 } from '../utils/meshCollector';
@@ -63,36 +64,74 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
 
   // 현재 선택된 plate만 Export
   const handleExportOBJ = () => {
-    if (!gltfs || !selectedPlate) {
-      alert('GLB 파츠가 아직 로드되지 않았거나 선택된 판이 없습니다.');
+    if (!selectedPlate) {
+      alert('선택된 판이 없습니다.');
+      return;
+    }
+
+    // 거치대 모드일 때만 GLB 체크
+    if (selectedPlate.productType === 'stand' && !gltfs) {
+      alert('GLB 파츠가 아직 로드되지 않았습니다.');
       return;
     }
 
     try {
-      // 1. 메시 수집 (선택된 plate의 색상 적용)
+      // 1. 메시 수집
       let allMeshes: any[] = [];
 
-      allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, selectedPlate.plateColor, true));
-      allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, selectedPlate.plateColor));
-      allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, selectedPlate.plateColor));
-      allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, selectedPlate.plateColor));
+      if (selectedPlate.productType === 'card') {
+        // 명함 모드 (이미 회전되어 있으므로 빈 transform 사용)
+        if (selectedQrGeometries) {
+          const emptyTransform = {
+            position: [0, 0, 0] as [number, number, number],
+            rotation: [0, 0, 0] as [number, number, number],
+          };
 
-      // QR/텍스트/이미지 추가 (선택된 plate의 것만)
-      if (selectedQrGeometries) {
-        allMeshes.push(
-          ...collectQRGeometries(
-            selectedQrGeometries.qr,
-            selectedQrGeometries.text,
-            selectedQrGeometries.images,
-            selectedQrGeometries.qrPosition,
-            selectedQrGeometries.qrQuaternion,
-            selectedQrGeometries.textPosition,
-            selectedQrGeometries.textQuaternion,
-            selectedQrGeometries.qrColor,
-            selectedQrGeometries.zScale,
-            frontTransform
-          )
-        );
+          allMeshes.push(
+            ...collectBusinessCardMeshes(
+              selectedPlate.cardWidth,
+              selectedPlate.cardHeight,
+              selectedPlate.cardThickness,
+              selectedPlate.plateColor,
+              selectedQrGeometries.qr,
+              selectedQrGeometries.text,
+              selectedQrGeometries.images,
+              selectedQrGeometries.qrPosition,
+              selectedQrGeometries.qrQuaternion,
+              selectedQrGeometries.textPosition,
+              selectedQrGeometries.textQuaternion,
+              selectedQrGeometries.qrColor,
+              selectedQrGeometries.zScale,
+              emptyTransform
+            )
+          );
+        }
+      } else {
+        // 거치대 모드 (기존 로직)
+        if (!gltfs) return; // 타입 안전성
+
+        allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, selectedPlate.plateColor, true));
+        allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, selectedPlate.plateColor));
+        allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, selectedPlate.plateColor));
+        allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, selectedPlate.plateColor));
+
+        // QR/텍스트/이미지 추가
+        if (selectedQrGeometries) {
+          allMeshes.push(
+            ...collectQRGeometries(
+              selectedQrGeometries.qr,
+              selectedQrGeometries.text,
+              selectedQrGeometries.images,
+              selectedQrGeometries.qrPosition,
+              selectedQrGeometries.qrQuaternion,
+              selectedQrGeometries.textPosition,
+              selectedQrGeometries.textQuaternion,
+              selectedQrGeometries.qrColor,
+              selectedQrGeometries.zScale,
+              frontTransform
+            )
+          );
+        }
       }
 
       // 2. Global rotation 적용
@@ -112,7 +151,9 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
 
   // 모든 plate를 개별 파일로 Export
   const handleExportAllPlates = () => {
-    if (!gltfs) {
+    // 거치대가 있는지 확인
+    const hasStand = plates.some(plate => plate.productType === 'stand');
+    if (hasStand && !gltfs) {
       alert('GLB 파츠가 아직 로드되지 않았습니다.');
       return;
     }
@@ -125,28 +166,61 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
         // 1. 메시 수집
         let allMeshes: any[] = [];
 
-        allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plate.plateColor, true));
-        allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plate.plateColor));
-        allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plate.plateColor));
-        allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plate.plateColor));
+        if (plate.productType === 'card') {
+          // 명함 모드 (이미 회전되어 있으므로 빈 transform 사용)
+          const plateGeometries = qrGeometriesMap.get(plate.id);
+          if (plateGeometries) {
+            const emptyTransform = {
+              position: [0, 0, 0] as [number, number, number],
+              rotation: [0, 0, 0] as [number, number, number],
+            };
 
-        // QR/텍스트/이미지 추가
-        const plateGeometries = qrGeometriesMap.get(plate.id);
-        if (plateGeometries) {
-          allMeshes.push(
-            ...collectQRGeometries(
-              plateGeometries.qr,
-              plateGeometries.text,
-              plateGeometries.images,
-              plateGeometries.qrPosition,
-              plateGeometries.qrQuaternion,
-              plateGeometries.textPosition,
-              plateGeometries.textQuaternion,
-              plateGeometries.qrColor,
-              plateGeometries.zScale,
-              frontTransform
-            )
-          );
+            allMeshes.push(
+              ...collectBusinessCardMeshes(
+                plate.cardWidth,
+                plate.cardHeight,
+                plate.cardThickness,
+                plate.plateColor,
+                plateGeometries.qr,
+                plateGeometries.text,
+                plateGeometries.images,
+                plateGeometries.qrPosition,
+                plateGeometries.qrQuaternion,
+                plateGeometries.textPosition,
+                plateGeometries.textQuaternion,
+                plateGeometries.qrColor,
+                plateGeometries.zScale,
+                emptyTransform
+              )
+            );
+          }
+        } else {
+          // 거치대 모드 (기존 로직)
+          if (!gltfs) return; // 타입 안전성
+
+          allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', backTransform, plate.plateColor, true));
+          allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', brigeTransform, plate.plateColor));
+          allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', frontTransform, plate.plateColor));
+          allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', pinTransform, plate.plateColor));
+
+          // QR/텍스트/이미지 추가
+          const plateGeometries = qrGeometriesMap.get(plate.id);
+          if (plateGeometries) {
+            allMeshes.push(
+              ...collectQRGeometries(
+                plateGeometries.qr,
+                plateGeometries.text,
+                plateGeometries.images,
+                plateGeometries.qrPosition,
+                plateGeometries.qrQuaternion,
+                plateGeometries.textPosition,
+                plateGeometries.textQuaternion,
+                plateGeometries.qrColor,
+                plateGeometries.zScale,
+                frontTransform
+              )
+            );
+          }
         }
 
         // 2. Global rotation 적용
@@ -219,7 +293,7 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
           />
 
           {/* Export 버튼들 (Preview 창 하단) */}
-          {gltfs && (
+          {(selectedPlate?.productType === 'card' || gltfs) && (
             <>
               {/* 선택된 판 Export */}
               <button

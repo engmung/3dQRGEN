@@ -205,6 +205,125 @@ function applyDebugTransform(geometry: THREE.BufferGeometry, transform: Transfor
 }
 
 /**
+ * 명함 메시 수집 (BoxGeometry + QR/텍스트/이미지)
+ * @param cardWidth - 명함 가로 (mm)
+ * @param cardHeight - 명함 세로 (mm)
+ * @param cardThickness - 명함 두께 (mm)
+ * @param plateColor - 명함 색상
+ * @param qrGeometry - QR Geometry
+ * @param textGeometry - 텍스트 Geometry
+ * @param imageGeometries - 이미지 Geometry 배열
+ * @param qrPosition - QR 위치
+ * @param qrQuaternion - QR 회전
+ * @param textPosition - 텍스트 위치
+ * @param textQuaternion - 텍스트 회전
+ * @param qrColor - QR/텍스트/이미지 색상
+ * @param zScale - QR 두께 스케일
+ * @param debugTransform - 디버깅용 transform
+ */
+export function collectBusinessCardMeshes(
+  cardWidth: number,
+  cardHeight: number,
+  cardThickness: number,
+  plateColor: string,
+  qrGeometry: THREE.BufferGeometry | null,
+  textGeometry: THREE.BufferGeometry | null,
+  imageGeometries: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>,
+  qrPosition: THREE.Vector3,
+  qrQuaternion: THREE.Quaternion,
+  textPosition: THREE.Vector3 | null,
+  textQuaternion: THREE.Quaternion | null,
+  qrColor: string,
+  zScale: number,
+  debugTransform: Transform
+): CollectedMesh[] {
+  const meshes: CollectedMesh[] = [];
+
+  // BusinessCard.tsx에서 group rotation={[-Math.PI / 2, 0, 0]}로 회전하므로
+  // OBJ Export 시에도 동일한 회전 적용 필요
+  const cardRotation = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
+
+  // 1. 명함 BoxGeometry 생성
+  const cardGeometry = new THREE.BoxGeometry(cardWidth, cardHeight, cardThickness);
+  const cardMaterial = new THREE.MeshStandardMaterial({ color: plateColor });
+
+  // 명함 회전 적용
+  cardGeometry.applyMatrix4(cardRotation);
+
+  // 디버깅 transform 적용
+  applyDebugTransform(cardGeometry, debugTransform);
+
+  meshes.push({ geometry: cardGeometry, material: cardMaterial, partName: 'card' });
+
+  // 2. QR Geometry
+  // position/quaternion은 회전 전 좌표계의 값이므로,
+  // position/quaternion 적용 후 명함 회전도 적용해야 함
+  if (qrGeometry) {
+    const geo = qrGeometry.clone();
+    const material = new THREE.MeshStandardMaterial({ color: qrColor });
+
+    // 1. position/quaternion 적용
+    const qrMatrix = new THREE.Matrix4().compose(
+      qrPosition,
+      qrQuaternion,
+      new THREE.Vector3(1, 1, zScale)
+    );
+    geo.applyMatrix4(qrMatrix);
+
+    // 2. 명함 회전 적용 (group rotation과 동일)
+    geo.applyMatrix4(cardRotation);
+
+    applyDebugTransform(geo, debugTransform);
+
+    meshes.push({ geometry: geo, material, partName: 'qr' });
+  }
+
+  // 3. Text Geometry
+  if (textGeometry && textPosition && textQuaternion) {
+    const geo = textGeometry.clone();
+    const material = new THREE.MeshStandardMaterial({ color: qrColor });
+
+    // 1. position/quaternion 적용
+    const textMatrix = new THREE.Matrix4().compose(
+      textPosition,
+      textQuaternion,
+      new THREE.Vector3(1, 1, 1)
+    );
+    geo.applyMatrix4(textMatrix);
+
+    // 2. 명함 회전 적용 (group rotation과 동일)
+    geo.applyMatrix4(cardRotation);
+
+    applyDebugTransform(geo, debugTransform);
+
+    meshes.push({ geometry: geo, material, partName: 'text' });
+  }
+
+  // 4. Image Geometries
+  imageGeometries.forEach(({ geometry: imageGeometry, position: imagePosition, quaternion: imageQuaternion }, index) => {
+    const geo = imageGeometry.clone();
+    const material = new THREE.MeshStandardMaterial({ color: qrColor });
+
+    // 1. position/quaternion 적용
+    const imageMatrix = new THREE.Matrix4().compose(
+      imagePosition,
+      imageQuaternion,
+      new THREE.Vector3(1, 1, 1)
+    );
+    geo.applyMatrix4(imageMatrix);
+
+    // 2. 명함 회전 적용 (group rotation과 동일)
+    geo.applyMatrix4(cardRotation);
+
+    applyDebugTransform(geo, debugTransform);
+
+    meshes.push({ geometry: geo, material, partName: `image_${index + 1}` });
+  });
+
+  return meshes;
+}
+
+/**
  * 전체 메시에 global rotation 적용 (눕히기)
  */
 export function applyGlobalRotation(
@@ -245,9 +364,10 @@ export function alignToGround(meshes: CollectedMesh[]): CollectedMesh[] {
 
   const result: CollectedMesh[] = [];
 
-  // Front 파트의 Y 오프셋 계산 (QR/텍스트/이미지가 따라갈 기준)
-  let frontOffsetY = 0;
+  // Front 파트 또는 Card 파트의 Y 오프셋 계산 (QR/텍스트/이미지가 따라갈 기준)
+  let baseOffsetY = 0;
   if (partGroups.has('front')) {
+    // QR 간판 모드: Front 파트 기준
     const frontMeshes = partGroups.get('front')!;
     const box = new THREE.Box3();
     const tempGroup = new THREE.Group();
@@ -256,16 +376,27 @@ export function alignToGround(meshes: CollectedMesh[]): CollectedMesh[] {
       tempGroup.add(tempMesh);
     });
     box.setFromObject(tempGroup);
-    frontOffsetY = -box.min.y;
+    baseOffsetY = -box.min.y;
+  } else if (partGroups.has('card')) {
+    // 명함 모드: Card 파트 기준
+    const cardMeshes = partGroups.get('card')!;
+    const box = new THREE.Box3();
+    const tempGroup = new THREE.Group();
+    cardMeshes.forEach(({ geometry }) => {
+      const tempMesh = new THREE.Mesh(geometry);
+      tempGroup.add(tempMesh);
+    });
+    box.setFromObject(tempGroup);
+    baseOffsetY = -box.min.y;
   }
 
   // 각 파트별로 바운딩 박스 계산 및 접지
   partGroups.forEach((partMeshes, partName) => {
-    // QR/텍스트/이미지는 Front 파트와 같은 Y 오프셋 사용 (개별 접지 안 함)
+    // QR/텍스트/이미지는 기준 파트(Front 또는 Card)와 같은 Y 오프셋 사용 (개별 접지 안 함)
     if (partName === 'qr' || partName === 'text' || partName.startsWith('image_')) {
       partMeshes.forEach((mesh) => {
         const geo = mesh.geometry.clone();
-        geo.translate(0, frontOffsetY, 0); // Front와 같은 오프셋
+        geo.translate(0, baseOffsetY, 0); // 기준 파트와 같은 오프셋
         result.push({ ...mesh, geometry: geo });
       });
       return;

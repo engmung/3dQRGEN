@@ -3,6 +3,7 @@ import { Canvas, useLoader } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { QRPlateInstance } from "./QRPlateInstance";
 import { GLBBaseParts } from "./GLBBaseParts";
+import { BusinessCard } from "./BusinessCard";
 import { useDesignStore } from "../store/useDesignStore";
 import type { GLBRegions } from "../utils/glbLoader";
 import * as THREE from "three";
@@ -108,12 +109,22 @@ export const Scene3D = ({
   const [glbRegions, setGlbRegions] = useState<GLBRegions | null>(null);
   const [isGlbLoaded, setIsGlbLoaded] = useState(false);
 
-  // GLB 로딩 완료 시 상위에 알림
+  // 선택된 판 확인
+  const selectedPlate = plates.find(p => p.id === selectedPlateId);
+
+  // GLB 로딩 완료 시 또는 명함 모드일 때 상위에 알림
   useEffect(() => {
+    // 명함 모드면 GLB 로딩 불필요하므로 즉시 완료 처리
+    if (selectedPlate?.productType === 'card' && onLoadingComplete) {
+      onLoadingComplete();
+      return;
+    }
+
+    // 거치대 모드면 GLB 로딩 대기
     if (isGlbLoaded && onLoadingComplete) {
       onLoadingComplete();
     }
-  }, [isGlbLoaded, onLoadingComplete]);
+  }, [isGlbLoaded, onLoadingComplete, selectedPlate?.productType]);
 
   // 카메라 위치 - PC와 모바일 다르게
   const cameraPos = isMobile
@@ -159,11 +170,11 @@ export const Scene3D = ({
         {/* 폰 모델 (크기 비교용) */}
         <PhoneModel />
 
-        {/* Pin 모델 (미리보기 전용) - 선택된 판이 있을 때만 표시 */}
+        {/* Pin 모델 (미리보기 전용) - 거치대 모드일 때만 표시 */}
         {selectedPlateId &&
           (() => {
             const selectedPlate = plates.find((p) => p.id === selectedPlateId);
-            if (!selectedPlate) return null;
+            if (!selectedPlate || selectedPlate.productType === 'card') return null;
 
             return <PinModel color={selectedPlate.plateColor} />;
           })()}
@@ -174,27 +185,14 @@ export const Scene3D = ({
             const selectedPlate = plates.find((p) => p.id === selectedPlateId);
             if (!selectedPlate) return null;
 
-            return (
-              <group key={selectedPlate.id}>
-                {/* GLB 파츠 모델 (중앙 위치 고정) */}
-                <GLBBaseParts
-                  plateColor={selectedPlate.plateColor}
-                  position={[0, 0, 0]}
-                  onRegionsLoaded={(regions) => {
-                    setGlbRegions(regions);
-                    setIsGlbLoaded(true);
-                  }}
-                  onGltfsLoaded={onGltfsLoaded}
-                />
-
-                {/* QR 판 인스턴스 (glbRegions 로드 후에만 렌더링) */}
-                {glbRegions && (
-                  <QRPlateInstance
+            // 제품 타입에 따라 분기
+            if (selectedPlate.productType === 'card') {
+              // 명함 모드
+              return (
+                <group key={selectedPlate.id}>
+                  <BusinessCard
                     config={selectedPlate}
                     isSelected={true}
-                    qrRegion={glbRegions.QR}
-                    textRegion={glbRegions.TEXT}
-                    imageRegion={glbRegions.IMAGE}
                     onGeometriesReady={
                       onQRGeometriesReady
                         ? (geometries) =>
@@ -202,9 +200,42 @@ export const Scene3D = ({
                         : undefined
                     }
                   />
-                )}
-              </group>
-            );
+                </group>
+              );
+            } else {
+              // 거치대 모드 (기존 로직)
+              return (
+                <group key={selectedPlate.id}>
+                  {/* GLB 파츠 모델 (중앙 위치 고정) */}
+                  <GLBBaseParts
+                    plateColor={selectedPlate.plateColor}
+                    position={[0, 0, 0]}
+                    onRegionsLoaded={(regions) => {
+                      setGlbRegions(regions);
+                      setIsGlbLoaded(true);
+                    }}
+                    onGltfsLoaded={onGltfsLoaded}
+                  />
+
+                  {/* QR 판 인스턴스 (glbRegions 로드 후에만 렌더링) */}
+                  {glbRegions && (
+                    <QRPlateInstance
+                      config={selectedPlate}
+                      isSelected={true}
+                      qrRegion={glbRegions.QR}
+                      textRegion={glbRegions.TEXT}
+                      imageRegion={glbRegions.IMAGE}
+                      onGeometriesReady={
+                        onQRGeometriesReady
+                          ? (geometries) =>
+                              onQRGeometriesReady(selectedPlate.id, geometries)
+                          : undefined
+                      }
+                    />
+                  )}
+                </group>
+              );
+            }
           })()}
 
         {/* 컨트롤 */}

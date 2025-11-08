@@ -284,15 +284,32 @@ export const QRPlateInstance = ({
         .crossVectors(imageRegion.upVector, imageRegion.normal)
         .normalize();
 
+      // 이미지 오프셋 제한
+      let clampedImageHeightOffset = img.heightOffset;
+      let clampedImageHorizontalOffset = img.horizontalOffset;
+
+      // 명함 모드: 명함 크기에 맞춰 제한
+      if (config.productType === 'card') {
+        // 높이 제한 (명함 세로 기준)
+        const maxImageHeightOffset = (config.cardHeight - img.size) / 2;
+        const minImageHeightOffset = -(config.cardHeight - img.size) / 2;
+        clampedImageHeightOffset = Math.max(minImageHeightOffset, Math.min(maxImageHeightOffset, img.heightOffset));
+
+        // 좌우 제한 (명함 가로 기준)
+        const maxImageHorizontalOffset = (config.cardWidth - img.size) / 2;
+        const minImageHorizontalOffset = -(config.cardWidth - img.size) / 2;
+        clampedImageHorizontalOffset = Math.max(minImageHorizontalOffset, Math.min(maxImageHorizontalOffset, img.horizontalOffset));
+      }
+
       // 이미지 위치 계산
       const position = imageRegion.center.clone()
         .add(imageRegion.normal.clone().multiplyScalar(0.01))
-        .add(imageRegion.upVector.clone().multiplyScalar(img.heightOffset))
-        .add(imageRightVector.multiplyScalar(img.horizontalOffset));
+        .add(imageRegion.upVector.clone().multiplyScalar(clampedImageHeightOffset))
+        .add(imageRightVector.multiplyScalar(clampedImageHorizontalOffset));
 
       return { geometry, position, quaternion };
     }).filter(Boolean);
-  }, [imageRegion, imageGeometriesArray, config.images]);
+  }, [imageRegion, imageGeometriesArray, config.images, config.productType, config.cardWidth, config.cardHeight]);
 
   // QR transform 계산 (memoized for performance)
   // ⚠️ IMPORTANT: early return 전에 배치 (Hook 순서 유지)
@@ -312,25 +329,37 @@ export const QRPlateInstance = ({
 
     // QR 크기를 고려한 높이/좌우 오프셋 제한
     const qrHalfSize = config.qrSize / 2;
-    const PLATE_WIDTH = 60; // mm (판 너비)
 
     let clampedHeightOffset = config.qrHeightOffset;
     let clampedHorizontalOffset = config.qrHorizontalOffset;
 
-    // 높이 제한 (상단, 하단 모두 제한)
-    if (qrRegion.topBoundary !== null && qrRegion.bottomBoundary !== null) {
-      const maxOffset = qrRegion.topBoundary - qrHalfSize; // 상단: QR 상단이 경계를 넘지 않도록
-      const minOffset = qrRegion.bottomBoundary + qrHalfSize; // 하단: QR 하단이 경계를 넘지 않도록
-      clampedHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.qrHeightOffset));
-    }
+    // 명함 모드: 명함 크기에 맞춰 제한
+    if (config.productType === 'card') {
+      // 높이 제한 (명함 세로 기준)
+      const maxHeightOffset = (config.cardHeight - config.qrSize) / 2;
+      const minHeightOffset = -(config.cardHeight - config.qrSize) / 2;
+      clampedHeightOffset = Math.max(minHeightOffset, Math.min(maxHeightOffset, config.qrHeightOffset));
 
-    // 좌우 제한 (판 너비 기준)
-    const maxHorizontalOffset = (PLATE_WIDTH - config.qrSize) / 2;
-    const minHorizontalOffset = -(PLATE_WIDTH - config.qrSize) / 2;
-    clampedHorizontalOffset = Math.max(
-      minHorizontalOffset,
-      Math.min(maxHorizontalOffset, config.qrHorizontalOffset)
-    );
+      // 좌우 제한 (명함 가로 기준)
+      const maxHorizontalOffset = (config.cardWidth - config.qrSize) / 2;
+      const minHorizontalOffset = -(config.cardWidth - config.qrSize) / 2;
+      clampedHorizontalOffset = Math.max(minHorizontalOffset, Math.min(maxHorizontalOffset, config.qrHorizontalOffset));
+    } else {
+      // 거치대 모드: 기존 로직
+      const PLATE_WIDTH = 60; // mm (판 너비)
+
+      // 높이 제한 (상단, 하단 모두 제한)
+      if (qrRegion.topBoundary !== null && qrRegion.bottomBoundary !== null) {
+        const maxOffset = qrRegion.topBoundary - qrHalfSize; // 상단: QR 상단이 경계를 넘지 않도록
+        const minOffset = qrRegion.bottomBoundary + qrHalfSize; // 하단: QR 하단이 경계를 넘지 않도록
+        clampedHeightOffset = Math.max(minOffset, Math.min(maxOffset, config.qrHeightOffset));
+      }
+
+      // 좌우 제한 (판 너비 기준)
+      const maxHorizontalOffset = (PLATE_WIDTH - config.qrSize) / 2;
+      const minHorizontalOffset = -(PLATE_WIDTH - config.qrSize) / 2;
+      clampedHorizontalOffset = Math.max(minHorizontalOffset, Math.min(maxHorizontalOffset, config.qrHorizontalOffset));
+    }
 
     // QR 위치 계산
     // 1. 법선 방향으로 0.01mm만큼 offset (Z-fighting 방지하면서 표면에 거의 붙임)
@@ -342,7 +371,7 @@ export const QRPlateInstance = ({
       .add(rightVector.multiplyScalar(clampedHorizontalOffset));
 
     return { quaternion, position, rightVector };
-  }, [qrRegion, config.qrSize, config.qrHeightOffset, config.qrHorizontalOffset]);
+  }, [qrRegion, config.qrSize, config.qrHeightOffset, config.qrHorizontalOffset, config.productType, config.cardWidth, config.cardHeight]);
 
   // Cleanup geometries on unmount
   // ⚠️ CRITICAL: Must be before ANY early return (Hook order must be consistent)
@@ -396,11 +425,34 @@ export const QRPlateInstance = ({
       .crossVectors(textRegion.upVector, textRegion.normal)
       .normalize();
 
-    // 텍스트 위치 계산 (제한 없음)
+    // 텍스트 오프셋 제한
+    let clampedTextHeightOffset = config.textHeightOffset;
+    let clampedTextHorizontalOffset = config.textHorizontalOffset;
+
+    // 명함 모드: 명함 크기에 맞춰 제한 (텍스트 크기 고려)
+    if (config.productType === 'card') {
+      // 텍스트 bbox 계산 (대략적인 크기)
+      textGeometry.computeBoundingBox();
+      const textBbox = textGeometry.boundingBox!;
+      const textWidth = textBbox.max.x - textBbox.min.x;
+      const textHeight = textBbox.max.y - textBbox.min.y;
+
+      // 높이 제한 (명함 세로 기준)
+      const maxTextHeightOffset = (config.cardHeight - textHeight) / 2;
+      const minTextHeightOffset = -(config.cardHeight - textHeight) / 2;
+      clampedTextHeightOffset = Math.max(minTextHeightOffset, Math.min(maxTextHeightOffset, config.textHeightOffset));
+
+      // 좌우 제한 (명함 가로 기준)
+      const maxTextHorizontalOffset = (config.cardWidth - textWidth) / 2;
+      const minTextHorizontalOffset = -(config.cardWidth - textWidth) / 2;
+      clampedTextHorizontalOffset = Math.max(minTextHorizontalOffset, Math.min(maxTextHorizontalOffset, config.textHorizontalOffset));
+    }
+
+    // 텍스트 위치 계산
     textPosition = textRegion.center.clone()
       .add(textRegion.normal.clone().multiplyScalar(0.01))
-      .add(textRegion.upVector.clone().multiplyScalar(config.textHeightOffset))
-      .add(textRightVector.multiplyScalar(config.textHorizontalOffset));
+      .add(textRegion.upVector.clone().multiplyScalar(clampedTextHeightOffset))
+      .add(textRightVector.multiplyScalar(clampedTextHorizontalOffset));
   }
 
   // Geometry 데이터를 ref에 저장 (useEffect에서 사용)
