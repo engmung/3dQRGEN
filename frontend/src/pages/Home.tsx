@@ -93,7 +93,9 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
       return;
     }
 
-    if (!gltfs) {
+    // 거치대가 있는지 확인 (명함만 있으면 GLB 불필요)
+    const hasStand = plates.some(plate => plate.productType === 'stand');
+    if (hasStand && !gltfs) {
       alert('3D 모델이 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
       return;
     }
@@ -103,7 +105,14 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
 
   // 주문 제출 (새 방식: OrderGroup)
   const handleOrderSubmit = async (addressData: AddressFormData) => {
-    if (!user || !gltfs) return;
+    if (!user) return;
+
+    // 거치대가 있는지 확인 (명함만 있으면 GLB 불필요)
+    const hasStand = plates.some(plate => plate.productType === 'stand');
+    if (hasStand && !gltfs) {
+      alert('거치대 3D 모델이 아직 로드되지 않았습니다.');
+      return;
+    }
 
     const email = user.primaryEmailAddress?.emailAddress || addressData.customerEmail;
 
@@ -151,9 +160,10 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
         console.log(`[OrderGroup] Generating OBJ for plate ${i + 1}/${plates.length}...`);
 
         // OBJ/MTL Blob 생성
+        // 명함은 gltfs 불필요하지만, 타입 호환성을 위해 전달 (내부에서 productType 확인 후 분기)
         const objBlobs = await generateOBJFromCartItem(
           { id: plate.id, plateConfig: plate, geometries, addedAt: new Date(), quantity: plate.quantity },
-          gltfs,
+          gltfs!,  // 명함은 사용 안 함, 거치대는 위에서 이미 체크됨
           {
             backTransform,
             brigeTransform,

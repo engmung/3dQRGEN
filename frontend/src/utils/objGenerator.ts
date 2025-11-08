@@ -7,6 +7,7 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {
   collectGLBMeshes,
   collectQRGeometries,
+  collectBusinessCardMeshes,
   applyGlobalRotation,
   alignToGround,
   type CollectedMesh,
@@ -149,30 +150,61 @@ export async function generateOBJFromCartItem(
   transforms: Transforms
 ): Promise<OBJBlobs> {
   try {
-    // 1. GLB 메시 수집
     let allMeshes: CollectedMesh[] = [];
 
-    allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', transforms.backTransform, item.plateConfig.plateColor, true));
-    allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', transforms.brigeTransform, item.plateConfig.plateColor));
-    allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', transforms.frontTransform, item.plateConfig.plateColor));
-    allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', transforms.pinTransform, item.plateConfig.plateColor));
+    // 제품 타입에 따라 분기
+    if (item.plateConfig.productType === 'card') {
+      // 명함 모드 (이미 회전되어 있으므로 빈 transform 사용)
+      if (item.geometries) {
+        const emptyTransform = {
+          position: [0, 0, 0] as [number, number, number],
+          rotation: [0, 0, 0] as [number, number, number],
+        };
 
-    // 2. QR/텍스트/이미지 추가
-    if (item.geometries) {
-      allMeshes.push(
-        ...collectQRGeometries(
-          item.geometries.qr,
-          item.geometries.text,
-          item.geometries.images,
-          item.geometries.qrPosition,
-          item.geometries.qrQuaternion,
-          item.geometries.textPosition,
-          item.geometries.textQuaternion,
-          item.geometries.qrColor,
-          item.geometries.zScale,
-          transforms.frontTransform
-        )
-      );
+        allMeshes.push(
+          ...collectBusinessCardMeshes(
+            item.plateConfig.cardWidth,
+            item.plateConfig.cardHeight,
+            item.plateConfig.cardThickness,
+            item.plateConfig.plateColor,
+            item.geometries.qr,
+            item.geometries.text,
+            item.geometries.images,
+            item.geometries.qrPosition,
+            item.geometries.qrQuaternion,
+            item.geometries.textPosition,
+            item.geometries.textQuaternion,
+            item.geometries.qrColor,
+            item.geometries.zScale,
+            emptyTransform
+          )
+        );
+      }
+    } else {
+      // 거치대 모드 (기존 로직)
+      // 1. GLB 메시 수집
+      allMeshes.push(...collectGLBMeshes(gltfs.back, 'back', transforms.backTransform, item.plateConfig.plateColor, true));
+      allMeshes.push(...collectGLBMeshes(gltfs.brige, 'brige', transforms.brigeTransform, item.plateConfig.plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.front, 'front', transforms.frontTransform, item.plateConfig.plateColor));
+      allMeshes.push(...collectGLBMeshes(gltfs.pin, 'pin', transforms.pinTransform, item.plateConfig.plateColor));
+
+      // 2. QR/텍스트/이미지 추가
+      if (item.geometries) {
+        allMeshes.push(
+          ...collectQRGeometries(
+            item.geometries.qr,
+            item.geometries.text,
+            item.geometries.images,
+            item.geometries.qrPosition,
+            item.geometries.qrQuaternion,
+            item.geometries.textPosition,
+            item.geometries.textQuaternion,
+            item.geometries.qrColor,
+            item.geometries.zScale,
+            transforms.frontTransform
+          )
+        );
+      }
     }
 
     // 3. 변환 적용

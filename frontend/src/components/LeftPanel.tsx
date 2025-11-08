@@ -3,6 +3,7 @@ import { useDesignStore } from '../store/useDesignStore';
 import type { QRType } from '../store/useDesignStore';
 import { AVAILABLE_FONTS } from '../utils/fontLoader';
 import { QRTypeSelector } from './QRTypeSelector';
+import { ProductTypeSelector } from './ProductTypeSelector';
 import { WiFiForm } from './forms/WiFiForm';
 import { EmailForm } from './forms/EmailForm';
 import { getPricingSettings, calculatePlatePrice, formatPrice, type PricingSettings } from '../utils/pricing';
@@ -147,6 +148,64 @@ export function LeftPanel() {
 
         {activeTab === 'qr' && selectedPlate && (
           <div>
+            {/* 제품 유형 선택 */}
+            <ProductTypeSelector />
+
+            {/* 명함 크기 설정 (명함 모드일 때만) */}
+            {selectedPlate.productType === 'card' && (
+              <div style={sectionStyle}>
+                <label style={labelStyle}>명함 크기</label>
+
+                {/* 가로 */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ fontSize: '14px', color: '#666', marginBottom: '4px', display: 'block' }}>
+                    가로: {selectedPlate.cardWidth}mm
+                  </label>
+                  <input
+                    type="range"
+                    min="20"
+                    max="120"
+                    step="1"
+                    value={selectedPlate.cardWidth}
+                    onChange={(e) => updatePlate(selectedPlate.id, { cardWidth: Number(e.target.value) })}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* 세로 */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ fontSize: '14px', color: '#666', marginBottom: '4px', display: 'block' }}>
+                    세로: {selectedPlate.cardHeight}mm
+                  </label>
+                  <input
+                    type="range"
+                    min="20"
+                    max="80"
+                    step="1"
+                    value={selectedPlate.cardHeight}
+                    onChange={(e) => updatePlate(selectedPlate.id, { cardHeight: Number(e.target.value) })}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {/* 두께 */}
+                <div>
+                  <label style={{ fontSize: '14px', color: '#666', marginBottom: '4px', display: 'block' }}>
+                    두께: {selectedPlate.cardThickness.toFixed(1)}mm
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.1"
+                    value={selectedPlate.cardThickness}
+                    onChange={(e) => updatePlate(selectedPlate.id, { cardThickness: Number(e.target.value) })}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* QR 타입 선택 */}
             <div style={sectionStyle}>
               <QRTypeSelector
@@ -207,7 +266,9 @@ export function LeftPanel() {
                   onTouchStart={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
                   min="20"
-                  max="60"
+                  max={selectedPlate.productType === 'card'
+                    ? Math.min(selectedPlate.cardWidth, selectedPlate.cardHeight) - 5
+                    : 60}
                   step="0.1"
                   style={{ width: '100%' }}
                 />
@@ -236,8 +297,12 @@ export function LeftPanel() {
                   onInput={(e) => updatePlate(selectedPlate.id, { qrHeightOffset: Number(e.currentTarget.value) })}
                   onTouchStart={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
-                  min="-50"
-                  max="30"
+                  min={selectedPlate.productType === 'card'
+                    ? -(selectedPlate.cardHeight - selectedPlate.qrSize) / 2
+                    : -50}
+                  max={selectedPlate.productType === 'card'
+                    ? (selectedPlate.cardHeight - selectedPlate.qrSize) / 2
+                    : 30}
                   step="0.01"
                   style={{ width: '100%' }}
                 />
@@ -251,8 +316,12 @@ export function LeftPanel() {
                   onInput={(e) => updatePlate(selectedPlate.id, { qrHorizontalOffset: Number(e.currentTarget.value) })}
                   onTouchStart={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
-                  min={-(60 - selectedPlate.qrSize) / 2}
-                  max={(60 - selectedPlate.qrSize) / 2}
+                  min={selectedPlate.productType === 'card'
+                    ? -(selectedPlate.cardWidth - selectedPlate.qrSize) / 2
+                    : -(60 - selectedPlate.qrSize) / 2}
+                  max={selectedPlate.productType === 'card'
+                    ? (selectedPlate.cardWidth - selectedPlate.qrSize) / 2
+                    : (60 - selectedPlate.qrSize) / 2}
                   step="0.01"
                   style={{ width: '100%' }}
                 />
@@ -297,7 +366,7 @@ export function LeftPanel() {
                 onInput={(e) => updatePlate(selectedPlate.id, { textSize: Number(e.currentTarget.value) })}
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
-                min="5"
+                min="2"
                 max="30"
                 step="0.1"
                 style={{ width: '100%' }}
@@ -312,8 +381,12 @@ export function LeftPanel() {
                 onInput={(e) => updatePlate(selectedPlate.id, { textHeightOffset: Number(e.currentTarget.value) })}
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
-                min="-50"
-                max="70"
+                min={selectedPlate.productType === 'card'
+                  ? -selectedPlate.cardHeight / 2
+                  : -50}
+                max={selectedPlate.productType === 'card'
+                  ? selectedPlate.cardHeight / 2
+                  : 70}
                 step="0.01"
                 style={{ width: '100%' }}
               />
@@ -327,8 +400,12 @@ export function LeftPanel() {
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
                 onInput={(e) => updatePlate(selectedPlate.id, { textHorizontalOffset: Number(e.currentTarget.value) })}
-                min="-30"
-                max="30"
+                min={selectedPlate.productType === 'card'
+                  ? -selectedPlate.cardWidth / 2
+                  : -30}
+                max={selectedPlate.productType === 'card'
+                  ? selectedPlate.cardWidth / 2
+                  : 30}
                 step="0.01"
                 style={{ width: '100%' }}
               />
@@ -458,8 +535,10 @@ export function LeftPanel() {
                     onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { size: Number(e.currentTarget.value) })}
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
-                    min="10"
-                    max="60"
+                    min="3"
+                    max={selectedPlate.productType === 'card'
+                      ? Math.min(selectedPlate.cardWidth, selectedPlate.cardHeight) - 5
+                      : 60}
                     step="0.1"
                     style={{ width: '100%' }}
                   />
@@ -473,8 +552,12 @@ export function LeftPanel() {
                     onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { heightOffset: Number(e.currentTarget.value) })}
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
-                    min="-50"
-                    max="70"
+                    min={selectedPlate.productType === 'card'
+                      ? -(selectedPlate.cardHeight - img.size) / 2
+                      : -50}
+                    max={selectedPlate.productType === 'card'
+                      ? (selectedPlate.cardHeight - img.size) / 2
+                      : 70}
                     step="0.01"
                     style={{ width: '100%' }}
                   />
@@ -488,8 +571,12 @@ export function LeftPanel() {
                     onInput={(e) => useDesignStore.getState().updateImage(selectedPlate.id, img.id, { horizontalOffset: Number(e.currentTarget.value) })}
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
-                    min="-30"
-                    max="30"
+                    min={selectedPlate.productType === 'card'
+                      ? -(selectedPlate.cardWidth - img.size) / 2
+                      : -30}
+                    max={selectedPlate.productType === 'card'
+                      ? (selectedPlate.cardWidth - img.size) / 2
+                      : 30}
                     step="0.01"
                     style={{ width: '100%' }}
                   />

@@ -5,6 +5,9 @@ import type { WiFiData, EmailData } from '../utils/qrGenerator';
 // QR 타입 정의
 export type QRType = 'url' | 'wifi' | 'email';
 
+// 제품 타입 정의
+export type ProductType = 'stand' | 'card';
+
 // UUID 생성 폴리필 (crypto.randomUUID가 없는 환경용)
 function generateUUID(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -63,6 +66,14 @@ export interface ImageConfig {
 // 개별 QR 판 설정
 export interface QRPlateConfig {
   id: string;
+
+  // 제품 타입
+  productType: ProductType; // 'stand' (거치대) 또는 'card' (명함)
+
+  // 명함 전용 설정 (productType === 'card'일 때만 사용)
+  cardWidth: number;        // 명함 가로 (mm, 기본: 90)
+  cardHeight: number;       // 명함 세로 (mm, 기본: 50)
+  cardThickness: number;    // 명함 두께 (mm, 기본: 2)
 
   // QR 타입 및 데이터
   qrType: QRType;          // QR 타입
@@ -142,6 +153,12 @@ const createDefaultPlate = (
   index: number = 0
 ): QRPlateConfig => ({
   id,
+  // 제품 타입
+  productType: 'stand',    // 기본: QR 거치대
+  // 명함 전용 설정
+  cardWidth: 90,           // 명함 가로 (기본: 90mm)
+  cardHeight: 50,          // 명함 세로 (기본: 50mm)
+  cardThickness: 2,        // 명함 두께 (기본: 2mm)
   // QR 타입 및 데이터
   qrType: 'url',                          // 기본 타입: URL
   qrUrl: 'https://example.com',           // URL 기본값
