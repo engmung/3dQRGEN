@@ -7,6 +7,7 @@ import { API_BASE_URL, createAuthHeaders } from './auth';
 
 export interface PricingSettings {
   base_price: number;
+  card_base_price: number;
   text_price: number;
   image_price: number;
   announcement_message?: string;

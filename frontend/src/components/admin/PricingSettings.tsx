@@ -25,6 +25,7 @@ export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<PricingSettings>({
     base_price: pricingSettings?.base_price || 20000,
+    card_base_price: pricingSettings?.card_base_price || 10000,
     text_price: pricingSettings?.text_price || 5000,
     image_price: pricingSettings?.image_price || 5000,
     announcement_message: pricingSettings?.announcement_message || '',
@@ -53,6 +54,7 @@ export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
   const handleCancel = () => {
     setFormData(pricingSettings || {
       base_price: 20000,
+      card_base_price: 10000,
       text_price: 5000,
       image_price: 5000,
       announcement_message: '',
@@ -75,10 +77,16 @@ export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
         <div>
           <div style={styles.grid}>
             <FormField
-              label="기본 가격 (원)"
+              label="거치대 기본가 (원)"
               type="number"
               value={formData.base_price}
               onChange={(val) => setFormData({ ...formData, base_price: Number(val) })}
+            />
+            <FormField
+              label="명함 기본가 (원)"
+              type="number"
+              value={formData.card_base_price}
+              onChange={(val) => setFormData({ ...formData, card_base_price: Number(val) })}
             />
             <FormField
               label="텍스트 추가 (원)"
@@ -117,9 +125,15 @@ export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
       ) : (
         <div style={styles.displayGrid}>
           <div>
-            <div style={styles.labelText}>기본 가격</div>
+            <div style={styles.labelText}>거치대 기본가</div>
             <div style={styles.priceText}>
               {pricingSettings ? formatPrice(pricingSettings.base_price) : '로딩 중...'}
+            </div>
+          </div>
+          <div>
+            <div style={styles.labelText}>명함 기본가</div>
+            <div style={styles.priceText}>
+              {pricingSettings ? formatPrice(pricingSettings.card_base_price) : '로딩 중...'}
             </div>
           </div>
           <div>
@@ -160,7 +174,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
+    gridTemplateColumns: '1fr 1fr 1fr 1fr',
     gap: '20px',
     marginBottom: '15px',
   },
@@ -171,7 +185,7 @@ const styles = {
   },
   displayGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
+    gridTemplateColumns: '1fr 1fr 1fr 1fr',
     gap: '20px',
   },
   labelText: {
