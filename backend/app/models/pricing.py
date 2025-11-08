@@ -10,7 +10,8 @@ class PricingSetting(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # 가격 설정
-    base_price = Column(Float, default=20000.0, nullable=False)  # 기본 가격
+    base_price = Column(Float, default=20000.0, nullable=False)  # 거치대 기본 가격
+    card_base_price = Column(Float, default=10000.0, nullable=False)  # 명함 기본 가격
     text_price = Column(Float, default=5000.0, nullable=False)   # 텍스트 추가 가격
     image_price = Column(Float, default=5000.0, nullable=False)  # 이미지 1개당 추가 가격
 

@@ -12,6 +12,7 @@ class Order(Base):
     order_uuid = Column(String(36), unique=True, index=True, default=lambda: str(uuid.uuid4()))
     stand_id = Column(Integer)  # 외래키 제거, 단순 정수
     stand_name = Column(String(100))  # 거치대 이름 추가
+    product_type = Column(String(20), default="stand")  # "stand" or "card"
 
     # QR & Customization
     qr_url = Column(String(500), nullable=False)

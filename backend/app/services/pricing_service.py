@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 
-def calculate_product_price(customization_data: dict, pricing: PricingSetting) -> float:
+def calculate_product_price(customization_data: dict, pricing: PricingSetting, product_type: str = "stand") -> float:
     """
-    Calculate product price based on customization.
+    Calculate product price based on customization and product type.
 
     Consolidates duplicate logic from:
     - routers/orders.py calculate_expected_price() (Lines 21-44)
@@ -15,11 +15,16 @@ def calculate_product_price(customization_data: dict, pricing: PricingSetting) -
     Args:
         customization_data: 판 설정 데이터 (text, images 포함)
         pricing: 현재 가격 설정
+        product_type: "stand" (거치대) or "card" (명함)
 
     Returns:
         계산된 가격
     """
-    price = pricing.base_price
+    # Select base price based on product type
+    if product_type == "card":
+        price = pricing.card_base_price
+    else:
+        price = pricing.base_price
 
     # Add text price if text content exists
     text_content = customization_data.get('text', '')
@@ -59,6 +64,7 @@ def get_pricing_settings(db: Session, create_if_missing: bool = False) -> Pricin
         if create_if_missing:
             setting = PricingSetting(
                 base_price=20000.0,
+                card_base_price=10000.0,
                 text_price=5000.0,
                 image_price=5000.0
             )

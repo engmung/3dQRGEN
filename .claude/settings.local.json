@@ -12,7 +12,10 @@
       "Bash(timeout 30 npx tsc --noEmit)",
       "Bash(find:*)",
       "Bash(timeout 60 npx tsc --noEmit)",
-      "Bash(echo \"Exit code: $?\")"
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(git commit:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

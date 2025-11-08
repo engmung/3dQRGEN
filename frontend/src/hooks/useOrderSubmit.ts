@@ -146,6 +146,7 @@ export function useOrderSubmit(params: UseOrderSubmitParams) {
           customization,
           quantity: plate.quantity,
           unit_price: unitPrice,
+          product_type: plate.productType, // "stand" or "card"
         });
 
         // 파일 추가 (OBJ, MTL 순서)

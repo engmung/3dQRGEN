@@ -163,12 +163,13 @@ async def create_order_group(
         qr_url = item_data.get('qr_url')
         customization = item_data.get('customization', {})
         quantity = item_data.get('quantity', 1)
+        product_type = item_data.get('product_type', 'stand')  # "stand" or "card"
 
         if not product_sku or not qr_url or quantity < 1:
             raise HTTPException(status_code=400, detail=f"Invalid line item #{i}: missing required fields")
 
-        # 가격 계산
-        unit_price = calculate_product_price(customization, pricing_settings)
+        # 가격 계산 (product_type 전달)
+        unit_price = calculate_product_price(customization, pricing_settings, product_type)
         item_total_price = unit_price * quantity
 
         # 가격 검증 (클라이언트가 보낸 가격과 비교) - 선택적
