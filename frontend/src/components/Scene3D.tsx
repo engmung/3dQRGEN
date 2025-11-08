@@ -243,8 +243,8 @@ export const Scene3D = ({
           target={[cameraTarget.x, cameraTarget.y, cameraTarget.z]}
           enableDamping
           dampingFactor={0.05}
-          minPolarAngle={Math.PI / 6}
-          maxPolarAngle={Math.PI / 2.2}
+          minPolarAngle={0}
+          maxPolarAngle={Math.PI}
         />
       </Canvas>
     </>
