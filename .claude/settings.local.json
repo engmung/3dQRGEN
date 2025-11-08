@@ -3,7 +3,10 @@
     "allow": [
       "Bash(done)",
       "Bash(npm run build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n[리팩토링] Group C-1 완료: LeftPanel 분할\n\n- LeftPanel.tsx (603줄) → 6개 파일로 분리\n  - panels/LeftPanel/index.tsx: 메인 레이아웃 (129줄)\n  - panels/LeftPanel/QRTab.tsx: QR 설정 (168줄)\n  - panels/LeftPanel/TextTab.tsx: 텍스트 설정 (75줄)\n  - panels/LeftPanel/ImageTab.tsx: 이미지 설정 (161줄)\n  - panels/LeftPanel/CardSizeSettings.tsx: 명함 크기 (48줄)\n  - panels/LeftPanel/PresetImageGrid.tsx: 프리셋 이미지 (51줄)\n\n- RangeSlider에 decimals prop 추가 (소수점 표시)\n- FormField/FormSelect onChange 시그니처에 맞게 수정\n- 기존 LeftPanel.tsx는 re-export로 하위 호환성 유지\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npx tsc:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\n[리팩토링] Group C-2, C-3 완료: RightPanel 분할 및 QRPlateInstance 리팩토링\n\n## Group C-2: RightPanel 분할 (599줄 → 5개 파일)\n- panels/RightPanel/index.tsx: 메인 레이아웃 (154줄)\n- panels/RightPanel/QRPreview.tsx: QR 미리보기 (87줄)\n- panels/RightPanel/PlateCard.tsx: 플레이트 카드 (153줄)\n- panels/RightPanel/PlateControls.tsx: 제어 버튼 (161줄)\n- panels/RightPanel/TotalSummary.tsx: 가격 요약 (238줄)\n\n## Group C-3: QRPlateInstance 리팩토링 (530줄 → 229줄, 57% 감소)\n- utils/geometry/positionCalculators.ts: 위치 계산 (235줄)\n- hooks/useQRGeometry.ts: QR 지오메트리 훅 (112줄)\n- hooks/useTextGeometry.ts: 텍스트 지오메트리 훅 (71줄)\n- hooks/useImageGeometry.ts: 이미지 지오메트리 훅 (103줄)\n\n- COLORS, PRICING 상수 사용\n- formatPrice 유틸리티 활용\n- 재사용 가능한 커스텀 훅 분리\n- 메모리 누수 방지 (자동 cleanup)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
