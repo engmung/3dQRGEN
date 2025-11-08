@@ -146,6 +146,7 @@ export function Admin({ onLoadingComplete }: AdminProps = {}) {
           setPricingSettings(settings);
           setNewPricing(settings);
         }}
+        onEditingChange={setEditingPricing}
       />
 
       {/* Color Settings (shown only when editing pricing) */}

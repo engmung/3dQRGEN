@@ -3,7 +3,7 @@
  * ColorPalette에서 추출
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HexColorPicker } from 'react-colorful';
 
 interface ColorPickerModalProps {

@@ -20,6 +20,37 @@ import {
 
 type ColorType = 'plate' | 'qr' | 'bg';
 
+// 색상 버튼 컴포넌트 (컴포넌트 외부로 이동)
+const ColorButton = ({ color, onClick, title, isMobile }: {
+  color: string;
+  onClick: () => void;
+  title: string;
+  isMobile: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    style={{
+      width: isMobile ? '32px' : '40px',
+      height: isMobile ? '32px' : '40px',
+      minWidth: isMobile ? '32px' : '40px',
+      minHeight: isMobile ? '32px' : '40px',
+      borderRadius: '50%',
+      background: color,
+      border: isMobile ? '2px solid #ddd' : '3px solid #ddd',
+      cursor: 'pointer',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'transform 0.2s',
+      padding: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+    onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
+    onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+    title={title}
+  />
+);
+
 export const ColorPalette = () => {
   const isMobile = useIsMobile();
 
@@ -70,6 +101,8 @@ export const ColorPalette = () => {
 
   // 외부 클릭 감지
   useEffect(() => {
+    if (!showPlatePicker && !showQrPicker && !showBgPicker) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (platePickerRef.current && !platePickerRef.current.contains(event.target as Node)) {
         setShowPlatePicker(false);
@@ -82,35 +115,16 @@ export const ColorPalette = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    // 다음 프레임에 리스너 추가 (현재 클릭 이벤트 이후)
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
 
-  // 색상 버튼 컴포넌트
-  const ColorButton = ({ color, onClick, title }: { color: string; onClick: () => void; title: string }) => (
-    <button
-      onClick={onClick}
-      style={{
-        width: isMobile ? '32px' : '40px',
-        height: isMobile ? '32px' : '40px',
-        minWidth: isMobile ? '32px' : '40px',
-        minHeight: isMobile ? '32px' : '40px',
-        borderRadius: '50%',
-        background: color,
-        border: isMobile ? '2px solid #ddd' : '3px solid #ddd',
-        cursor: 'pointer',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-        transition: 'transform 0.2s',
-        padding: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-      onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
-      onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-      title={title}
-    />
-  );
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPlatePicker, showQrPicker, showBgPicker]);
 
   const isInvalidCombination = selectedPlate && !isCombinationAllowed(
     selectedPlate.plateColor,
@@ -156,11 +170,14 @@ export const ColorPalette = () => {
             <ColorButton
               color={selectedPlate.plateColor}
               onClick={() => {
+                console.log('Plate button clicked, current state:', showPlatePicker);
+                console.log('Available colors:', availableColors);
                 setShowPlatePicker(!showPlatePicker);
                 setShowQrPicker(false);
                 setShowBgPicker(false);
               }}
               title="판 색상"
+              isMobile={isMobile}
             />
             {showPlatePicker && (
               <ColorDropdown
@@ -189,6 +206,7 @@ export const ColorPalette = () => {
                 setShowBgPicker(false);
               }}
               title="QR 색상"
+              isMobile={isMobile}
             />
             {showQrPicker && (
               <ColorDropdown
@@ -219,6 +237,7 @@ export const ColorPalette = () => {
               setShowQrPicker(false);
             }}
             title="배경 색상"
+            isMobile={isMobile}
           />
           {showBgPicker && (
             <div

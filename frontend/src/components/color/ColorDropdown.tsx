@@ -3,6 +3,7 @@
  * ColorPalette에서 추출한 재사용 가능 컴포넌트
  */
 
+import React from 'react';
 import type { ColorInfo } from '../../utils/colorValidator';
 
 interface ColorDropdownProps {
