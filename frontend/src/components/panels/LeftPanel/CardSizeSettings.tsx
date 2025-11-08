@@ -37,7 +37,7 @@ export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
         label="두께"
         value={plate.cardThickness}
         onChange={(val) => updatePlate(plate.id, { cardThickness: val })}
-        min={1}
+        min={0.4}
         max={3}
         step={0.1}
         unit="mm"

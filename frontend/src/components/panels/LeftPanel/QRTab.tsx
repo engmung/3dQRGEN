@@ -117,7 +117,7 @@ export function QRTab({ plate }: QRTabProps) {
           label="QR 두께"
           value={plate.qrThickness}
           onChange={(val) => updatePlate(plate.id, { qrThickness: val })}
-          min={1}
+          min={0.2}
           max={3}
           step={0.01}
           unit="mm"
