@@ -15,11 +15,13 @@ import { updatePricingSettings, type PricingSettings } from '../../utils/api';
 interface PricingSettingsPanelProps {
   pricingSettings: PricingSettings | null;
   onUpdate: (settings: PricingSettings) => void;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
 export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
   pricingSettings,
   onUpdate,
+  onEditingChange,
 }) => {
   const { getToken } = useAuth();
   const [editing, setEditing] = useState(false);
@@ -45,6 +47,7 @@ export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
       onUpdate(updated);
       invalidatePricingCache();
       setEditing(false);
+      onEditingChange?.(false);
       alert('가격 설정이 저장되었습니다.');
     } catch (err: any) {
       alert('가격 설정 저장 실패: ' + err.message);
@@ -60,6 +63,7 @@ export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
       announcement_message: '',
     });
     setEditing(false);
+    onEditingChange?.(false);
   };
 
   return (
@@ -67,7 +71,7 @@ export const PricingSettingsPanel: React.FC<PricingSettingsPanelProps> = ({
       <div style={styles.header}>
         <h2 style={styles.title}>가격 설정</h2>
         {!editing && (
-          <Button onClick={() => setEditing(true)} variant="secondary" size="sm">
+          <Button onClick={() => { setEditing(true); onEditingChange?.(true); }} variant="secondary" size="sm">
             수정
           </Button>
         )}
