@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AddressForm, type AddressFormData } from './AddressForm';
+import { AddressForm, type AddressFormData } from './order/AddressForm';
 import type { CartItem } from '../store/useCartStore';
 import { getPricingSettings, calculatePlatePrice, formatPrice } from '../utils/pricing';
 import { getQRTypeLabel } from '../utils/qrHelpers';
