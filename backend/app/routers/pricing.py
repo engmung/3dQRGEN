@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/pricing", tags=["pricing"])
 class PricingSettingResponse(BaseModel):
     """가격 설정 응답 스키마"""
     base_price: float
+    card_base_price: float
     text_price: float
     image_price: float
     announcement_message: str | None = None
@@ -26,6 +27,7 @@ class PricingSettingResponse(BaseModel):
 class PricingSettingUpdate(BaseModel):
     """가격 설정 업데이트 스키마"""
     base_price: float
+    card_base_price: float
     text_price: float
     image_price: float
     announcement_message: str | None = None
@@ -60,6 +62,7 @@ def update_pricing_settings(
         # 없으면 새로 생성
         setting = PricingSetting(
             base_price=pricing_update.base_price,
+            card_base_price=pricing_update.card_base_price,
             text_price=pricing_update.text_price,
             image_price=pricing_update.image_price,
             announcement_message=pricing_update.announcement_message,
@@ -71,6 +74,7 @@ def update_pricing_settings(
     else:
         # 있으면 업데이트
         setting.base_price = pricing_update.base_price
+        setting.card_base_price = pricing_update.card_base_price
         setting.text_price = pricing_update.text_price
         setting.image_price = pricing_update.image_price
         setting.announcement_message = pricing_update.announcement_message

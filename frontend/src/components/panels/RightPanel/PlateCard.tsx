@@ -94,8 +94,14 @@ export function PlateCard({
         >
           {/* Base price */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-            <span>기본</span>
-            <span>{formatPrice(pricingSettings.base_price)}</span>
+            <span>기본 ({plate.productType === 'card' ? '명함' : '거치대'})</span>
+            <span>
+              {formatPrice(
+                plate.productType === 'card'
+                  ? pricingSettings.card_base_price
+                  : pricingSettings.base_price
+              )}
+            </span>
           </div>
 
           {/* Text addon */}
