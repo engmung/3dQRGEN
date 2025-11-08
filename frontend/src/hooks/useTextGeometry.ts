@@ -3,69 +3,89 @@ import * as THREE from "three";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { loadFont, type FontKey } from "../utils/fontLoader";
 import { DIMENSIONS } from "../constants/dimensions";
+import type { TextConfig } from "../types/design";
 
-interface UseTextGeometryParams {
-  text: string;
-  textFont: string;
-  textSize: number;
-  qrThickness: number; // 텍스트는 QR 두께와 공유
+interface UseTextGeometriesParams {
+  texts: TextConfig[];
+  qrThickness: number; // zScale 계산용 (실제 사용 안 함)
+}
+
+interface TextGeometryResult {
+  id: string;
+  geometry: THREE.BufferGeometry;
+  config: TextConfig;
 }
 
 /**
- * 텍스트 Geometry 생성 커스텀 훅 (비동기 폰트 로딩)
+ * 다중 텍스트 Geometry 생성 커스텀 훅 (비동기 폰트 로딩)
  */
-export const useTextGeometry = ({
-  text,
-  textFont,
-  textSize,
+export const useTextGeometries = ({
+  texts,
   qrThickness,
-}: UseTextGeometryParams) => {
-  const [textGeometry, setTextGeometry] = useState<THREE.BufferGeometry | null>(null);
+}: UseTextGeometriesParams): TextGeometryResult[] => {
+  const [textGeometries, setTextGeometries] = useState<TextGeometryResult[]>([]);
 
   useEffect(() => {
-    if (!text || text.trim() === '') {
-      setTextGeometry(null);
+    let isCancelled = false;
+    const geometries: TextGeometryResult[] = [];
+
+    // Filter out empty texts
+    const validTexts = texts.filter(txt => txt.content && txt.content.trim() !== '');
+
+    if (validTexts.length === 0) {
+      setTextGeometries([]);
       return;
     }
 
-    let isCancelled = false;
+    // Load all text geometries
+    Promise.all(
+      validTexts.map(async (textConfig) => {
+        try {
+          const font = await loadFont(textConfig.font as FontKey);
+          if (isCancelled) return null;
 
-    loadFont(textFont as FontKey)
-      .then((font) => {
-        if (isCancelled) return;
+          const geometry = new TextGeometry(textConfig.content, {
+            font: font,
+            size: textConfig.size,
+            depth: DIMENSIONS.GEOMETRY.BASE_THICKNESS, // 1mm (이미지와 동일, 나중에 zScale로 조절)
+            curveSegments: DIMENSIONS.GEOMETRY.CURVE_SEGMENTS,
+            bevelEnabled: false,
+          });
 
-        const geometry = new TextGeometry(text, {
-          font: font,
-          size: textSize,
-          depth: qrThickness, // QR 두께와 공유!
-          curveSegments: DIMENSIONS.GEOMETRY.CURVE_SEGMENTS,
-          bevelEnabled: false,
-        });
+          // 중앙 정렬 (X축만, 이미지와 동일)
+          geometry.computeBoundingBox();
+          const bbox = geometry.boundingBox!;
+          const centerOffsetX = -(bbox.max.x - bbox.min.x) / 2;
 
-        // 중앙 정렬
-        geometry.computeBoundingBox();
-        const bbox = geometry.boundingBox!;
-        const centerOffsetX = -(bbox.max.x - bbox.min.x) / 2;
-        geometry.translate(centerOffsetX, 0, 0);
+          geometry.translate(centerOffsetX, 0, 0);
 
-        setTextGeometry(geometry);
+          return {
+            id: textConfig.id,
+            geometry,
+            config: textConfig,
+          };
+        } catch (err) {
+          console.error(`Text geometry generation error for text ${textConfig.id}:`, err);
+          return null;
+        }
       })
-      .catch((err) => {
-        console.error("Text geometry generation error:", err);
-        setTextGeometry(null);
-      });
+    ).then((results) => {
+      if (isCancelled) return;
+      const validResults = results.filter((r): r is TextGeometryResult => r !== null);
+      setTextGeometries(validResults);
+    });
 
     return () => {
       isCancelled = true;
     };
-  }, [text, textFont, textSize, qrThickness]);
+  }, [texts, qrThickness]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      textGeometry?.dispose();
+      textGeometries.forEach(({ geometry }) => geometry.dispose());
     };
-  }, [textGeometry]);
+  }, [textGeometries]);
 
-  return textGeometry;
+  return textGeometries;
 };

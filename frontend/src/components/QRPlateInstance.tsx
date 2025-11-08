@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useDesignStore, type QRPlateConfig } from "../store/useDesignStore";
 import type { VertexGroup } from "../utils/glbLoader";
 import { useQRGeometry } from "../hooks/useQRGeometry";
-import { useTextGeometry } from "../hooks/useTextGeometry";
+import { useTextGeometries } from "../hooks/useTextGeometry";
 import { useImageGeometry } from "../hooks/useImageGeometry";
 import {
   calculateQRPosition,
@@ -53,10 +53,8 @@ export const QRPlateInstance = ({
     qrThickness: config.qrThickness,
   });
 
-  const textGeometry = useTextGeometry({
-    text: config.text,
-    textFont: config.textFont,
-    textSize: config.textSize,
+  const textGeometriesArray = useTextGeometries({
+    texts: config.texts,
     qrThickness: config.qrThickness,
   });
 
@@ -73,6 +71,25 @@ export const QRPlateInstance = ({
 
   // Geometry data ref for parent component
   const geometryDataRef = useRef<any>(null);
+
+  // Calculate text positions and quaternions
+  const textPositionsAndQuaternions = useMemo(() => {
+    if (!textRegion || textGeometriesArray.length === 0) return [];
+
+    return textGeometriesArray.map(({ id, geometry, config: textConfig }) => {
+      const { position, quaternion } = calculateTextPosition({
+        textRegion,
+        textGeometry: geometry,
+        textHeightOffset: textConfig.heightOffset,
+        textHorizontalOffset: textConfig.horizontalOffset,
+        productType: config.productType,
+        cardWidth: config.cardWidth,
+        cardHeight: config.cardHeight,
+      });
+
+      return { id, geometry, position, quaternion };
+    });
+  }, [textRegion, textGeometriesArray, config.productType, config.cardWidth, config.cardHeight]);
 
   // Calculate image positions and quaternions
   const imagePositionsAndQuaternions = useMemo(() => {
@@ -118,11 +135,11 @@ export const QRPlateInstance = ({
   }, [
     onGeometriesReady,
     baseGeometry,
-    textGeometry,
+    textGeometriesArray,
     imageGeometriesArray,
     qrRegion,
     config.qrColor,
-    config.text,
+    config.texts,
     config.images,
     config.qrUrl,
   ]);
@@ -136,36 +153,20 @@ export const QRPlateInstance = ({
 
   const { quaternion: qrQuaternion, position: qrPosition } = qrTransform;
 
-  // Calculate text position and quaternion
-  let textPosition: THREE.Vector3 | null = null;
-  let textQuaternion: THREE.Quaternion | null = null;
-
-  if (textRegion && textGeometry) {
-    const textTransform = calculateTextPosition({
-      textRegion,
-      textGeometry,
-      textHeightOffset: config.textHeightOffset,
-      textHorizontalOffset: config.textHorizontalOffset,
-      productType: config.productType,
-      cardWidth: config.cardWidth,
-      cardHeight: config.cardHeight,
-    });
-    textPosition = textTransform.position;
-    textQuaternion = textTransform.quaternion;
-  }
-
   // Geometry 데이터를 ref에 저장 (useEffect에서 사용)
   const imagesToExport = imagePositionsAndQuaternions.filter((item): item is { geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion } => item !== null);
+  const textsToExport = textPositionsAndQuaternions.map(({ id, geometry, position, quaternion }) => ({ geometry, position, quaternion }));
 
   geometryDataRef.current = {
     qr: baseGeometry,
-    text: textGeometry,
+    text: null, // Legacy field for backwards compatibility
     image: null, // Legacy field for backwards compatibility
+    texts: textsToExport,
     images: imagesToExport,
     qrPosition,
     qrQuaternion,
-    textPosition,
-    textQuaternion,
+    textPosition: null, // Legacy field for backwards compatibility
+    textQuaternion: null, // Legacy field for backwards compatibility
     imagePosition: null, // Legacy field for backwards compatibility
     imageQuaternion: null, // Legacy field for backwards compatibility
     qrColor: config.qrColor,
@@ -189,12 +190,14 @@ export const QRPlateInstance = ({
         />
       </mesh>
 
-      {/* 3D 텍스트 */}
-      {textGeometry && textPosition && textQuaternion && (
+      {/* 3D 텍스트들 */}
+      {textPositionsAndQuaternions.map((data) => (
         <mesh
-          geometry={textGeometry}
-          position={textPosition}
-          quaternion={textQuaternion}
+          key={`text-${data.id}`}
+          geometry={data.geometry}
+          position={data.position}
+          quaternion={data.quaternion}
+          scale={[1, 1, zScale]}
           onClick={handleClick}
           castShadow
           receiveShadow={false}
@@ -203,7 +206,7 @@ export const QRPlateInstance = ({
             color={config.qrColor}
           />
         </mesh>
-      )}
+      ))}
 
       {/* 3D 이미지들 */}
       {imagePositionsAndQuaternions.map((data, index) => (

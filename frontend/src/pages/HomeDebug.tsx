@@ -29,6 +29,7 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
     image: THREE.BufferGeometry | null;
+    texts: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;

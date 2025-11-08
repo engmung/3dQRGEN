@@ -121,7 +121,7 @@ interface TextPositionParams {
 }
 
 /**
- * 텍스트 위치와 회전 계산
+ * 텍스트 위치와 회전 계산 (이미지와 동일한 방식)
  */
 export const calculateTextPosition = ({
   textRegion,
@@ -166,7 +166,7 @@ export const calculateTextPosition = ({
     clampedTextHorizontalOffset = Math.max(minTextHorizontalOffset, Math.min(maxTextHorizontalOffset, textHorizontalOffset));
   }
 
-  // 텍스트 위치 계산
+  // 텍스트 위치 계산 (이미지와 동일한 방식)
   const position = textRegion.center.clone()
     .add(textRegion.normal.clone().multiplyScalar(DIMENSIONS.GEOMETRY.NORMAL_OFFSET))
     .add(textRegion.upVector.clone().multiplyScalar(clampedTextHeightOffset))
