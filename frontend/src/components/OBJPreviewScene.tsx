@@ -24,6 +24,7 @@ interface OBJPreviewSceneProps {
   qrGeometries?: {
     qr: THREE.BufferGeometry | null;
     text: THREE.BufferGeometry | null;
+    texts: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
@@ -68,12 +69,10 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
             selectedPlate.cardThickness,
             selectedPlate.plateColor,
             qrGeometries.qr,
-            qrGeometries.text,
+            qrGeometries.texts || [],
             qrGeometries.images,
             qrGeometries.qrPosition,
             qrGeometries.qrQuaternion,
-            qrGeometries.textPosition,
-            qrGeometries.textQuaternion,
             qrGeometries.qrColor,
             qrGeometries.zScale,
             emptyTransform
@@ -98,12 +97,10 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
         allMeshes.push(
           ...collectQRGeometries(
             qrGeometries.qr,
-            qrGeometries.text,
+            qrGeometries.texts || [],
             qrGeometries.images,
             qrGeometries.qrPosition,
             qrGeometries.qrQuaternion,
-            qrGeometries.textPosition,
-            qrGeometries.textQuaternion,
             qrGeometries.qrColor,
             qrGeometries.zScale,
             frontTransform
@@ -122,12 +119,10 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
     gltfs,
     plateColor,
     qrGeometries?.qr,
-    qrGeometries?.text,
+    qrGeometries?.texts,
     qrGeometries?.images,
     qrGeometries?.qrPosition,
     qrGeometries?.qrQuaternion,
-    qrGeometries?.textPosition,
-    qrGeometries?.textQuaternion,
     qrGeometries?.qrColor,
     qrGeometries?.zScale,
     backTransform,

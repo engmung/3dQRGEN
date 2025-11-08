@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { QRPlateConfig, ImageConfig } from '../../types/design';
+import type { QRPlateConfig, ImageConfig, TextConfig } from '../../types/design';
 import { generateUUID, createDefaultPlate } from '../../types/design';
 import { serializeImages, deserializeImages } from '../../utils/storage/fileStorageAdapter';
 
@@ -25,6 +25,11 @@ interface PlateStore {
   addImage: (plateId: string, file: File) => ImageConfig;
   removeImage: (plateId: string, imageId: string) => void;
   updateImage: (plateId: string, imageId: string, updates: Partial<Omit<ImageConfig, 'id' | 'file'>>) => void;
+
+  // Text CRUD
+  addText: (plateId: string, content?: string) => TextConfig;
+  removeText: (plateId: string, textId: string) => void;
+  updateText: (plateId: string, textId: string, updates: Partial<Omit<TextConfig, 'id'>>) => void;
 
   // 전역 기본 색상 설정
   setGlobalPlateColor: (color: string) => void;
@@ -150,6 +155,49 @@ export const usePlateStore = create<PlateStore>()(
           set({ plates: updated });
         },
 
+        // 텍스트 추가
+        addText: (plateId: string, content: string = '') => {
+          const { plates } = get();
+          const newText: TextConfig = {
+            id: generateUUID(),
+            content,
+            font: 'Pretendard-Regular',
+            size: 10,
+            heightOffset: 0,
+            horizontalOffset: 0,
+          };
+          const updated = plates.map(p =>
+            p.id === plateId ? { ...p, texts: [...p.texts, newText] } : p
+          );
+          set({ plates: updated });
+          return newText;
+        },
+
+        // 텍스트 제거
+        removeText: (plateId: string, textId: string) => {
+          const { plates } = get();
+          const updated = plates.map(p =>
+            p.id === plateId ? { ...p, texts: p.texts.filter(txt => txt.id !== textId) } : p
+          );
+          set({ plates: updated });
+        },
+
+        // 텍스트 업데이트
+        updateText: (plateId: string, textId: string, updates: Partial<Omit<TextConfig, 'id'>>) => {
+          const { plates } = get();
+          const updated = plates.map(p =>
+            p.id === plateId
+              ? {
+                  ...p,
+                  texts: p.texts.map(txt =>
+                    txt.id === textId ? { ...txt, ...updates } : txt
+                  ),
+                }
+              : p
+          );
+          set({ plates: updated });
+        },
+
         // 전역 기본 색상 설정
         setGlobalPlateColor: (color: string) => {
           set({ globalPlateColor: color });
@@ -170,15 +218,42 @@ export const usePlateStore = create<PlateStore>()(
           try {
             const data = JSON.parse(str);
 
-            // plates의 images를 File 객체로 복원
+            // plates의 images를 File 객체로 복원 + 구버전 텍스트 마이그레이션
             if (data.state.plates) {
               const restoredPlates = await Promise.all(
                 data.state.plates.map(async (plate: any) => {
+                  let migratedPlate = { ...plate };
+
+                  // 1. 이미지 복원
                   if (plate.images && Array.isArray(plate.images)) {
                     const restoredImages = deserializeImages(plate.images);
-                    return { ...plate, images: restoredImages };
+                    migratedPlate.images = restoredImages;
                   }
-                  return plate;
+
+                  // 2. 구버전 텍스트 필드를 texts 배열로 마이그레이션
+                  if (!migratedPlate.texts && plate.text !== undefined) {
+                    const hasContent = plate.text && plate.text.trim().length > 0;
+                    migratedPlate.texts = hasContent
+                      ? [
+                          {
+                            id: generateUUID(),
+                            content: plate.text,
+                            font: plate.textFont || 'Pretendard-Regular',
+                            size: plate.textSize || 10,
+                            heightOffset: plate.textHeightOffset || 0,
+                            horizontalOffset: plate.textHorizontalOffset || 0,
+                          },
+                        ]
+                      : [];
+                    // 구버전 필드 제거
+                    delete migratedPlate.text;
+                    delete migratedPlate.textFont;
+                    delete migratedPlate.textSize;
+                    delete migratedPlate.textHeightOffset;
+                    delete migratedPlate.textHorizontalOffset;
+                  }
+
+                  return migratedPlate;
                 })
               );
               data.state.plates = restoredPlates;

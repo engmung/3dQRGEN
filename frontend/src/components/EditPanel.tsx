@@ -7,6 +7,7 @@ import { WiFiForm } from './forms/WiFiForm';
 import { EmailForm } from './forms/EmailForm';
 import { ColorGuideModal } from './ColorGuideModal';
 import { getPricingSettings } from '../utils/pricing';
+import { generateUUID } from '../types/design';
 
 interface ColorInfo {
   name: string;
@@ -44,6 +45,9 @@ export function EditPanel() {
   const updatePlate = useDesignStore((state) => state.updatePlate);
   const removePlate = useDesignStore((state) => state.removePlate);
   const selectPlate = useDesignStore((state) => state.selectPlate);
+  const addText = useDesignStore((state) => state.addText);
+  const removeText = useDesignStore((state) => state.removeText);
+  const updateText = useDesignStore((state) => state.updateText);
 
   const [showColorGuide, setShowColorGuide] = useState(false);
   const [availableColors, setAvailableColors] = useState<ColorInfo[]>([]);
@@ -246,70 +250,122 @@ export function EditPanel() {
       <div style={sectionStyle}>
         <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>텍스트 설정</h3>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>텍스트 내용</label>
-          <input
-            type="text"
-            value={selectedPlate.text}
-            onChange={(e) => updatePlate(selectedPlate.id, { text: e.target.value })}
-            placeholder="텍스트 입력 (선택사항)"
-            style={inputStyle}
-          />
-        </div>
+        <button
+          onClick={() => addText(selectedPlate.id, '')}
+          style={{
+            width: '100%',
+            padding: '10px',
+            marginBottom: '15px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 'bold'
+          }}
+        >
+          + 텍스트 추가
+        </button>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>폰트</label>
-          <select
-            value={selectedPlate.textFont}
-            onChange={(e) => updatePlate(selectedPlate.id, { textFont: e.target.value })}
-            style={inputStyle}
-          >
-            {Object.entries(AVAILABLE_FONTS).map(([key, info]) => (
-              <option key={key} value={key}>
-                {info.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {selectedPlate.texts.length === 0 && (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+            텍스트를 추가하세요
+          </div>
+        )}
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>텍스트 크기 (mm): {selectedPlate.textSize.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.textSize}
-            onChange={(e) => updatePlate(selectedPlate.id, { textSize: Number(e.target.value) })}
-            min="5"
-            max="30"
-            step="0.5"
-            style={{ width: '100%' }}
-          />
-        </div>
+        {selectedPlate.texts.map((txt, index) => (
+          <div key={txt.id} style={{
+            marginBottom: '20px',
+            padding: '12px',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '4px',
+            border: '1px solid #ddd'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 'bold' }}>텍스트 {index + 1}</span>
+              <button
+                onClick={() => removeText(selectedPlate.id, txt.id)}
+                style={{
+                  padding: '4px 12px',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                제거
+              </button>
+            </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>텍스트 높이 (mm): {selectedPlate.textHeightOffset.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.textHeightOffset}
-            onChange={(e) => updatePlate(selectedPlate.id, { textHeightOffset: Number(e.target.value) })}
-            min="-50"
-            max="70"
-            step="0.1"
-            style={{ width: '100%' }}
-          />
-        </div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={labelStyle}>내용</label>
+              <input
+                type="text"
+                value={txt.content}
+                onChange={(e) => updateText(selectedPlate.id, txt.id, { content: e.target.value })}
+                placeholder="텍스트 입력"
+                style={inputStyle}
+              />
+            </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={labelStyle}>텍스트 좌우 (mm): {selectedPlate.textHorizontalOffset.toFixed(1)}</label>
-          <input
-            type="range"
-            value={selectedPlate.textHorizontalOffset}
-            onChange={(e) => updatePlate(selectedPlate.id, { textHorizontalOffset: Number(e.target.value) })}
-            min="-30"
-            max="30"
-            step="0.1"
-            style={{ width: '100%' }}
-          />
-        </div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={labelStyle}>폰트</label>
+              <select
+                value={txt.font}
+                onChange={(e) => updateText(selectedPlate.id, txt.id, { font: e.target.value })}
+                style={inputStyle}
+              >
+                {Object.entries(AVAILABLE_FONTS).map(([key, info]) => (
+                  <option key={key} value={key}>
+                    {info.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <label style={labelStyle}>크기 (mm): {txt.size.toFixed(1)}</label>
+              <input
+                type="range"
+                value={txt.size}
+                onChange={(e) => updateText(selectedPlate.id, txt.id, { size: Number(e.target.value) })}
+                min="2"
+                max="30"
+                step="0.1"
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <label style={labelStyle}>높이 (mm): {txt.heightOffset.toFixed(1)}</label>
+              <input
+                type="range"
+                value={txt.heightOffset}
+                onChange={(e) => updateText(selectedPlate.id, txt.id, { heightOffset: Number(e.target.value) })}
+                min={selectedPlate.productType === 'card' ? -selectedPlate.cardHeight / 2 : -50}
+                max={selectedPlate.productType === 'card' ? selectedPlate.cardHeight / 2 : 70}
+                step="0.01"
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <label style={labelStyle}>좌우 (mm): {txt.horizontalOffset.toFixed(1)}</label>
+              <input
+                type="range"
+                value={txt.horizontalOffset}
+                onChange={(e) => updateText(selectedPlate.id, txt.id, { horizontalOffset: Number(e.target.value) })}
+                min={selectedPlate.productType === 'card' ? -selectedPlate.cardWidth / 2 : -30}
+                max={selectedPlate.productType === 'card' ? selectedPlate.cardWidth / 2 : 30}
+                step="0.01"
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 이미지 설정 */}

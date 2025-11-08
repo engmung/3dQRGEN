@@ -105,10 +105,10 @@ export function PlateCard({
           </div>
 
           {/* Text addon */}
-          {plate.text && plate.text.trim().length > 0 && (
+          {plate.texts.filter(txt => txt.content && txt.content.trim().length > 0).length > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-              <span>+ 텍스트</span>
-              <span>{formatPrice(pricingSettings.text_price)}</span>
+              <span>+ 텍스트 {plate.texts.filter(txt => txt.content && txt.content.trim().length > 0).length}개</span>
+              <span>{formatPrice(pricingSettings.text_price * plate.texts.filter(txt => txt.content && txt.content.trim().length > 0).length)}</span>
             </div>
           )}
 

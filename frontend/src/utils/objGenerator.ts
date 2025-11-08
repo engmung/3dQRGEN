@@ -67,12 +67,10 @@ export async function generateOBJFromCartItem(
             item.plateConfig.cardThickness,
             item.plateConfig.plateColor,
             item.geometries.qr,
-            item.geometries.text,
+            item.geometries.texts || [],
             item.geometries.images,
             item.geometries.qrPosition,
             item.geometries.qrQuaternion,
-            item.geometries.textPosition,
-            item.geometries.textQuaternion,
             item.geometries.qrColor,
             item.geometries.zScale,
             emptyTransform
@@ -92,12 +90,10 @@ export async function generateOBJFromCartItem(
         allMeshes.push(
           ...collectQRGeometries(
             item.geometries.qr,
-            item.geometries.text,
+            item.geometries.texts || [],
             item.geometries.images,
             item.geometries.qrPosition,
             item.geometries.qrQuaternion,
-            item.geometries.textPosition,
-            item.geometries.textQuaternion,
             item.geometries.qrColor,
             item.geometries.zScale,
             transforms.frontTransform

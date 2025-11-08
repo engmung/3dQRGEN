@@ -108,12 +108,10 @@ export function collectGLBMeshes(
  */
 export function collectQRGeometries(
   qrGeometry: THREE.BufferGeometry | null,
-  textGeometry: THREE.BufferGeometry | null,
+  textGeometries: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>,
   imageGeometries: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>,
   qrPosition: THREE.Vector3,
   qrQuaternion: THREE.Quaternion,
-  textPosition: THREE.Vector3 | null,
-  textQuaternion: THREE.Quaternion | null,
   qrColor: string,
   zScale: number,
   debugTransform: Transform
@@ -139,23 +137,24 @@ export function collectQRGeometries(
     meshes.push({ geometry: geo, material, partName: 'qr' });
   }
 
-  // Text Geometry
-  if (textGeometry && textPosition && textQuaternion) {
+  // Text Geometries (여러 개 지원)
+  textGeometries.forEach(({ geometry: textGeometry, position: textPosition, quaternion: textQuaternion }, index) => {
     const geo = textGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
 
+    // 이미지와 동일한 방식으로 처리 (zScale 대신 1 사용)
     const textMatrix = new THREE.Matrix4().compose(
       textPosition,
       textQuaternion,
-      new THREE.Vector3(1, 1, 1)
+      new THREE.Vector3(1, 1, 1) // 이미지처럼 scale 1로
     );
     geo.applyMatrix4(textMatrix);
 
     // 디버깅 transform 적용
     applyDebugTransform(geo, debugTransform);
 
-    meshes.push({ geometry: geo, material, partName: 'text' });
-  }
+    meshes.push({ geometry: geo, material, partName: `text_${index + 1}` });
+  });
 
   // Image Geometries (여러 개 지원)
   imageGeometries.forEach(({ geometry: imageGeometry, position: imagePosition, quaternion: imageQuaternion }, index) => {
@@ -209,12 +208,10 @@ function applyDebugTransform(geometry: THREE.BufferGeometry, transform: Transfor
  * @param cardThickness - 명함 두께 (mm)
  * @param plateColor - 명함 색상
  * @param qrGeometry - QR Geometry
- * @param textGeometry - 텍스트 Geometry
+ * @param textGeometries - 텍스트 Geometry 배열
  * @param imageGeometries - 이미지 Geometry 배열
  * @param qrPosition - QR 위치
  * @param qrQuaternion - QR 회전
- * @param textPosition - 텍스트 위치
- * @param textQuaternion - 텍스트 회전
  * @param qrColor - QR/텍스트/이미지 색상
  * @param zScale - QR 두께 스케일
  * @param debugTransform - 디버깅용 transform
@@ -225,12 +222,10 @@ export function collectBusinessCardMeshes(
   cardThickness: number,
   plateColor: string,
   qrGeometry: THREE.BufferGeometry | null,
-  textGeometry: THREE.BufferGeometry | null,
+  textGeometries: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>,
   imageGeometries: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>,
   qrPosition: THREE.Vector3,
   qrQuaternion: THREE.Quaternion,
-  textPosition: THREE.Vector3 | null,
-  textQuaternion: THREE.Quaternion | null,
   qrColor: string,
   zScale: number,
   debugTransform: Transform
@@ -276,11 +271,12 @@ export function collectBusinessCardMeshes(
     meshes.push({ geometry: geo, material, partName: 'qr' });
   }
 
-  // 3. Text Geometry
-  if (textGeometry && textPosition && textQuaternion) {
+  // 3. Text Geometries (여러 개 지원)
+  textGeometries.forEach(({ geometry: textGeometry, position: textPosition, quaternion: textQuaternion }, index) => {
     const geo = textGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
 
+    // 이미지와 동일한 방식으로 처리 (scale은 1)
     // 1. position/quaternion 적용
     const textMatrix = new THREE.Matrix4().compose(
       textPosition,
@@ -294,8 +290,8 @@ export function collectBusinessCardMeshes(
 
     applyDebugTransform(geo, debugTransform);
 
-    meshes.push({ geometry: geo, material, partName: 'text' });
-  }
+    meshes.push({ geometry: geo, material, partName: `text_${index + 1}` });
+  });
 
   // 4. Image Geometries
   imageGeometries.forEach(({ geometry: imageGeometry, position: imagePosition, quaternion: imageQuaternion }, index) => {
@@ -391,7 +387,7 @@ export function alignToGround(meshes: CollectedMesh[]): CollectedMesh[] {
   // 각 파트별로 바운딩 박스 계산 및 접지
   partGroups.forEach((partMeshes, partName) => {
     // QR/텍스트/이미지는 기준 파트(Front 또는 Card)와 같은 Y 오프셋 사용 (개별 접지 안 함)
-    if (partName === 'qr' || partName === 'text' || partName.startsWith('image_')) {
+    if (partName === 'qr' || partName === 'text' || partName.startsWith('text_') || partName.startsWith('image_')) {
       partMeshes.forEach((mesh) => {
         const geo = mesh.geometry.clone();
         geo.translate(0, baseOffsetY, 0); // 기준 파트와 같은 오프셋

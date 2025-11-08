@@ -26,6 +26,16 @@ export interface ImageConfig {
   horizontalOffset: number;   // 이미지 좌우 오프셋 (rightVector 방향, mm)
 }
 
+// 텍스트 설정
+export interface TextConfig {
+  id: string;
+  content: string;            // 텍스트 내용
+  font: string;               // 폰트명
+  size: number;               // 텍스트 크기 (mm)
+  heightOffset: number;       // 텍스트 높이 오프셋 (upVector 방향, mm)
+  horizontalOffset: number;   // 텍스트 좌우 오프셋 (rightVector 방향, mm)
+}
+
 // 개별 QR 판 설정
 export interface QRPlateConfig {
   id: string;
@@ -50,12 +60,8 @@ export interface QRPlateConfig {
   qrHeightOffset: number;  // QR 높이 오프셋 (upVector 방향, mm)
   qrHorizontalOffset: number; // QR 좌우 오프셋 (rightVector 방향, mm)
 
-  // 텍스트 설정
-  text: string;                    // 텍스트 내용
-  textFont: string;                // 폰트명
-  textSize: number;                // 텍스트 크기 (mm)
-  textHeightOffset: number;        // 텍스트 높이 오프셋 (upVector 방향, mm)
-  textHorizontalOffset: number;    // 텍스트 좌우 오프셋 (rightVector 방향, mm)
+  // 텍스트 설정 (배열로 변경)
+  texts: TextConfig[];
 
   // 이미지 설정 (배열로 변경)
   images: ImageConfig[];
@@ -118,11 +124,7 @@ export const createDefaultPlate = (
   qrThickness: 2,          // 기본 2mm
   qrHeightOffset: 0,       // 기본 0mm (upVector 방향 오프셋, GLB 표면에 맞춤)
   qrHorizontalOffset: 0,   // 기본 0mm (rightVector 방향 오프셋)
-  text: '',                // 기본 빈 텍스트
-  textFont: 'Pretendard-Regular', // 기본 폰트
-  textSize: 10,            // 기본 10mm
-  textHeightOffset: 0,     // 기본 0mm
-  textHorizontalOffset: 0, // 기본 0mm
+  texts: [],               // 기본 텍스트 없음 (빈 배열)
   images: [],              // 기본 이미지 없음 (빈 배열)
   plateColor,
   qrColor, // QR, 텍스트, 이미지 색상 공용

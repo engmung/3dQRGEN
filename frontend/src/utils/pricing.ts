@@ -34,6 +34,7 @@ export async function getPricingSettings(): Promise<PricingSettings> {
     // 기본값 반환
     return {
       base_price: 20000,
+      card_base_price: 10000,
       text_price: 5000,
       image_price: 5000,
     };
@@ -61,12 +62,13 @@ export function calculatePlatePrice(
 ): number {
   // 제품 타입에 따라 기본 가격 설정
   let price = plateConfig.productType === 'card'
-    ? 10000  // 명함 기본가: 10,000원
-    : pricingSettings.base_price;  // 거치대 기본가: 20,000원
+    ? pricingSettings.card_base_price  // 명함 기본가
+    : pricingSettings.base_price;      // 거치대 기본가
 
-  // 텍스트가 있으면 추가 요금
-  if (plateConfig.text && plateConfig.text.trim().length > 0) {
-    price += pricingSettings.text_price;
+  // 텍스트 개수만큼 추가 요금 (비어있지 않은 텍스트만 카운트)
+  const textCount = plateConfig.texts.filter(txt => txt.content && txt.content.trim().length > 0).length;
+  if (textCount > 0) {
+    price += pricingSettings.text_price * textCount;
   }
 
   // 이미지 개수만큼 추가 요금

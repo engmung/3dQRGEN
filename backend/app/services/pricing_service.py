@@ -13,7 +13,7 @@ def calculate_product_price(customization_data: dict, pricing: PricingSetting, p
     - routers/order_groups.py calculate_line_item_price() (Lines 29-52)
 
     Args:
-        customization_data: 판 설정 데이터 (text, images 포함)
+        customization_data: 판 설정 데이터 (texts, images 포함)
         pricing: 현재 가격 설정
         product_type: "stand" (거치대) or "card" (명함)
 
@@ -26,10 +26,18 @@ def calculate_product_price(customization_data: dict, pricing: PricingSetting, p
     else:
         price = pricing.base_price
 
-    # Add text price if text content exists
-    text_content = customization_data.get('text', '')
-    if text_content and text_content.strip():
-        price += pricing.text_price
+    # Add text price for each non-empty text
+    # Support both old format (single 'text' field) and new format (texts array)
+    texts = customization_data.get('texts', [])
+    if texts and isinstance(texts, list):
+        # New format: texts array
+        text_count = sum(1 for txt in texts if txt.get('content', '').strip())
+        price += pricing.text_price * text_count
+    else:
+        # Old format: single text field (backward compatibility)
+        text_content = customization_data.get('text', '')
+        if text_content and text_content.strip():
+            price += pricing.text_price
 
     # Add image price for each image
     images = customization_data.get('images', [])

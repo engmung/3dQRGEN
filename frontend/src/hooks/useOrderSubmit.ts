@@ -129,7 +129,7 @@ export function useOrderSubmit(params: UseOrderSubmitParams) {
           qr_size: plate.qrSize,
           qr_depth: plate.qrThickness,
           qr_y_offset: plate.qrHeightOffset,
-          text: plate.text,
+          texts: plate.texts, // Multi-text array
           images: plate.images,
           qrType: plate.qrType,
           plateColor: plate.plateColor,
