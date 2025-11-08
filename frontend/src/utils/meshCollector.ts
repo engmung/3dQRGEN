@@ -1,12 +1,10 @@
 import * as THREE from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Transform } from '../store/objPreviewStore';
+import type { CollectedMesh } from '../types/mesh';
 
-export interface CollectedMesh {
-  geometry: THREE.BufferGeometry;
-  material: THREE.Material | THREE.Material[];
-  partName: string; // 'back', 'brige', 'front', 'pin'
-}
+// Re-export CollectedMesh for backward compatibility
+export type { CollectedMesh };
 
 /**
  * GLB 파츠에서 모든 메시 수집 (world matrix 적용 + 디버깅 transform)
