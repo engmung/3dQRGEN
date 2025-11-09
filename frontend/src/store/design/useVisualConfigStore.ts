@@ -54,45 +54,8 @@ export const useTextConfig = () => {
   const selectedPlateId = usePlateStore(state => state.selectedPlateId);
   const updatePlate = usePlateStore(state => state.updatePlate);
 
-  const selectedPlate = plates.find(p => p.id === selectedPlateId);
-
-  return {
-    text: selectedPlate?.text ?? '',
-    textFont: selectedPlate?.textFont ?? 'Pretendard-Regular',
-    textSize: selectedPlate?.textSize ?? 10,
-    textHeightOffset: selectedPlate?.textHeightOffset ?? 0,
-    textHorizontalOffset: selectedPlate?.textHorizontalOffset ?? 0,
-
-    setText: (text: string) => {
-      if (selectedPlateId) {
-        updatePlate(selectedPlateId, { text });
-      }
-    },
-
-    setTextFont: (textFont: string) => {
-      if (selectedPlateId) {
-        updatePlate(selectedPlateId, { textFont });
-      }
-    },
-
-    setTextSize: (textSize: number) => {
-      if (selectedPlateId) {
-        updatePlate(selectedPlateId, { textSize });
-      }
-    },
-
-    setTextHeightOffset: (textHeightOffset: number) => {
-      if (selectedPlateId) {
-        updatePlate(selectedPlateId, { textHeightOffset });
-      }
-    },
-
-    setTextHorizontalOffset: (textHorizontalOffset: number) => {
-      if (selectedPlateId) {
-        updatePlate(selectedPlateId, { textHorizontalOffset });
-      }
-    },
-  };
+  // 다중 텍스트로 마이그레이션되어 더 이상 사용하지 않음
+  return {};
 };
 
 /**

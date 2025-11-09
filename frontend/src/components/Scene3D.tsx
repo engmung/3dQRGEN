@@ -24,15 +24,10 @@ interface Scene3DProps {
     plateId: string,
     geometries: {
       qr: THREE.BufferGeometry | null;
-      text: THREE.BufferGeometry | null;
-      image: THREE.BufferGeometry | null;
+      texts: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
       images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
       qrPosition: THREE.Vector3;
       qrQuaternion: THREE.Quaternion;
-      textPosition: THREE.Vector3 | null;
-      textQuaternion: THREE.Quaternion | null;
-      imagePosition: THREE.Vector3 | null;
-      imageQuaternion: THREE.Quaternion | null;
       qrColor: string;
       zScale: number;
     }

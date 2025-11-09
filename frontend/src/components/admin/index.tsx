@@ -33,6 +33,7 @@ export function Admin({ onLoadingComplete }: AdminProps = {}) {
   const [editingPricing, setEditingPricing] = useState(false);
   const [newPricing, setNewPricing] = useState<PricingSettings>({
     base_price: 20000,
+    card_base_price: 10000,
     text_price: 5000,
     image_price: 5000,
     announcement_message: '',

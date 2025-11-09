@@ -201,7 +201,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                   </div>
 
                   {/* 텍스트/이미지 정보 */}
-                  {(item.plateConfig.text || item.plateConfig.images.length > 0) && (
+                  {((item.plateConfig.texts || []).length > 0 || (item.plateConfig.images || []).length > 0) && (
                     <div
                       style={{
                         fontSize: '11px',
@@ -209,8 +209,8 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                         marginBottom: '8px',
                       }}
                     >
-                      {item.plateConfig.text && <div>✏️ 텍스트: {item.plateConfig.text.substring(0, 20)}{item.plateConfig.text.length > 20 ? '...' : ''}</div>}
-                      {item.plateConfig.images.length > 0 && <div>🖼️ 이미지: {item.plateConfig.images[0].file.name}</div>}
+                      {(item.plateConfig.texts || []).length > 0 && <div>✏️ 텍스트: {(item.plateConfig.texts || [])[0].content.substring(0, 20)}{(item.plateConfig.texts || [])[0].content.length > 20 ? '...' : ''}</div>}
+                      {(item.plateConfig.images || []).length > 0 && <div>🖼️ 이미지: {(item.plateConfig.images || [])[0].file.name}</div>}
                     </div>
                   )}
 
