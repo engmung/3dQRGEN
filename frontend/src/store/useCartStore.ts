@@ -9,15 +9,10 @@ export interface CartItem {
   quantity: number;  // 주문 수량
   geometries: {  // QR/텍스트/이미지 geometry 정보
     qr: THREE.BufferGeometry | null;
-    text: THREE.BufferGeometry | null;
-    image: THREE.BufferGeometry | null;
+    texts: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
     qrPosition: THREE.Vector3;
     qrQuaternion: THREE.Quaternion;
-    textPosition: THREE.Vector3 | null;
-    textQuaternion: THREE.Quaternion | null;
-    imagePosition: THREE.Vector3 | null;
-    imageQuaternion: THREE.Quaternion | null;
     qrColor: string;
     zScale: number;
   } | null;
@@ -51,8 +46,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
       quantity: 1, // 기본 수량 1개
       geometries: geometries ? {
         qr: geometries.qr?.clone() ?? null,
-        text: geometries.text?.clone() ?? null,
-        image: geometries.image?.clone() ?? null,
+        texts: geometries.texts.map(txt => ({
+          geometry: txt.geometry.clone(),
+          position: txt.position.clone(),
+          quaternion: txt.quaternion.clone()
+        })),
         images: geometries.images.map(img => ({
           geometry: img.geometry.clone(),
           position: img.position.clone(),
@@ -60,10 +58,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
         })),
         qrPosition: geometries.qrPosition.clone(),
         qrQuaternion: geometries.qrQuaternion.clone(),
-        textPosition: geometries.textPosition?.clone() ?? null,
-        textQuaternion: geometries.textQuaternion?.clone() ?? null,
-        imagePosition: geometries.imagePosition?.clone() ?? null,
-        imageQuaternion: geometries.imageQuaternion?.clone() ?? null,
         qrColor: geometries.qrColor,
         zScale: geometries.zScale,
       } : null,

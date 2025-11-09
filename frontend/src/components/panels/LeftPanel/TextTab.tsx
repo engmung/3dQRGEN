@@ -37,13 +37,14 @@ export function TextTab({ plate }: TextTabProps) {
     <div>
       {/* 텍스트 추가 버튼 */}
       <div style={{ marginBottom: '15px' }}>
-        <Button
-          onClick={() => addText(plate.id, '')}
-          variant="primary"
-          style={{ width: '100%' }}
-        >
-          + 텍스트 추가
-        </Button>
+        <div style={{ width: '100%' }}>
+          <Button
+            onClick={() => addText(plate.id, '')}
+            variant="primary"
+          >
+            + 텍스트 추가
+          </Button>
+        </div>
       </div>
 
       {/* 텍스트 리스트 */}

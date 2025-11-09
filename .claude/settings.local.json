@@ -15,7 +15,8 @@
       "Bash(echo \"Exit code: $?\")",
       "Bash(git commit:*)",
       "Bash(curl:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

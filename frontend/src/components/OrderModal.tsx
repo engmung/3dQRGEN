@@ -9,6 +9,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 
 interface PricingSettings {
   base_price: number;
+  card_base_price: number;
   text_price: number;
   image_price: number;
 }

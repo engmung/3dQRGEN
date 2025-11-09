@@ -54,14 +54,14 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
             </div>
 
             <div style={styles.itemDetails}>
-              <div>기본: {formatPrice(pricingSettings.base_price)}</div>
-              {item.plateConfig.text && item.plateConfig.text.trim().length > 0 && (
-                <div>+ 텍스트: {formatPrice(pricingSettings.text_price)}</div>
+              <div>기본: {formatPrice(item.plateConfig.productType === 'card' ? pricingSettings.card_base_price : pricingSettings.base_price)}</div>
+              {(item.plateConfig.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length > 0 && (
+                <div>+ 텍스트 {(item.plateConfig.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length}개: {formatPrice(pricingSettings.text_price * (item.plateConfig.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length)}</div>
               )}
-              {item.plateConfig.images.length > 0 && (
+              {(item.plateConfig.images || []).length > 0 && (
                 <div>
-                  + 이미지 {item.plateConfig.images.length}개:{' '}
-                  {formatPrice(pricingSettings.image_price * item.plateConfig.images.length)}
+                  + 이미지 {(item.plateConfig.images || []).length}개:{' '}
+                  {formatPrice(pricingSettings.image_price * (item.plateConfig.images || []).length)}
                 </div>
               )}
               <div style={styles.itemSubtotal}>

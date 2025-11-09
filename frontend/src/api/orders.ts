@@ -209,6 +209,7 @@ export interface LineItemData {
   customization: any;
   quantity: number;
   unit_price?: number;  // optional, for validation
+  product_type?: string;  // "stand" or "card"
 }
 
 export interface OrderGroupResponse {

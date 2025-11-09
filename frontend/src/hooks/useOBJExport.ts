@@ -33,15 +33,10 @@ interface UseOBJExportParams {
 
 type QRGeometries = {
   qr: THREE.BufferGeometry | null;
-  text: THREE.BufferGeometry | null;
-  image: THREE.BufferGeometry | null;
+  texts: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
   images: Array<{ geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion }>;
   qrPosition: THREE.Vector3;
   qrQuaternion: THREE.Quaternion;
-  textPosition: THREE.Vector3 | null;
-  textQuaternion: THREE.Quaternion | null;
-  imagePosition: THREE.Vector3 | null;
-  imageQuaternion: THREE.Quaternion | null;
   qrColor: string;
   zScale: number;
 };
@@ -108,12 +103,10 @@ export function useOBJExport(params: UseOBJExportParams) {
         allMeshes.push(
           ...collectQRGeometries(
             plateGeometries.qr,
-            plateGeometries.text,
+            plateGeometries.texts,
             plateGeometries.images,
             plateGeometries.qrPosition,
             plateGeometries.qrQuaternion,
-            plateGeometries.textPosition,
-            plateGeometries.textQuaternion,
             plateGeometries.qrColor,
             plateGeometries.zScale,
             objTransforms.frontTransform
@@ -199,12 +192,10 @@ export function useOBJExport(params: UseOBJExportParams) {
           allMeshes.push(
             ...collectQRGeometries(
               plateGeometries.qr,
-              plateGeometries.text,
+              plateGeometries.texts,
               plateGeometries.images,
               plateGeometries.qrPosition,
               plateGeometries.qrQuaternion,
-              plateGeometries.textPosition,
-              plateGeometries.textQuaternion,
               plateGeometries.qrColor,
               plateGeometries.zScale,
               objTransforms.frontTransform

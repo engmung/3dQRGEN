@@ -10,7 +10,7 @@ interface UseTextGeometriesParams {
   qrThickness: number; // zScale 계산용 (실제 사용 안 함)
 }
 
-interface TextGeometryResult {
+export interface TextGeometryResult {
   id: string;
   geometry: THREE.BufferGeometry;
   config: TextConfig;
@@ -71,7 +71,7 @@ export const useTextGeometries = ({
       })
     ).then((results) => {
       if (isCancelled) return;
-      const validResults = results.filter((r): r is TextGeometryResult => r !== null);
+      const validResults = results.filter(r => r !== null) as TextGeometryResult[];
       setTextGeometries(validResults);
     });
 
