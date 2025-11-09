@@ -68,7 +68,7 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
       clearTimeout(timer);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]); // onClose는 안정적인 함수라고 가정
 
   if (!isOpen) return null;
 
