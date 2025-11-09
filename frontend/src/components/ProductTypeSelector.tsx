@@ -38,7 +38,11 @@ export function ProductTypeSelector() {
   if (!selectedPlate) return null;
 
   const handleProductTypeChange = (productType: ProductType) => {
-    updatePlate(selectedPlate.id, { productType });
+    updatePlate(selectedPlate.id, {
+      productType,
+      texts: [],  // 제품 유형 변경 시 배열 초기화
+      images: [],  // 제품 유형 변경 시 배열 초기화
+    });
   };
 
   return (

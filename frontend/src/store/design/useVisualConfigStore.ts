@@ -113,7 +113,11 @@ export const useProductTypeConfig = () => {
 
     setProductType: (productType: ProductType) => {
       if (selectedPlateId) {
-        updatePlate(selectedPlateId, { productType });
+        updatePlate(selectedPlateId, {
+          productType,
+          texts: [],  // 제품 유형 변경 시 배열 초기화
+          images: [],  // 제품 유형 변경 시 배열 초기화
+        });
       }
     },
 

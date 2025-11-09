@@ -15,9 +15,6 @@ export function useMediaQuery(query: string): boolean {
       setMatches(e.matches);
     };
 
-    // 초기값 설정
-    setMatches(mediaQuery.matches);
-
     // 이벤트 리스너 등록
     mediaQuery.addEventListener('change', handleChange);
 
