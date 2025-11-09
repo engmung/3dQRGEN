@@ -105,18 +105,18 @@ export function PlateCard({
           </div>
 
           {/* Text addon */}
-          {plate.texts.filter(txt => txt.content && txt.content.trim().length > 0).length > 0 && (
+          {(plate.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-              <span>+ 텍스트 {plate.texts.filter(txt => txt.content && txt.content.trim().length > 0).length}개</span>
-              <span>{formatPrice(pricingSettings.text_price * plate.texts.filter(txt => txt.content && txt.content.trim().length > 0).length)}</span>
+              <span>+ 텍스트 {(plate.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length}개</span>
+              <span>{formatPrice(pricingSettings.text_price * (plate.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length)}</span>
             </div>
           )}
 
           {/* Image addon */}
-          {plate.images.length > 0 && (
+          {(plate.images || []).length > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-              <span>+ 이미지 {plate.images.length}개</span>
-              <span>{formatPrice(pricingSettings.image_price * plate.images.length)}</span>
+              <span>+ 이미지 {(plate.images || []).length}개</span>
+              <span>{formatPrice(pricingSettings.image_price * (plate.images || []).length)}</span>
             </div>
           )}
 

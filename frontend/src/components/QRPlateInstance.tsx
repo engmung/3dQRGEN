@@ -54,12 +54,12 @@ export const QRPlateInstance = ({
   });
 
   const textGeometriesArray = useTextGeometries({
-    texts: config.texts,
+    texts: config.texts || [],
     qrThickness: config.qrThickness,
   });
 
   const imageGeometriesArray = useImageGeometry({
-    images: config.images,
+    images: config.images || [],
     qrThickness: config.qrThickness,
   });
 
