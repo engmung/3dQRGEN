@@ -61,7 +61,7 @@ export function ImageTab({ plate }: ImageTabProps) {
       </div>
 
       {/* 이미지 리스트 */}
-      {plate.images.map((img, index) => (
+      {(plate.images || []).map((img, index) => (
         <div
           key={img.id}
           style={{
@@ -151,7 +151,7 @@ export function ImageTab({ plate }: ImageTabProps) {
         </div>
       ))}
 
-      {plate.images.length === 0 && (
+      {(plate.images || []).length === 0 && (
         <div
           style={{
             padding: '20px',

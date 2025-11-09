@@ -47,7 +47,7 @@ export function TextTab({ plate }: TextTabProps) {
       </div>
 
       {/* 텍스트 리스트 */}
-      {plate.texts.map((txt, index) => (
+      {(plate.texts || []).map((txt, index) => (
         <div
           key={txt.id}
           style={{
@@ -129,7 +129,7 @@ export function TextTab({ plate }: TextTabProps) {
         </div>
       ))}
 
-      {plate.texts.length === 0 && (
+      {(plate.texts || []).length === 0 && (
         <div
           style={{
             padding: '20px',
