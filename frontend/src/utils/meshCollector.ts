@@ -142,11 +142,11 @@ export function collectQRGeometries(
     const geo = textGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
 
-    // 이미지와 동일한 방식으로 처리 (zScale 대신 1 사용)
+    // QR/이미지와 동일하게 zScale 적용
     const textMatrix = new THREE.Matrix4().compose(
       textPosition,
       textQuaternion,
-      new THREE.Vector3(1, 1, 1) // 이미지처럼 scale 1로
+      new THREE.Vector3(1, 1, zScale) // Z축 스케일 적용 (두께)
     );
     geo.applyMatrix4(textMatrix);
 
@@ -276,12 +276,12 @@ export function collectBusinessCardMeshes(
     const geo = textGeometry.clone();
     const material = new THREE.MeshStandardMaterial({ color: qrColor });
 
-    // 이미지와 동일한 방식으로 처리 (scale은 1)
+    // QR/이미지와 동일하게 zScale 적용
     // 1. position/quaternion 적용
     const textMatrix = new THREE.Matrix4().compose(
       textPosition,
       textQuaternion,
-      new THREE.Vector3(1, 1, 1)
+      new THREE.Vector3(1, 1, zScale) // Z축 스케일 적용 (두께)
     );
     geo.applyMatrix4(textMatrix);
 
@@ -302,7 +302,7 @@ export function collectBusinessCardMeshes(
     const imageMatrix = new THREE.Matrix4().compose(
       imagePosition,
       imageQuaternion,
-      new THREE.Vector3(1, 1, 1)
+      new THREE.Vector3(1, 1, zScale) // Z축 스케일 적용 (두께)
     );
     geo.applyMatrix4(imageMatrix);
 
