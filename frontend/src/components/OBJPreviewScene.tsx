@@ -72,6 +72,8 @@ export const OBJPreviewScene = ({ gltfs, plateColor, qrGeometries }: OBJPreviewS
             qrGeometries.qrQuaternion,
             qrGeometries.qrColor,
             qrGeometries.zScale,
+            selectedPlate.cardCornerStyle ?? 'sharp',
+            selectedPlate.cardCornerRadius ?? 2,
             emptyTransform
           )
         );

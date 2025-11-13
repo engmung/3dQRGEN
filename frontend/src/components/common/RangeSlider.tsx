@@ -62,7 +62,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
 
         {showValue && (
           <div style={styles.valueDisplay}>
-            {value.toFixed(decimals)}
+            {(value ?? 0).toFixed(decimals)}
             {unit && <span style={styles.unit}>{unit}</span>}
           </div>
         )}

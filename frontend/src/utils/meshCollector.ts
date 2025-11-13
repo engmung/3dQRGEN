@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Transform } from '../store/objPreviewStore';
 import type { CollectedMesh } from '../types/mesh';
+import type { CardCornerStyle } from '../types/design';
+import { createCardGeometry } from './geometry/cardGeometry';
 
 // Re-export CollectedMesh for backward compatibility
 export type { CollectedMesh };
@@ -214,6 +216,8 @@ function applyDebugTransform(geometry: THREE.BufferGeometry, transform: Transfor
  * @param qrQuaternion - QR 회전
  * @param qrColor - QR/텍스트/이미지 색상
  * @param zScale - QR 두께 스케일
+ * @param cornerStyle - 모서리 스타일
+ * @param cornerRadius - 둥글게/챔퍼 크기
  * @param debugTransform - 디버깅용 transform
  */
 export function collectBusinessCardMeshes(
@@ -228,6 +232,8 @@ export function collectBusinessCardMeshes(
   qrQuaternion: THREE.Quaternion,
   qrColor: string,
   zScale: number,
+  cornerStyle: CardCornerStyle,
+  cornerRadius: number,
   debugTransform: Transform
 ): CollectedMesh[] {
   const meshes: CollectedMesh[] = [];
@@ -236,8 +242,8 @@ export function collectBusinessCardMeshes(
   // OBJ Export 시에도 동일한 회전 적용 필요
   const cardRotation = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
 
-  // 1. 명함 BoxGeometry 생성
-  const cardGeometry = new THREE.BoxGeometry(cardWidth, cardHeight, cardThickness);
+  // 1. 명함 Geometry 생성 (모서리 스타일 적용)
+  const cardGeometry = createCardGeometry(cardWidth, cardHeight, cardThickness, cornerStyle, cornerRadius);
   const cardMaterial = new THREE.MeshStandardMaterial({ color: plateColor });
 
   // 명함 회전 적용

@@ -87,6 +87,8 @@ export function useOBJExport(params: UseOBJExportParams) {
             plateGeometries.qrQuaternion,
             plateGeometries.qrColor,
             plateGeometries.zScale,
+            plate.cardCornerStyle ?? 'sharp',
+            plate.cardCornerRadius ?? 2,
             emptyTransform
           )
         );
@@ -176,6 +178,8 @@ export function useOBJExport(params: UseOBJExportParams) {
               plateGeometries.qrQuaternion,
               plateGeometries.qrColor,
               plateGeometries.zScale,
+              plate.cardCornerStyle ?? 'sharp',
+              plate.cardCornerRadius ?? 2,
               emptyTransform
             )
           );

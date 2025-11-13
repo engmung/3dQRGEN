@@ -16,7 +16,8 @@
       "Bash(git commit:*)",
       "Bash(curl:*)",
       "Bash(python:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
