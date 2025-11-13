@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import type { QRPlateConfig } from '../store/useDesignStore';
 import type { VertexGroup } from '../utils/glbLoader';
 import { QRPlateInstance } from './QRPlateInstance';
+import { createCardGeometry } from '../utils/geometry/cardGeometry';
 
 interface BusinessCardProps {
   config: QRPlateConfig;
@@ -25,10 +26,16 @@ interface BusinessCardProps {
 }
 
 export function BusinessCard({ config, isSelected, onGeometriesReady }: BusinessCardProps) {
-  // 명함 BoxGeometry
+  // 명함 Geometry (모서리 스타일에 따라 다른 geometry 생성)
   const cardGeometry = useMemo(() => {
-    return new THREE.BoxGeometry(config.cardWidth, config.cardHeight, config.cardThickness);
-  }, [config.cardWidth, config.cardHeight, config.cardThickness]);
+    return createCardGeometry(
+      config.cardWidth,
+      config.cardHeight,
+      config.cardThickness,
+      config.cardCornerStyle ?? 'sharp',
+      config.cardCornerRadius ?? 2
+    );
+  }, [config.cardWidth, config.cardHeight, config.cardThickness, config.cardCornerStyle, config.cardCornerRadius]);
 
   // 명함 Material
   const cardMaterial = useMemo(() => {

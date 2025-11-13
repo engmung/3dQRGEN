@@ -1,6 +1,8 @@
 import { useDesignStore } from '../../../store/useDesignStore';
 import { RangeSlider } from '../../common/RangeSlider';
+import { FormSelect } from '../../common/FormSelect';
 import type { QRPlateConfig } from '../../../store/useDesignStore';
+import type { CardCornerStyle } from '../../../types/design';
 
 interface CardSizeSettingsProps {
   plate: QRPlateConfig;
@@ -44,6 +46,31 @@ export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
         showValue
         decimals={1}
       />
+
+      <FormSelect
+        label="모서리 스타일"
+        value={plate.cardCornerStyle ?? 'sharp'}
+        onChange={(val) => updatePlate(plate.id, { cardCornerStyle: val as CardCornerStyle })}
+        options={[
+          { value: 'sharp', label: '뾰족하게' },
+          { value: 'rounded', label: '둥글게' },
+          { value: 'chamfered', label: '45도 챔퍼' }
+        ]}
+      />
+
+      {(plate.cardCornerStyle ?? 'sharp') !== 'sharp' && (
+        <RangeSlider
+          label={(plate.cardCornerStyle ?? 'sharp') === 'rounded' ? '둥근 정도' : '챔퍼 크기'}
+          value={plate.cardCornerRadius ?? 2}
+          onChange={(val) => updatePlate(plate.id, { cardCornerRadius: val })}
+          min={0.5}
+          max={5}
+          step={0.5}
+          unit="mm"
+          showValue
+          decimals={1}
+        />
+      )}
     </div>
   );
 }

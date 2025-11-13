@@ -73,6 +73,8 @@ export async function generateOBJFromCartItem(
             item.geometries.qrQuaternion,
             item.geometries.qrColor,
             item.geometries.zScale,
+            item.plateConfig.cardCornerStyle ?? 'sharp',
+            item.plateConfig.cardCornerRadius ?? 2,
             emptyTransform
           )
         );

@@ -6,6 +6,9 @@ export type QRType = 'url' | 'wifi' | 'email';
 // 제품 타입 정의
 export type ProductType = 'stand' | 'card';
 
+// 명함 모서리 스타일
+export type CardCornerStyle = 'sharp' | 'rounded' | 'chamfered';
+
 // 이미지 설정 (저장용 - Base64)
 export interface ImageConfigStored {
   id: string;
@@ -47,6 +50,8 @@ export interface QRPlateConfig {
   cardWidth: number;        // 명함 가로 (mm, 기본: 90)
   cardHeight: number;       // 명함 세로 (mm, 기본: 50)
   cardThickness: number;    // 명함 두께 (mm, 기본: 2)
+  cardCornerStyle: CardCornerStyle; // 모서리 스타일 (기본: 'sharp')
+  cardCornerRadius: number; // 둥글게/챔퍼 크기 (mm, 기본: 2)
 
   // QR 타입 및 데이터
   qrType: QRType;          // QR 타입
@@ -106,6 +111,8 @@ export const createDefaultPlate = (
   cardWidth: 90,           // 명함 가로 (기본: 90mm)
   cardHeight: 50,          // 명함 세로 (기본: 50mm)
   cardThickness: 2,        // 명함 두께 (기본: 2mm)
+  cardCornerStyle: 'sharp', // 모서리 스타일 (기본: 뾰족하게)
+  cardCornerRadius: 2,     // 둥글게/챔퍼 크기 (기본: 2mm)
   // QR 타입 및 데이터
   qrType: 'url',                          // 기본 타입: URL
   qrUrl: 'https://example.com',           // URL 기본값
