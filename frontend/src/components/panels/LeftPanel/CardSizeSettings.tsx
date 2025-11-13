@@ -64,7 +64,7 @@ export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
           value={plate.cardCornerRadius ?? 2}
           onChange={(val) => updatePlate(plate.id, { cardCornerRadius: val })}
           min={0.5}
-          max={5}
+          max={20}
           step={0.5}
           unit="mm"
           showValue
