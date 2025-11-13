@@ -110,7 +110,7 @@ export const createDefaultPlate = (
   // 명함 전용 설정
   cardWidth: 90,           // 명함 가로 (기본: 90mm)
   cardHeight: 50,          // 명함 세로 (기본: 50mm)
-  cardThickness: 2,        // 명함 두께 (기본: 2mm)
+  cardThickness: 1.2,      // 명함 두께 (기본: 1.2mm)
   cardCornerStyle: 'sharp', // 모서리 스타일 (기본: 뾰족하게)
   cardCornerRadius: 2,     // 둥글게/챔퍼 크기 (기본: 2mm)
   // QR 타입 및 데이터

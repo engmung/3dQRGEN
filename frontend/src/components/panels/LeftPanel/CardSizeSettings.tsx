@@ -11,8 +11,30 @@ interface CardSizeSettingsProps {
 export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
   const updatePlate = useDesignStore((state) => state.updatePlate);
 
+  const resetToDefault = () => {
+    updatePlate(plate.id, { cardWidth: 90, cardHeight: 50, cardThickness: 1.2 });
+  };
+
   return (
     <div style={{ marginBottom: '20px' }}>
+      <button
+        onClick={resetToDefault}
+        style={{
+          width: '100%',
+          padding: '8px 12px',
+          marginBottom: '12px',
+          backgroundColor: '#4CAF50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          fontWeight: 500,
+        }}
+      >
+        명함 기본 크기로 리셋 (90×50×1.2mm)
+      </button>
+
       <RangeSlider
         label="가로"
         value={plate.cardWidth}
