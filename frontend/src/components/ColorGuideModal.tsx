@@ -11,12 +11,7 @@ interface ColorCombination {
 }
 
 interface ColorGuideModalProps {
-  availableColors: ColorInfo[];
-  allowedCombinations: ColorCombination[];
-  colorWarningMessage: string;
   onClose: () => void;
-  currentPlateColor?: string;
-  currentQrColor?: string;
 }
 
 export function ColorGuideModal({
