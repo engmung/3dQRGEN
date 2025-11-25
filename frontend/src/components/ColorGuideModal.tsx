@@ -20,31 +20,10 @@ interface ColorGuideModalProps {
 }
 
 export function ColorGuideModal({
-  availableColors,
-  allowedCombinations,
-  colorWarningMessage,
   onClose,
-  currentPlateColor,
-  currentQrColor,
 }: ColorGuideModalProps) {
   const isMobile = useIsMobile();
 
-  // 현재 선택된 색상 조합이 허용되는지 확인
-  const isCurrentCombinationValid = () => {
-    if (!currentPlateColor || !currentQrColor) return true;
-    if (currentPlateColor === currentQrColor) return false;
-
-    return allowedCombinations.some(combo =>
-      combo.colors.length === 2 &&
-      combo.colors.includes(currentPlateColor) &&
-      combo.colors.includes(currentQrColor)
-    );
-  };
-
-  const getCurrentColorName = (colorValue: string) => {
-    const color = availableColors.find(c => c.value === colorValue);
-    return color?.name || colorValue;
-  };
   return (
     <div
       style={{
@@ -85,7 +64,7 @@ export function ColorGuideModal({
             paddingBottom: '15px',
           }}
         >
-          <h2 style={{ margin: 0, fontSize: '24px' }}>출력 가능한 색상 안내</h2>
+          <h2 style={{ margin: 0, fontSize: '24px' }}>Color Guide</h2>
           <button
             onClick={onClose}
             style={{
@@ -108,199 +87,40 @@ export function ColorGuideModal({
           </button>
         </div>
 
-        {/* 현재 선택된 색상 조합 경고 */}
-        {currentPlateColor && currentQrColor && !isCurrentCombinationValid() && (
-          <section style={{ marginBottom: '25px' }}>
-            <div
-              style={{
-                padding: '16px',
-                backgroundColor: '#ffebee',
-                border: '2px solid #f44336',
-                borderRadius: '8px',
-              }}
-            >
-              <h3 style={{
-                fontSize: '16px',
-                marginBottom: '12px',
-                color: '#c62828',
-                fontWeight: 700,
-              }}>
-                ⚠️ 현재 선택된 색상 조합은 출력이 불가능합니다
-              </h3>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '12px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '6px',
-                      backgroundColor: currentPlateColor,
-                      border: '2px solid #333',
-                    }}
-                  />
-                  <span style={{ fontWeight: 600, fontSize: '14px' }}>
-                    {getCurrentColorName(currentPlateColor)}
-                  </span>
-                </div>
-
-                <span style={{ fontSize: '18px', color: '#999' }}>+</span>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '6px',
-                      backgroundColor: currentQrColor,
-                      border: '2px solid #333',
-                    }}
-                  />
-                  <span style={{ fontWeight: 600, fontSize: '14px' }}>
-                    {getCurrentColorName(currentQrColor)}
-                  </span>
-                </div>
-              </div>
-
-              <p style={{
-                margin: 0,
-                fontSize: '14px',
-                color: '#555',
-                lineHeight: '1.5',
-              }}>
-                {currentPlateColor === currentQrColor
-                  ? '같은 색상끼리는 조합할 수 없습니다.'
-                  : '이 색상 조합은 QR 코드 인식이 불가능합니다.'
-                }
-                <br />
-                아래의 허용된 색상 조합을 참고해주세요.
-              </p>
-            </div>
-          </section>
-        )}
-
-        {/* 사용 가능한 색상 */}
+        {/* 색상 대비 안내 */}
         <section style={{ marginBottom: '30px' }}>
-          <h3 style={{ fontSize: '18px', marginBottom: '12px' }}>
-            ✅ 사용 가능한 색상 (출력 가능)
-          </h3>
           <div
             style={{
-              display: 'flex',
-              gap: '10px',
-              flexWrap: 'wrap',
+              padding: '20px',
+              backgroundColor: '#fff3cd',
+              border: '2px solid #ffc107',
+              borderRadius: '8px',
             }}
           >
-            {availableColors.map((color) => (
-              <div
-                key={color.value}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  backgroundColor: '#f9f9f9',
-                }}
-              >
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: color.value,
-                    border: '2px solid #ccc',
-                  }}
-                />
-                <span style={{ fontWeight: 600, fontSize: '14px' }}>
-                  {color.name}
-                </span>
-              </div>
-            ))}
+            <h3 style={{
+              fontSize: '18px',
+              marginBottom: '12px',
+              color: '#333',
+              fontWeight: 700,
+            }}>
+              ⚠️ Important: Color Contrast
+            </h3>
+            <p style={{
+              margin: 0,
+              fontSize: '15px',
+              color: '#555',
+              lineHeight: '1.7',
+            }}>
+              Please ensure sufficient contrast between plate and QR colors.<br />
+              <strong>Similar colors may result in QR code scanning failure.</strong><br />
+              <br />
+              Examples of good contrast:<br />
+              • Black + White<br />
+              • Dark colors + Light colors<br />
+              • High saturation + Low saturation
+            </p>
           </div>
         </section>
-
-        {/* 허용된 조합 */}
-        <section style={{ marginBottom: '30px' }}>
-          <h3 style={{ fontSize: '18px', marginBottom: '12px' }}>
-            ⭐ 허용된 색상 조합 (QR 인식 가능)
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {allowedCombinations.map((combo, index) => (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '15px',
-                  padding: '15px',
-                  border: '2px solid #4CAF50',
-                  borderRadius: '8px',
-                  backgroundColor: '#f0f8f0',
-                }}
-              >
-                {/* 색상 1 */}
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                    색상 1
-                  </div>
-                  <div
-                    style={{
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '8px',
-                      backgroundColor: combo.colors[0],
-                      border: '2px solid #333',
-                    }}
-                  />
-                </div>
-
-                <div style={{ fontSize: '20px', color: '#999' }}>+</div>
-
-                {/* 색상 2 */}
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                    색상 2
-                  </div>
-                  <div
-                    style={{
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '8px',
-                      backgroundColor: combo.colors[1],
-                      border: '2px solid #333',
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 안내 메시지 */}
-        {colorWarningMessage && (
-          <section style={{ marginBottom: '30px' }}>
-            <div
-              style={{
-                padding: '16px',
-                backgroundColor: '#fff3cd',
-                border: '1px solid #ffc107',
-                borderRadius: '8px',
-                fontSize: '14px',
-                lineHeight: '1.6',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {colorWarningMessage}
-            </div>
-          </section>
-        )}
 
         {/* 닫기 버튼 */}
         <div style={{ marginTop: '25px', textAlign: 'center' }}>
@@ -323,7 +143,7 @@ export function ColorGuideModal({
               (e.currentTarget.style.backgroundColor = '#333')
             }
           >
-            확인
+            OK
           </button>
         </div>
       </div>

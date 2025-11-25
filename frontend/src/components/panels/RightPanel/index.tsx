@@ -24,12 +24,7 @@ export function RightPanel({ onDownload }: RightPanelProps) {
   const addPlate = useDesignStore((state) => state.addPlate);
   const removePlate = useDesignStore((state) => state.removePlate);
   const duplicatePlate = useDesignStore((state) => state.duplicatePlate);
-  const updatePlateQuantity = useDesignStore((state) => state.updatePlateQuantity);
-
   const [addButtonHover, setAddButtonHover] = useState(false);
-
-  // Calculate totals
-  const totalQuantity = plates.reduce((sum, plate) => sum + plate.quantity, 0);
 
   const addButtonStyle: React.CSSProperties = {
     width: '100%',
@@ -93,13 +88,6 @@ export function RightPanel({ onDownload }: RightPanelProps) {
             isSelected={plate.id === selectedPlateId}
             isMobile={isMobile}
             onSelect={() => selectPlate(plate.id)}
-            onQuantityChange={(delta) => {
-              if (delta < 0 && plate.quantity === 1) {
-                removePlate(plate.id);
-              } else {
-                updatePlateQuantity(plate.id, plate.quantity + delta);
-              }
-            }}
             onDuplicate={() => {
               const duplicated = duplicatePlate(plate.id);
               if (duplicated) selectPlate(duplicated.id);
@@ -125,7 +113,6 @@ export function RightPanel({ onDownload }: RightPanelProps) {
 
       {/* Footer: Total summary and download */}
       <TotalSummary
-        totalQuantity={totalQuantity}
         hasPlates={plates.length > 0}
         isMobile={isMobile}
         onDownload={onDownload}

@@ -83,7 +83,7 @@ export const ColorDropdown: React.FC<ColorDropdownProps> = ({
               outline: 'none',
               opacity: hasWarning ? 0.5 : 1,
             }}
-            title={hasWarning ? '출력 불가 조합' : ''}
+            title={hasWarning ? 'Invalid Combination' : ''}
           >
             <div
               style={{
@@ -131,7 +131,7 @@ export const ColorDropdown: React.FC<ColorDropdownProps> = ({
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f8f4'}
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
       >
-        🎨 자유 색상 (미리보기용)
+        🎨 Custom Color
       </button>
     </div>
   );
