@@ -182,9 +182,9 @@ export const Scene3D = ({
 
             // 제품 타입에 따라 분기
             if (selectedPlate.productType === 'card') {
-              // 명함 모드
+              // 명함 모드 (바닥에서 3mm 위로 올려서 배치)
               return (
-                <group key={selectedPlate.id}>
+                <group key={selectedPlate.id} position={[0, 3, 0]}>
                   <BusinessCard
                     config={selectedPlate}
                     isSelected={true}

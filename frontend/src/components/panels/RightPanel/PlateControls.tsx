@@ -1,30 +1,30 @@
 /**
  * Plate Controls Component
- * Quantity controls and action buttons (duplicate/delete)
+ * Product type label and action buttons (duplicate/delete)
  */
 import React, { useState } from 'react';
 import { COLORS } from '../../../constants/colors';
 
 interface PlateControlsProps {
-  quantity: number;
-  onQuantityChange: (delta: number) => void;
+  productType: 'stand' | 'card';
   onDuplicate: () => void;
   onDelete: () => void;
 }
 
 /**
  * Right-side controls for plate card (50% width)
- * Top half: quantity controls
- * Bottom half: duplicate/delete buttons
+ * Top: Product type label
+ * Bottom: Duplicate/Delete buttons
  */
 export function PlateControls({
-  quantity,
-  onQuantityChange,
+  productType,
   onDuplicate,
   onDelete,
 }: PlateControlsProps) {
   const [copyHover, setCopyHover] = useState(false);
   const [deleteHover, setDeleteHover] = useState(false);
+
+  const productTypeLabel = productType === 'card' ? 'Card' : 'Stand';
 
   return (
     <div
@@ -35,61 +35,19 @@ export function PlateControls({
         flexDirection: 'column',
       }}
     >
-      {/* Top: Quantity controls */}
+      {/* Top: Product type label */}
       <div
         style={{
           height: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '4px',
-          padding: '4px',
+          fontSize: '14px',
+          fontWeight: 600,
+          color: COLORS.UI.TEXT_PRIMARY,
         }}
       >
-        <span style={{ fontSize: '16px', fontWeight: 600, marginRight: '2px' }}>수량:</span>
-        <span style={{ fontSize: '24px', fontWeight: 700, marginRight: '4px' }}>{quantity}</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onQuantityChange(-1);
-          }}
-          style={{
-            width: '26px',
-            height: '26px',
-            border: `1px solid ${COLORS.UI.BORDER}`,
-            borderRadius: '0',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-            fontSize: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0',
-          }}
-        >
-          −
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onQuantityChange(1);
-          }}
-          style={{
-            width: '26px',
-            height: '26px',
-            border: `1px solid ${COLORS.UI.BORDER}`,
-            borderRadius: '0',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-            fontSize: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0',
-          }}
-        >
-          +
-        </button>
+        {productTypeLabel}
       </div>
 
       {/* Bottom: Duplicate/Delete buttons */}
@@ -125,7 +83,7 @@ export function PlateControls({
             justifyContent: 'center',
           }}
         >
-          복사
+          Copy
         </button>
 
         {/* Right: Delete */}
@@ -153,7 +111,7 @@ export function PlateControls({
             justifyContent: 'center',
           }}
         >
-          삭제
+          Delete
         </button>
       </div>
     </div>

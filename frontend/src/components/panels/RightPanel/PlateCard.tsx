@@ -13,7 +13,6 @@ interface PlateCardProps {
   isSelected: boolean;
   isMobile: boolean;
   onSelect: () => void;
-  onQuantityChange: (delta: number) => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }
@@ -26,7 +25,6 @@ export function PlateCard({
   isSelected,
   isMobile,
   onSelect,
-  onQuantityChange,
   onDuplicate,
   onDelete,
 }: PlateCardProps) {
@@ -52,49 +50,19 @@ export function PlateCard({
     position: 'relative',
   };
 
-  // Get product type label
-  const productTypeLabel = plate.productType === 'card' ? 'Card' : 'Stand';
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-      {/* Card */}
-      <div
-        style={cardStyle}
-        onClick={onSelect}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <QRPreview plate={plate} />
-        <PlateControls
-          quantity={plate.quantity}
-          onQuantityChange={onQuantityChange}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-        />
-      </div>
-
-      {/* Info row - product type and quantity */}
-      <div
-        style={{
-          fontSize: '12px',
-          color: COLORS.UI.TEXT_PRIMARY,
-          padding: '6px 8px',
-          backgroundColor: isMobile
-            ? 'rgba(249, 249, 249, 0.4)'
-            : COLORS.UI.BACKGROUND,
-          border: `1px solid ${COLORS.UI.BORDER}`,
-          borderRadius: '4px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          ...(isMobile && {
-            textShadow: '0 0 6px rgba(255,255,255,0.9)',
-          }),
-        }}
-      >
-        <span style={{ fontWeight: 500 }}>{productTypeLabel}</span>
-        <span style={{ fontWeight: 600 }}>× {plate.quantity}</span>
-      </div>
+    <div
+      style={cardStyle}
+      onClick={onSelect}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <QRPreview plate={plate} />
+      <PlateControls
+        productType={plate.productType}
+        onDuplicate={onDuplicate}
+        onDelete={onDelete}
+      />
     </div>
   );
 }

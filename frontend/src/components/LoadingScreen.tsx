@@ -36,7 +36,7 @@ export const LoadingScreen = () => {
         textAlign: 'center',
         padding: '0 20px',
       }}>
-        3D QR 플랫폼 로딩 중...
+        Loading 3D QR Platform...
       </div>
 
       {/* CSS 애니메이션 */}
