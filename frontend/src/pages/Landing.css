@@ -71,6 +71,8 @@
   max-width: none;
   border-top: 1px solid #e5e0db;
   border-bottom: 1px solid #e5e0db;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .landing-section-alt > * {
