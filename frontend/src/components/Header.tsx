@@ -29,61 +29,64 @@ export function Header() {
       boxSizing: 'border-box',
       position: 'relative',
     }}>
-      <h1
-        style={{
-          margin: 0,
-          fontSize: isMobile ? '20px' : '28px',
-          fontWeight: 700,
-          cursor: 'pointer',
-        }}
-        onClick={() => navigate('/')}
-      >
-        3D QR DESIGNER
-      </h1>
+      {/* Left side - Logo and Navigation */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: isMobile ? '20px' : '28px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+          onClick={() => navigate('/')}
+        >
+          3D QR DESIGNER
+        </h1>
 
-      {/* Navigation Links */}
-      <nav style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        {isEditorPage && (
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#333',
-              fontSize: isMobile ? '14px' : '16px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-          >
-            Introduction
-          </button>
-        )}
-        {isLandingPage && (
-          <button
-            onClick={() => navigate('/editor')}
-            style={{
-              background: '#FF6B6B',
-              border: 'none',
-              color: '#fff',
-              fontSize: isMobile ? '14px' : '16px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FF5252')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FF6B6B')}
-          >
-            Start Design
-          </button>
-        )}
-      </nav>
+        {/* Navigation Links next to logo */}
+        <nav style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          {isEditorPage && (
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#333',
+                fontSize: isMobile ? '14px' : '16px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              Introduction
+            </button>
+          )}
+          {isLandingPage && (
+            <button
+              onClick={() => navigate('/editor')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#333',
+                fontSize: isMobile ? '14px' : '16px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              Design
+            </button>
+          )}
+        </nav>
+      </div>
 
       {/* Debug link (commented out - manually type /debug in URL to access) */}
       {/* <a href="/debug">Debug</a> */}
