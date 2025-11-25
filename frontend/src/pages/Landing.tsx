@@ -36,19 +36,19 @@ export function Landing() {
           <div className="gallery-grid">
             <div className="gallery-item gallery-item-portrait">
               <img
-                src="/images/wifi.webp"
-                alt="3D printed WiFi QR code plate"
+                src="/images/landing/gallery-1.webp"
+                alt="3D printed business card with QR code"
                 className="gallery-image"
               />
-              <p className="gallery-caption">WiFi QR Plate</p>
+              <p className="gallery-caption">3D Printed Business Card</p>
             </div>
             <div className="gallery-item gallery-item-square">
               <img
-                src="/images/insta.webp"
-                alt="3D printed Instagram QR business card"
+                src="/images/landing/gallery-2.webp"
+                alt="Various 3D printed QR plates"
                 className="gallery-image"
               />
-              <p className="gallery-caption">Instagram Card</p>
+              <p className="gallery-caption">Custom QR Plates</p>
             </div>
           </div>
         </div>
