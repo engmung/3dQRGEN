@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
 import { Scene3D } from '../components/Scene3D';
 import { LeftPanel } from '../components/LeftPanel';
 import { RightPanel } from '../components/RightPanel';
-import { OrderModal } from '../components/OrderModal';
+import { DownloadModal } from '../components/OrderModal';
 import { ColorPalette } from '../components/color/ColorPalette';
 import { MobileLayout } from '../components/MobileLayout';
 import { useDesignStore } from '../store/useDesignStore';
 import { useOBJPreviewStore } from '../store/objPreviewStore';
 import { getPricingSettings } from '../utils/pricing';
 import { useIsMobile } from '../hooks/useMediaQuery';
-import { useOrderSubmit } from '../hooks/useOrderSubmit';
-import type { AddressFormData } from '../components/order/AddressForm';
+import { generateOBJFromCartItem } from '../utils/objGenerator';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
@@ -20,14 +18,13 @@ interface HomeProps {
 }
 
 export function Home({ onLoadingComplete }: HomeProps = {}) {
-  const { user } = useUser();
   const isMobile = useIsMobile();
 
-  // 전역 기본 색상 설정
+  // Global default color settings
   const setGlobalPlateColor = useDesignStore((state) => state.setGlobalPlateColor);
   const setGlobalQrColor = useDesignStore((state) => state.setGlobalQrColor);
 
-  // 앱 시작 시 API에서 첫 번째 색상 조합을 가져와 전역 색상 설정
+  // Load default colors on app start
   useEffect(() => {
     const loadDefaultColors = async () => {
       try {
@@ -44,7 +41,7 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
     loadDefaultColors();
   }, [setGlobalPlateColor, setGlobalQrColor]);
 
-  // GLB 파츠 데이터 저장 (주문 시 OBJ 생성용)
+  // GLB parts data for OBJ generation
   const [gltfs, setGltfs] = useState<{
     back: GLTF;
     brige: GLTF;
@@ -62,65 +59,98 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
     zScale: number;
   }>>(new Map());
 
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
 
-  // Plates 가져오기
+  // Get plates
   const plates = useDesignStore((state) => state.plates);
 
-  // OBJ Transform 설정
+  // OBJ Transform settings
   const backTransform = useOBJPreviewStore((state) => state.backTransform);
   const brigeTransform = useOBJPreviewStore((state) => state.brigeTransform);
   const frontTransform = useOBJPreviewStore((state) => state.frontTransform);
   const pinTransform = useOBJPreviewStore((state) => state.pinTransform);
   const globalRotation = useOBJPreviewStore((state) => state.globalRotation);
 
-  // 주문하기 버튼 클릭 (RightPanel에서)
-  const handleCheckout = () => {
-    if (!user) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
-
+  // Download button click
+  const handleDownloadClick = () => {
     if (plates.length === 0) {
-      alert('QR 판이 없습니다.');
+      alert('No QR plates to download.');
       return;
     }
 
-    // 거치대가 있는지 확인 (명함만 있으면 GLB 불필요)
+    // Check if stand products need GLB
     const hasStand = plates.some(plate => plate.productType === 'stand');
     if (hasStand && !gltfs) {
-      alert('3D 모델이 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      alert('3D models are still loading. Please wait and try again.');
       return;
     }
 
-    setIsOrderModalOpen(true);
+    setIsDownloadModalOpen(true);
   };
 
-  // 주문 제출 (커스텀 훅 사용)
-  const { handleOrderSubmit: submitOrder } = useOrderSubmit({
-    plates,
-    gltfs,
-    qrGeometriesMap,
-    objTransforms: {
+  // Handle download
+  const handleDownload = async () => {
+    const objTransforms = {
       backTransform,
       brigeTransform,
       frontTransform,
       pinTransform,
       globalRotation,
-    },
-  });
+    };
 
-  const handleOrderSubmit = async (addressData: AddressFormData) => {
-    try {
-      await submitOrder(addressData);
-      setIsOrderModalOpen(false);
-    } catch (error) {
-      // OrderModal에서 에러 메시지 표시
-      throw error;
+    console.log(`[Download] Generating OBJ files for ${plates.length} plates...`);
+
+    // Generate OBJ for each plate and download
+    for (let i = 0; i < plates.length; i++) {
+      const plate = plates[i];
+      const geometries = qrGeometriesMap.get(plate.id);
+
+      if (!geometries) {
+        throw new Error(
+          `3D model for plate ${i + 1} is not ready.\n\n` +
+          `Please click on each plate in the cart to load the 3D model, then try again.`
+        );
+      }
+
+      console.log(`[Download] Generating OBJ for plate ${i + 1}/${plates.length}...`);
+
+      // Generate OBJ/MTL Blobs
+      const objBlobs = await generateOBJFromCartItem(
+        { id: plate.id, plateConfig: plate, geometries, addedAt: new Date(), quantity: plate.quantity },
+        gltfs!,
+        objTransforms
+      );
+
+      // Download OBJ file
+      const objUrl = URL.createObjectURL(objBlobs.modelObjBlob);
+      const objLink = document.createElement('a');
+      objLink.href = objUrl;
+      objLink.download = `qr_plate_${i + 1}.obj`;
+      document.body.appendChild(objLink);
+      objLink.click();
+      document.body.removeChild(objLink);
+      URL.revokeObjectURL(objUrl);
+
+      // Download MTL file
+      const mtlUrl = URL.createObjectURL(objBlobs.modelMtlBlob);
+      const mtlLink = document.createElement('a');
+      mtlLink.href = mtlUrl;
+      mtlLink.download = `qr_plate_${i + 1}.mtl`;
+      document.body.appendChild(mtlLink);
+      mtlLink.click();
+      document.body.removeChild(mtlLink);
+      URL.revokeObjectURL(mtlUrl);
+
+      // Small delay between downloads to avoid browser blocking
+      if (i < plates.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
+
+    console.log(`[Download] All ${plates.length} plates downloaded successfully!`);
   };
 
-  // 모바일 레이아웃
+  // Mobile layout
   if (isMobile) {
     return (
       <>
@@ -133,40 +163,33 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
               return newMap;
             });
           }}
-          onCheckout={handleCheckout}
+          onDownload={handleDownloadClick}
           onLoadingComplete={onLoadingComplete}
         />
 
-        {/* 주문 모달 */}
-        <OrderModal
-          isOpen={isOrderModalOpen}
-          onClose={() => setIsOrderModalOpen(false)}
-          cartItems={plates.map(plate => ({
-            id: plate.id,
-            plateConfig: plate,
-            quantity: plate.quantity,
-            geometries: qrGeometriesMap.get(plate.id) || null,
-            addedAt: new Date(),
-          }))}
-          customerEmail={user?.primaryEmailAddress?.emailAddress || ''}
-          onSubmit={handleOrderSubmit}
+        {/* Download modal */}
+        <DownloadModal
+          isOpen={isDownloadModalOpen}
+          onClose={() => setIsDownloadModalOpen(false)}
+          onDownload={handleDownload}
+          itemCount={plates.length}
         />
       </>
     );
   }
 
-  // 데스크톱 레이아웃
+  // Desktop layout
   return (
     <div style={{
       display: 'flex',
       width: '100%',
-      height: 'calc(100vh - 50px)', // 헤더 높이 제외
+      height: 'calc(100vh - 50px)',
       overflow: 'hidden'
     }}>
-      {/* 좌측: 편집 패널 (40%) */}
+      {/* Left: Edit panel (40%) */}
       <LeftPanel />
 
-      {/* 중앙: 3D 씬 (43%) */}
+      {/* Center: 3D scene (43%) */}
       <div style={{
         width: '43%',
         height: '100%',
@@ -183,26 +206,19 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
           }}
           onLoadingComplete={onLoadingComplete}
         />
-        {/* 색상 팔레트 (3D 씬 영역 상단 중앙) */}
+        {/* Color palette (top center of 3D scene) */}
         <ColorPalette />
       </div>
 
-      {/* 우측: QR 판 목록 + 주문 (17%) */}
-      <RightPanel onCheckout={handleCheckout} />
+      {/* Right: QR plate list + download (17%) */}
+      <RightPanel onDownload={handleDownloadClick} />
 
-      {/* 주문 모달 */}
-      <OrderModal
-        isOpen={isOrderModalOpen}
-        onClose={() => setIsOrderModalOpen(false)}
-        cartItems={plates.map(plate => ({
-          id: plate.id,
-          plateConfig: plate,
-          quantity: plate.quantity,
-          geometries: qrGeometriesMap.get(plate.id) || null,
-          addedAt: new Date()
-        }))}
-        customerEmail={user?.primaryEmailAddress?.emailAddress || ''}
-        onSubmit={handleOrderSubmit}
+      {/* Download modal */}
+      <DownloadModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        onDownload={handleDownload}
+        itemCount={plates.length}
       />
     </div>
   );

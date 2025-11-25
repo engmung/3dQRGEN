@@ -37,15 +37,15 @@ export function ImageTab({ plate }: ImageTabProps) {
 
   return (
     <div>
-      {/* 프리셋 이미지 선택 */}
+      {/* Preset Image Selection */}
       <div style={{ marginBottom: '15px' }}>
-        <label style={labelStyle}>프리셋 이미지 추가</label>
+        <label style={labelStyle}>Preset Images</label>
         <PresetImageGrid plateId={plate.id} />
       </div>
 
-      {/* 직접 업로드 */}
+      {/* Direct Upload */}
       <div style={{ marginBottom: '15px' }}>
-        <label style={labelStyle}>또는 직접 업로드</label>
+        <label style={labelStyle}>Or Upload Your Own</label>
         <input
           type="file"
           accept="image/*"
@@ -60,7 +60,7 @@ export function ImageTab({ plate }: ImageTabProps) {
         />
       </div>
 
-      {/* 이미지 리스트 */}
+      {/* Image List */}
       {(plate.images || []).map((img, index) => (
         <div
           key={img.id}
@@ -80,13 +80,13 @@ export function ImageTab({ plate }: ImageTabProps) {
               marginBottom: '10px',
             }}
           >
-            <span style={{ fontSize: '14px', fontWeight: 600 }}>이미지 {index + 1}</span>
+            <span style={{ fontSize: '14px', fontWeight: 600 }}>Image {index + 1}</span>
             <Button
               onClick={() => removeImage(plate.id, img.id)}
               variant="danger"
               size="sm"
             >
-              제거
+              Remove
             </Button>
           </div>
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
@@ -94,7 +94,7 @@ export function ImageTab({ plate }: ImageTabProps) {
           </div>
 
           <RangeSlider
-            label="크기"
+            label="Size"
             value={img.size}
             onChange={(val) => updateImage(plate.id, img.id, { size: val })}
             min={3}
@@ -110,7 +110,7 @@ export function ImageTab({ plate }: ImageTabProps) {
           />
 
           <RangeSlider
-            label="높이"
+            label="Vertical Position"
             value={img.heightOffset}
             onChange={(val) => updateImage(plate.id, img.id, { heightOffset: val })}
             min={
@@ -130,7 +130,7 @@ export function ImageTab({ plate }: ImageTabProps) {
           />
 
           <RangeSlider
-            label="좌우"
+            label="Horizontal Position"
             value={img.horizontalOffset}
             onChange={(val) => updateImage(plate.id, img.id, { horizontalOffset: val })}
             min={
@@ -160,7 +160,7 @@ export function ImageTab({ plate }: ImageTabProps) {
             fontSize: '14px',
           }}
         >
-          이미지를 추가하세요
+          Add an image to your QR plate
         </div>
       )}
     </div>

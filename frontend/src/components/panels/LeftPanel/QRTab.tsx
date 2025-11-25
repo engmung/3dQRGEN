@@ -34,18 +34,18 @@ export function QRTab({ plate }: QRTabProps) {
 
   return (
     <div>
-      {/* 제품 유형 선택 */}
+      {/* Product Type Selection */}
       <ProductTypeSelector />
 
-      {/* 명함 크기 설정 */}
+      {/* Card Size Settings */}
       {plate.productType === 'card' && (
         <div style={sectionStyle}>
-          <label style={labelStyle}>명함 크기</label>
+          <label style={labelStyle}>Card Size</label>
           <CardSizeSettings plate={plate} />
         </div>
       )}
 
-      {/* QR 타입 선택 */}
+      {/* QR Type Selection */}
       <div style={sectionStyle}>
         <QRTypeSelector
           value={plate.qrType}
@@ -53,7 +53,7 @@ export function QRTab({ plate }: QRTabProps) {
         />
       </div>
 
-      {/* QR 데이터 입력 */}
+      {/* QR Data Input */}
       <div style={sectionStyle}>
         {plate.qrType === 'url' && (
           <FormField
@@ -80,7 +80,7 @@ export function QRTab({ plate }: QRTabProps) {
         )}
       </div>
 
-      {/* QR 설정 */}
+      {/* QR Settings */}
       <div style={sectionStyle}>
         <h3
           style={{
@@ -94,11 +94,11 @@ export function QRTab({ plate }: QRTabProps) {
             }),
           }}
         >
-          QR 설정
+          QR Settings
         </h3>
 
         <RangeSlider
-          label="QR 크기"
+          label="QR Size"
           value={plate.qrSize}
           onChange={(val) => updatePlate(plate.id, { qrSize: val })}
           min={20}
@@ -114,7 +114,7 @@ export function QRTab({ plate }: QRTabProps) {
         />
 
         <RangeSlider
-          label="QR 두께"
+          label="QR Thickness"
           value={plate.qrThickness}
           onChange={(val) => updatePlate(plate.id, { qrThickness: val })}
           min={0.2}
@@ -126,7 +126,7 @@ export function QRTab({ plate }: QRTabProps) {
         />
 
         <RangeSlider
-          label="QR 높이"
+          label="Vertical Position"
           value={plate.qrHeightOffset}
           onChange={(val) => updatePlate(plate.id, { qrHeightOffset: val })}
           min={
@@ -146,7 +146,7 @@ export function QRTab({ plate }: QRTabProps) {
         />
 
         <RangeSlider
-          label="QR 좌우"
+          label="Horizontal Position"
           value={plate.qrHorizontalOffset}
           onChange={(val) => updatePlate(plate.id, { qrHorizontalOffset: val })}
           min={

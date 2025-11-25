@@ -32,11 +32,11 @@ export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
           fontWeight: 500,
         }}
       >
-        명함 기본 크기로 리셋 (90×50×1.2mm)
+        Reset to Default (90x50x1.2mm)
       </button>
 
       <RangeSlider
-        label="가로"
+        label="Width"
         value={plate.cardWidth}
         onChange={(val) => updatePlate(plate.id, { cardWidth: val })}
         min={20}
@@ -47,7 +47,7 @@ export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
       />
 
       <RangeSlider
-        label="세로"
+        label="Height"
         value={plate.cardHeight}
         onChange={(val) => updatePlate(plate.id, { cardHeight: val })}
         min={20}
@@ -58,7 +58,7 @@ export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
       />
 
       <RangeSlider
-        label="두께"
+        label="Thickness"
         value={plate.cardThickness}
         onChange={(val) => updatePlate(plate.id, { cardThickness: val })}
         min={0.4}
@@ -70,19 +70,19 @@ export function CardSizeSettings({ plate }: CardSizeSettingsProps) {
       />
 
       <FormSelect
-        label="모서리 스타일"
+        label="Corner Style"
         value={plate.cardCornerStyle ?? 'sharp'}
         onChange={(val) => updatePlate(plate.id, { cardCornerStyle: val as CardCornerStyle })}
         options={[
-          { value: 'sharp', label: '뾰족하게' },
-          { value: 'rounded', label: '둥글게' },
-          { value: 'chamfered', label: '45도 챔퍼' }
+          { value: 'sharp', label: 'Sharp' },
+          { value: 'rounded', label: 'Rounded' },
+          { value: 'chamfered', label: '45° Chamfer' }
         ]}
       />
 
       {(plate.cardCornerStyle ?? 'sharp') !== 'sharp' && (
         <RangeSlider
-          label={(plate.cardCornerStyle ?? 'sharp') === 'rounded' ? '둥근 정도' : '챔퍼 크기'}
+          label={(plate.cardCornerStyle ?? 'sharp') === 'rounded' ? 'Corner Radius' : 'Chamfer Size'}
           value={plate.cardCornerRadius ?? 2}
           onChange={(val) => updatePlate(plate.id, { cardCornerRadius: val })}
           min={0.5}

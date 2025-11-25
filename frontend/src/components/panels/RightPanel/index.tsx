@@ -1,25 +1,22 @@
 /**
  * Right Panel - Main Layout
- * Shopping cart with plate cards, totals, and checkout
+ * Shopping cart with plate cards and download button
  */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDesignStore } from '../../../store/useDesignStore';
-import { getPricingSettings, calculatePlatePrice } from '../../../utils/pricing';
-import type { PricingSettings } from '../../../utils/api';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 import { COLORS } from '../../../constants/colors';
-import { PRICING } from '../../../constants/pricing';
 import { PlateCard } from './PlateCard';
 import { TotalSummary } from './TotalSummary';
 
 interface RightPanelProps {
-  onCheckout: () => void;
+  onDownload: () => void;
 }
 
 /**
- * Right sidebar showing all plates and checkout
+ * Right sidebar showing all plates and download button
  */
-export function RightPanel({ onCheckout }: RightPanelProps) {
+export function RightPanel({ onDownload }: RightPanelProps) {
   const isMobile = useIsMobile();
   const plates = useDesignStore((state) => state.plates);
   const selectedPlateId = useDesignStore((state) => state.selectedPlateId);
@@ -29,23 +26,10 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
   const duplicatePlate = useDesignStore((state) => state.duplicatePlate);
   const updatePlateQuantity = useDesignStore((state) => state.updatePlateQuantity);
 
-  const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [addButtonHover, setAddButtonHover] = useState(false);
-
-  // Load pricing settings
-  useEffect(() => {
-    getPricingSettings().then(setPricingSettings);
-  }, []);
 
   // Calculate totals
   const totalQuantity = plates.reduce((sum, plate) => sum + plate.quantity, 0);
-  const productTotal = pricingSettings
-    ? plates.reduce((sum, plate) => {
-        const platePrice = calculatePlatePrice(plate, pricingSettings);
-        return sum + platePrice * plate.quantity;
-      }, 0)
-    : 0;
-  const totalPrice = plates.length > 0 ? productTotal + PRICING.SHIPPING_FEE : 0;
 
   const addButtonStyle: React.CSSProperties = {
     width: '100%',
@@ -86,7 +70,7 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
             backgroundColor: COLORS.UI.BACKGROUND,
           }}
         >
-          장바구니
+          Cart
         </div>
       )}
 
@@ -107,7 +91,6 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
             key={plate.id}
             plate={plate}
             isSelected={plate.id === selectedPlateId}
-            pricingSettings={pricingSettings}
             isMobile={isMobile}
             onSelect={() => selectPlate(plate.id)}
             onQuantityChange={(delta) => {
@@ -136,18 +119,16 @@ export function RightPanel({ onCheckout }: RightPanelProps) {
           onMouseLeave={() => setAddButtonHover(false)}
         >
           <div>+</div>
-          <div style={{ fontSize: '14px', fontWeight: 400, marginTop: '4px' }}>새 QR 판</div>
+          <div style={{ fontSize: '14px', fontWeight: 400, marginTop: '4px' }}>New QR Plate</div>
         </div>
       </div>
 
-      {/* Footer: Total summary and checkout */}
+      {/* Footer: Total summary and download */}
       <TotalSummary
         totalQuantity={totalQuantity}
-        productTotal={productTotal}
-        totalPrice={totalPrice}
         hasPlates={plates.length > 0}
         isMobile={isMobile}
-        onCheckout={onCheckout}
+        onDownload={onDownload}
       />
     </div>
   );
