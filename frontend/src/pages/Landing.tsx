@@ -34,7 +34,7 @@ export function Landing() {
         </div>
         <div className="hero-right">
           <div className="gallery-grid">
-            <div className="gallery-item gallery-item-portrait">
+            <div className="gallery-item gallery-item-square">
               <img
                 src="/images/landing/gallery-1.webp"
                 alt="3D printed business card with QR code"
