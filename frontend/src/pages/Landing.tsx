@@ -42,7 +42,7 @@ export function Landing() {
               />
               <p className="gallery-caption">3D Printed Business Card</p>
             </div>
-            <div className="gallery-item gallery-item-square">
+            <div className="gallery-item gallery-item-portrait">
               <img
                 src="/images/landing/gallery-2.webp"
                 alt="Various 3D printed QR plates"
