@@ -36,7 +36,7 @@ export function Landing() {
           <div className="gallery-grid">
             <div className="gallery-item gallery-item-portrait">
               <img
-                src="/images/landing/gallery-2.webp"
+                src="/images/landing/gallery-1.webp"
                 alt="3D printed business card with QR code"
                 className="gallery-image"
               />
@@ -44,7 +44,7 @@ export function Landing() {
             </div>
             <div className="gallery-item gallery-item-square">
               <img
-                src="/images/landing/gallery-1.webp"
+                src="/images/landing/gallery-2.webp"
                 alt="Various 3D printed QR plates"
                 className="gallery-image"
               />
