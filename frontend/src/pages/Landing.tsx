@@ -25,11 +25,8 @@ export function Landing() {
       </section>
 
       {/* Gallery Section */}
-      <section className="landing-section">
+      <section className="landing-section landing-section-gallery">
         <h2 className="section-title">Gallery</h2>
-        <p className="section-description">
-          Check out what you can create with 3D QR Generator
-        </p>
         <div className="gallery-grid">
           <div className="gallery-item gallery-item-portrait">
             <img
