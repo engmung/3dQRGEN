@@ -3,10 +3,10 @@ import { useCartStore } from '../store/useCartStore';
 import { getQRTypeLabel } from '../utils/qrHelpers';
 
 interface CartPanelProps {
-  onCheckout: () => void;  // 주문하기 버튼 클릭 시 호출
+  onDownload: () => void;
 }
 
-export const CartPanel = ({ onCheckout }: CartPanelProps) => {
+export const CartPanel = ({ onDownload }: CartPanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const items = useCartStore((state) => state.items);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -14,7 +14,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
 
   return (
     <>
-      {/* 장바구니 토글 버튼 (우측 상단) */}
+      {/* Cart toggle button (top right) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
@@ -38,10 +38,10 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
         onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#FF5252')}
         onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#FF6B6B')}
       >
-        🛒 장바구니 ({items.length})
+        Cart ({items.length})
       </button>
 
-      {/* 장바구니 패널 */}
+      {/* Cart panel */}
       {isOpen && (
         <div
           style={{
@@ -60,7 +60,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
             overflow: 'hidden',
           }}
         >
-          {/* 헤더 */}
+          {/* Header */}
           <div
             style={{
               padding: '16px 20px',
@@ -72,12 +72,12 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
             }}
           >
             <h3 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
-              장바구니 ({items.length}개)
+              Cart ({items.length} items)
             </h3>
             {items.length > 0 && (
               <button
                 onClick={() => {
-                  if (confirm('장바구니를 모두 비우시겠습니까?')) {
+                  if (confirm('Clear all items from cart?')) {
                     clearCart();
                   }
                 }}
@@ -91,12 +91,12 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                   fontSize: '12px',
                 }}
               >
-                전체 삭제
+                Clear All
               </button>
             )}
           </div>
 
-          {/* 아이템 리스트 */}
+          {/* Item list */}
           <div
             style={{
               flex: 1,
@@ -113,7 +113,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                   fontSize: '14px',
                 }}
               >
-                장바구니가 비어있습니다
+                Cart is empty
               </div>
             ) : (
               items.map((item, index) => (
@@ -127,7 +127,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                     border: '1px solid #444',
                   }}
                 >
-                  {/* 아이템 번호 */}
+                  {/* Item number */}
                   <div
                     style={{
                       fontSize: '12px',
@@ -138,7 +138,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                     #{index + 1}
                   </div>
 
-                  {/* QR 타입 및 색상 */}
+                  {/* QR type and colors */}
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                     <div
                       style={{
@@ -148,7 +148,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                         fontWeight: 'bold',
                       }}
                     >
-                      QR 타입: {getQRTypeLabel(item.plateConfig.qrType)}
+                      QR Type: {getQRTypeLabel(item.plateConfig.qrType)}
                     </div>
                     <div
                       style={{
@@ -165,7 +165,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                           border: '1px solid #666',
                           borderRadius: '4px',
                         }}
-                        title={`거치대 색상: ${item.plateConfig.plateColor}`}
+                        title={`Plate color: ${item.plateConfig.plateColor}`}
                       />
                       <div
                         style={{
@@ -175,12 +175,12 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                           border: '1px solid #666',
                           borderRadius: '4px',
                         }}
-                        title={`QR 색상: ${item.plateConfig.qrColor}`}
+                        title={`QR color: ${item.plateConfig.qrColor}`}
                       />
                     </div>
                   </div>
 
-                  {/* QR 데이터 미리보기 */}
+                  {/* QR data preview */}
                   <div
                     style={{
                       fontSize: '12px',
@@ -193,14 +193,14 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                       <div>URL: {item.plateConfig.qrUrl.substring(0, 40)}{item.plateConfig.qrUrl.length > 40 ? '...' : ''}</div>
                     )}
                     {item.plateConfig.qrType === 'wifi' && (
-                      <div>WiFi: {item.plateConfig.qrWifiData.ssid || '(설정 없음)'}</div>
+                      <div>WiFi: {item.plateConfig.qrWifiData.ssid || '(not set)'}</div>
                     )}
                     {item.plateConfig.qrType === 'email' && (
-                      <div>Email: {item.plateConfig.qrEmailData.recipient || '(설정 없음)'}</div>
+                      <div>Email: {item.plateConfig.qrEmailData.recipient || '(not set)'}</div>
                     )}
                   </div>
 
-                  {/* 텍스트/이미지 정보 */}
+                  {/* Text/Image info */}
                   {((item.plateConfig.texts || []).length > 0 || (item.plateConfig.images || []).length > 0) && (
                     <div
                       style={{
@@ -209,12 +209,12 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                         marginBottom: '8px',
                       }}
                     >
-                      {(item.plateConfig.texts || []).length > 0 && <div>✏️ 텍스트: {(item.plateConfig.texts || [])[0].content.substring(0, 20)}{(item.plateConfig.texts || [])[0].content.length > 20 ? '...' : ''}</div>}
-                      {(item.plateConfig.images || []).length > 0 && <div>🖼️ 이미지: {(item.plateConfig.images || [])[0].file.name}</div>}
+                      {(item.plateConfig.texts || []).length > 0 && <div>Text: {(item.plateConfig.texts || [])[0].content.substring(0, 20)}{(item.plateConfig.texts || [])[0].content.length > 20 ? '...' : ''}</div>}
+                      {(item.plateConfig.images || []).length > 0 && <div>Image: {(item.plateConfig.images || [])[0].file.name}</div>}
                     </div>
                   )}
 
-                  {/* 삭제 버튼 */}
+                  {/* Delete button */}
                   <button
                     onClick={() => removeFromCart(item.id)}
                     style={{
@@ -230,14 +230,14 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                     onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#666')}
                     onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#555')}
                   >
-                    삭제
+                    Remove
                   </button>
                 </div>
               ))
             )}
           </div>
 
-          {/* 하단 주문하기 버튼 */}
+          {/* Bottom download button */}
           {items.length > 0 && (
             <div
               style={{
@@ -247,7 +247,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
               }}
             >
               <button
-                onClick={onCheckout}
+                onClick={onDownload}
                 style={{
                   width: '100%',
                   padding: '14px',
@@ -263,7 +263,7 @@ export const CartPanel = ({ onCheckout }: CartPanelProps) => {
                 onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#45a049')}
                 onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#4CAF50')}
               >
-                주문하기 ({items.length}개)
+                Download OBJ ({items.length} items)
               </button>
             </div>
           )}

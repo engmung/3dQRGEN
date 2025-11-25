@@ -7,8 +7,8 @@ interface QRTypeSelectorProps {
 }
 
 /**
- * QR 타입 선택 컴포넌트
- * URL, WiFi, Email 중 하나를 선택할 수 있는 라디오 버튼 그룹
+ * QR Type Selector Component
+ * Radio button group to select URL, WiFi, or Email
  */
 export function QRTypeSelector({ value, onChange }: QRTypeSelectorProps) {
   const isMobile = useIsMobile();
@@ -31,7 +31,7 @@ export function QRTypeSelector({ value, onChange }: QRTypeSelectorProps) {
           textShadow: '0 0 8px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.9)'
         })
       }}>
-        QR 타입
+        QR Type
       </label>
       <div style={{ display: 'flex', gap: '8px' }}>
         {options.map((option) => (
