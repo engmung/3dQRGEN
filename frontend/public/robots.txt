@@ -1,0 +1,15 @@
+# 3D QR Designer - robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://3dqr.design/sitemap.xml
+
+# Disallow non-essential paths
+Disallow: /api/
+Disallow: /*.json$
+
+# Allow all static assets
+Allow: /images/
+Allow: /fonts/
+Allow: /favicon/
