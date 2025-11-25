@@ -1,13 +1,19 @@
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
 /**
  * Header Component
- * Simple header with logo only
+ * Header with navigation between landing and editor pages
  *
  * Debug mode: Manually navigate to /debug to access developer tools
  */
 export function Header() {
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isLandingPage = location.pathname === '/';
+  const isEditorPage = location.pathname === '/editor' || location.pathname === '/debug';
 
   return (
     <header style={{
@@ -23,9 +29,61 @@ export function Header() {
       boxSizing: 'border-box',
       position: 'relative',
     }}>
-      <h1 style={{ margin: 0, fontSize: isMobile ? '20px' : '28px', fontWeight: 700 }}>
+      <h1
+        style={{
+          margin: 0,
+          fontSize: isMobile ? '20px' : '28px',
+          fontWeight: 700,
+          cursor: 'pointer',
+        }}
+        onClick={() => navigate('/')}
+      >
         3D QR DESIGNER
       </h1>
+
+      {/* Navigation Links */}
+      <nav style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        {isEditorPage && (
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#333',
+              fontSize: isMobile ? '14px' : '16px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            Introduction
+          </button>
+        )}
+        {isLandingPage && (
+          <button
+            onClick={() => navigate('/editor')}
+            style={{
+              background: '#FF6B6B',
+              border: 'none',
+              color: '#fff',
+              fontSize: isMobile ? '14px' : '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FF5252')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FF6B6B')}
+          >
+            Start Design
+          </button>
+        )}
+      </nav>
 
       {/* Debug link (commented out - manually type /debug in URL to access) */}
       {/* <a href="/debug">Debug</a> */}

@@ -9,7 +9,6 @@ import { Landing } from './pages/Landing';
 function AppContent() {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor' || location.pathname === '/debug';
-  const isLandingPage = location.pathname === '/';
   const [isResourcesLoaded, setIsResourcesLoaded] = useState(false);
 
   // 리소스(GLB 등) 로딩 상태 - 에디터 페이지에서만 적용
@@ -25,7 +24,7 @@ function AppContent() {
         minHeight: isEditorPage ? 'auto' : '100vh',
         overflow: isEditorPage ? 'hidden' : 'visible'
       }}>
-        {!isLandingPage && <Header />}
+        <Header />
         <div style={{ flex: 1, overflow: isEditorPage ? 'hidden' : 'visible' }}>
           <Routes>
             <Route path="/" element={<Landing />} />
