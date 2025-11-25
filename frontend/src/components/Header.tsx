@@ -46,8 +46,10 @@ export function Header() {
         {/* Navigation Links next to logo */}
         <nav style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           {isEditorPage && (
-            <button
-              onClick={() => navigate('/')}
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 background: 'none',
                 border: 'none',
@@ -58,12 +60,13 @@ export function Header() {
                 padding: '6px 12px',
                 borderRadius: '4px',
                 transition: 'background-color 0.2s',
+                textDecoration: 'none',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
               Introduction
-            </button>
+            </a>
           )}
           {isLandingPage && (
             <button
@@ -87,6 +90,29 @@ export function Header() {
           )}
         </nav>
       </div>
+
+      {/* Right side - Developer link */}
+      <a
+        href="https://lshsprotfolio.netlify.app/en/"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          background: 'none',
+          border: 'none',
+          color: '#333',
+          fontSize: isMobile ? '14px' : '16px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          padding: '6px 12px',
+          borderRadius: '4px',
+          transition: 'background-color 0.2s',
+          textDecoration: 'none',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+      >
+        Developer
+      </a>
 
       {/* Debug link (commented out - manually type /debug in URL to access) */}
       {/* <a href="/debug">Debug</a> */}
