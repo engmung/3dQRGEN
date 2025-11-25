@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
-import { LeftPanel } from "./LeftPanel";
-import { RightPanel } from "./RightPanel";
+import { LeftPanel } from "./panels/LeftPanel";
+import { RightPanel } from "./panels/RightPanel";
 import { Scene3D } from "./Scene3D";
-import { ColorPalette } from "./ColorPalette";
+import { ColorPalette } from "./color/ColorPalette";
 import { useSwipeGesture } from "../hooks/useSwipeGesture";
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';

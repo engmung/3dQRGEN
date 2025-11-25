@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Scene3D } from '../components/Scene3D';
 import { LeftPanel } from '../components/LeftPanel';
 import { RightPanel } from '../components/RightPanel';
@@ -7,7 +7,6 @@ import { ColorPalette } from '../components/color/ColorPalette';
 import { MobileLayout } from '../components/MobileLayout';
 import { useDesignStore } from '../store/useDesignStore';
 import { useOBJPreviewStore } from '../store/objPreviewStore';
-import { getPricingSettings } from '../utils/pricing';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { generateOBJFromCartItem } from '../utils/objGenerator';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -19,27 +18,6 @@ interface HomeProps {
 
 export function Home({ onLoadingComplete }: HomeProps = {}) {
   const isMobile = useIsMobile();
-
-  // Global default color settings
-  const setGlobalPlateColor = useDesignStore((state) => state.setGlobalPlateColor);
-  const setGlobalQrColor = useDesignStore((state) => state.setGlobalQrColor);
-
-  // Load default colors on app start
-  useEffect(() => {
-    const loadDefaultColors = async () => {
-      try {
-        const settings = await getPricingSettings();
-        const combinations = JSON.parse(settings.allowed_combinations || '[]');
-        if (combinations.length > 0 && combinations[0].colors?.length === 2) {
-          setGlobalPlateColor(combinations[0].colors[0]);
-          setGlobalQrColor(combinations[0].colors[1]);
-        }
-      } catch (error) {
-        console.error('Failed to load default colors:', error);
-      }
-    };
-    loadDefaultColors();
-  }, [setGlobalPlateColor, setGlobalQrColor]);
 
   // GLB parts data for OBJ generation
   const [gltfs, setGltfs] = useState<{

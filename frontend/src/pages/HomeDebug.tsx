@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Scene3D } from '../components/Scene3D';
 import { ColorPalette } from '../components/color/ColorPalette';
-import { EditPanel } from '../components/EditPanel';
+import { LeftPanel } from '../components/panels/LeftPanel';
 import { AddPlateButton } from '../components/AddPlateButton';
 import { OBJPreviewContainer } from '../components/OBJPreviewScene';
 import { OBJTransformPanel } from '../components/OBJTransformPanel';
@@ -97,11 +97,17 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
         {/* 상단 색상 팔레트 (선택된 판이 있을 때만 표시) */}
         <ColorPalette />
 
-        {/* 우측 상단 추가 버튼 */}
-        <AddPlateButton />
-
-        {/* 우측 편집 패널 (선택된 판이 있을 때만 표시) */}
-        <EditPanel />
+        {/* 좌측 편집 패널 */}
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: '300px',
+          zIndex: 10,
+        }}>
+          <LeftPanel />
+        </div>
 
         {/* OBJ Preview 토글 버튼 */}
         <button
