@@ -31,7 +31,7 @@ export function Landing() {
           Check out what you can create with 3D QR Generator
         </p>
         <div className="gallery-grid">
-          <div className="gallery-item">
+          <div className="gallery-item gallery-item-portrait">
             <img
               src="/images/landing/gallery-1.jpg"
               alt="3D printed business card with QR code"
@@ -39,7 +39,7 @@ export function Landing() {
             />
             <p className="gallery-caption">3D Printed Business Card</p>
           </div>
-          <div className="gallery-item">
+          <div className="gallery-item gallery-item-square">
             <img
               src="/images/landing/gallery-2.jpg"
               alt="Various 3D printed QR plates"
