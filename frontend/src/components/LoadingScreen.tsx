@@ -17,7 +17,7 @@ export const LoadingScreen = () => {
       justifyContent: 'center',
       zIndex: 9999,
     }}>
-      {/* 로딩 스피너 */}
+      {/* Loading spinner */}
       <div style={{
         width: isMobile ? '60px' : '80px',
         height: isMobile ? '60px' : '80px',
@@ -27,7 +27,7 @@ export const LoadingScreen = () => {
         animation: 'spin 1s linear infinite',
       }} />
 
-      {/* 로딩 텍스트 */}
+      {/* Loading text */}
       <div style={{
         marginTop: '30px',
         fontSize: isMobile ? '18px' : '24px',
@@ -36,10 +36,10 @@ export const LoadingScreen = () => {
         textAlign: 'center',
         padding: '0 20px',
       }}>
-        3D QR 플랫폼 로딩 중...
+        Loading 3D QR Designer...
       </div>
 
-      {/* CSS 애니메이션 */}
+      {/* CSS animation */}
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

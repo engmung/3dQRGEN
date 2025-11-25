@@ -46,7 +46,7 @@ export function PlateControls({
           padding: '4px',
         }}
       >
-        <span style={{ fontSize: '16px', fontWeight: 600, marginRight: '2px' }}>수량:</span>
+        <span style={{ fontSize: '16px', fontWeight: 600, marginRight: '2px' }}>Qty:</span>
         <span style={{ fontSize: '24px', fontWeight: 700, marginRight: '4px' }}>{quantity}</span>
         <button
           onClick={(e) => {
@@ -125,7 +125,7 @@ export function PlateControls({
             justifyContent: 'center',
           }}
         >
-          복사
+          Copy
         </button>
 
         {/* Right: Delete */}
@@ -153,7 +153,7 @@ export function PlateControls({
             justifyContent: 'center',
           }}
         >
-          삭제
+          Delete
         </button>
       </div>
     </div>
