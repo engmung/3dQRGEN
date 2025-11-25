@@ -1,140 +1,148 @@
-import { useState, useEffect } from 'react';
-import { AddressForm, type AddressFormData } from './order/AddressForm';
-import type { CartItem } from '../store/useCartStore';
-import { getPricingSettings, calculatePlatePrice, formatPrice } from '../utils/pricing';
-import { getQRTypeLabel } from '../utils/qrHelpers';
+import { useState } from 'react';
 import { MODAL_OVERLAY, MODAL_CONTENT_LARGE } from '../styles/modalStyles';
 import { COLORS } from '../styles/colors';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
-interface PricingSettings {
-  base_price: number;
-  card_base_price: number;
-  text_price: number;
-  image_price: number;
-}
-
-interface OrderModalProps {
+interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  cartItems: CartItem[];
-  customerEmail: string;
-  onSubmit: (addressData: AddressFormData) => Promise<void>;
+  onDownload: () => Promise<void>;
+  itemCount: number;
 }
 
-export const OrderModal = ({
+export const DownloadModal = ({
   isOpen,
   onClose,
-  cartItems,
-  customerEmail,
-  onSubmit,
-}: OrderModalProps) => {
+  onDownload,
+  itemCount,
+}: DownloadModalProps) => {
   const isMobile = useIsMobile();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
-
-  // 가격 설정 로드
-  useEffect(() => {
-    if (isOpen) {
-      getPricingSettings().then(setPricingSettings);
-    }
-  }, [isOpen]);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadComplete, setDownloadComplete] = useState(false);
 
   if (!isOpen) return null;
 
-  // 가격 계산 (수량 포함 + 택배비 5,000원)
-  const SHIPPING_FEE = 5000;
-  const productTotal = pricingSettings
-    ? cartItems.reduce((sum, item) => sum + calculatePlatePrice(item.plateConfig, pricingSettings) * item.quantity, 0)
-    : 0;
-  const totalPrice = productTotal + SHIPPING_FEE;
+  const handleDownload = async () => {
+    if (isDownloading) return;
 
-  // 총 제품 개수 계산 (quantity 합계)
-  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-
-  // 주문 제출
-  const handleSubmit = async (addressData: AddressFormData) => {
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
+    setIsDownloading(true);
     try {
-      await onSubmit(addressData);
-      // 성공 시 모달은 부모 컴포넌트에서 닫음
+      await onDownload();
+      setDownloadComplete(true);
     } catch (error) {
-      console.error('Order submission failed:', error);
-      alert('주문에 실패했습니다: ' + (error as Error).message);
+      console.error('Download failed:', error);
+      alert('Download failed: ' + (error as Error).message);
     } finally {
-      setIsSubmitting(false);
+      setIsDownloading(false);
     }
   };
 
+  const handleClose = () => {
+    setDownloadComplete(false);
+    onClose();
+  };
+
   return (
-    <div style={{
-      ...MODAL_OVERLAY,
-      zIndex: isMobile ? 10000 : 1000,
-      alignItems: 'center',
-      padding: isMobile ? '0' : '20px',
-    }} onClick={onClose}>
+    <div
+      style={{
+        ...MODAL_OVERLAY,
+        zIndex: isMobile ? 10000 : 1000,
+        alignItems: 'center',
+        padding: isMobile ? '20px' : '20px',
+      }}
+      onClick={handleClose}
+    >
       <div
         style={{
-          ...MODAL_CONTENT_LARGE,
           backgroundColor: COLORS.background.white,
           color: COLORS.text.primary,
-          borderRadius: isMobile ? '0' : '12px',
-          height: isMobile ? '100vh' : 'auto',
-          maxHeight: isMobile ? '100vh' : '95vh',
-          overflowY: 'auto',
-          overflowX: 'hidden',
+          borderRadius: '12px',
+          padding: '30px',
+          maxWidth: '400px',
+          width: '100%',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          flexDirection: 'column',
-          width: isMobile ? '100vw' : '90vw',
-          maxWidth: isMobile ? '100vw' : '1200px',
-          padding: isMobile ? '0' : '30px',
+          textAlign: 'center',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 배송지 입력 폼 (AddressForm 재사용) */}
-        <div style={{ backgroundColor: 'white' }}>
-          <AddressForm
-            initialData={{ customerEmail }}
-            price={totalPrice}
-            productTotal={productTotal}
-            shippingFee={SHIPPING_FEE}
-            totalQuantity={totalQuantity}
-            cartItems={cartItems}
-            onSubmit={handleSubmit}
-            onCancel={onClose}
-          />
-        </div>
-
-        {/* 로딩 오버레이 */}
-        {isSubmitting && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderRadius: '12px',
-            }}
-          >
-            <div style={{ textAlign: 'center', color: '#fff' }}>
-              <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '10px' }}>
-                주문 처리 중...
-              </div>
-              <div style={{ fontSize: '14px', fontWeight: 400, color: '#aaa' }}>
-                OBJ 파일 생성 및 전송 중입니다.
-              </div>
+        {downloadComplete ? (
+          <>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>✅</div>
+            <h2 style={{ margin: '0 0 10px 0', fontSize: '24px' }}>Download Complete!</h2>
+            <p style={{ margin: '0 0 20px 0', color: '#666' }}>
+              Your OBJ files have been downloaded successfully.
+            </p>
+            <button
+              onClick={handleClose}
+              style={{
+                padding: '12px 30px',
+                backgroundColor: COLORS.primary || '#4A90E2',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 600,
+              }}
+            >
+              Done
+            </button>
+          </>
+        ) : isDownloading ? (
+          <>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
+            <h2 style={{ margin: '0 0 10px 0', fontSize: '24px' }}>Generating Files...</h2>
+            <p style={{ margin: '0', color: '#666' }}>
+              Creating OBJ files for {itemCount} item{itemCount > 1 ? 's' : ''}.
+              <br />
+              This may take a moment.
+            </p>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>📦</div>
+            <h2 style={{ margin: '0 0 10px 0', fontSize: '24px' }}>Download OBJ Files</h2>
+            <p style={{ margin: '0 0 20px 0', color: '#666' }}>
+              You are about to download {itemCount} QR plate{itemCount > 1 ? 's' : ''} as OBJ files.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={handleClose}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#e0e0e0',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDownload}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                }}
+              >
+                Download
+              </button>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
   );
 };
+
+// Keep OrderModal as alias for backwards compatibility
+export const OrderModal = DownloadModal;

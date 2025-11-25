@@ -40,14 +40,14 @@ export function ProductTypeSelector() {
   const handleProductTypeChange = (productType: ProductType) => {
     updatePlate(selectedPlate.id, {
       productType,
-      texts: [],  // 제품 유형 변경 시 배열 초기화
-      images: [],  // 제품 유형 변경 시 배열 초기화
+      texts: [],  // Reset arrays when product type changes
+      images: [],  // Reset arrays when product type changes
     });
   };
 
   return (
     <div style={sectionStyle}>
-      <label style={labelStyle}>제품 유형</label>
+      <label style={labelStyle}>Product Type</label>
       <div style={radioGroupStyle}>
         <label style={radioLabelStyle}>
           <input
@@ -57,7 +57,7 @@ export function ProductTypeSelector() {
             checked={selectedPlate.productType === 'stand'}
             onChange={() => handleProductTypeChange('stand')}
           />
-          <span>QR 거치대</span>
+          <span>QR Stand</span>
         </label>
         <label style={radioLabelStyle}>
           <input
@@ -67,7 +67,7 @@ export function ProductTypeSelector() {
             checked={selectedPlate.productType === 'card'}
             onChange={() => handleProductTypeChange('card')}
           />
-          <span>명함</span>
+          <span>Business Card</span>
         </label>
       </div>
     </div>

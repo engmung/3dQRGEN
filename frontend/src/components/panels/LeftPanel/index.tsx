@@ -42,7 +42,7 @@ export function LeftPanel() {
         overflow: isMobile ? 'visible' : 'hidden',
       }}
     >
-      {/* 탭 헤더 */}
+      {/* Tab header */}
       <div
         style={{
           display: 'flex',
@@ -67,7 +67,7 @@ export function LeftPanel() {
           }}
           onClick={() => setActiveTab('text')}
         >
-          텍스트
+          Text
         </button>
         <button
           style={{
@@ -77,11 +77,11 @@ export function LeftPanel() {
           }}
           onClick={() => setActiveTab('image')}
         >
-          이미지
+          Image
         </button>
       </div>
 
-      {/* 탭 컨텐츠 */}
+      {/* Tab content */}
       <div
         style={{
           flex: 1,
@@ -92,7 +92,7 @@ export function LeftPanel() {
           position: 'relative',
         }}
       >
-        {/* 선택 안 된 경우 오버레이 */}
+        {/* Overlay when no plate selected */}
         {!hasPlate && (
           <div
             style={{
@@ -111,10 +111,10 @@ export function LeftPanel() {
             }}
           >
             <div style={{ fontSize: '20px', color: '#999', fontWeight: 600 }}>
-              QR 판을 선택하세요
+              Select a QR Plate
             </div>
             <div style={{ fontSize: '16px', color: '#bbb', fontWeight: 400 }}>
-              우측에서 + 버튼을 클릭하여 새 QR 판을 추가할 수 있습니다
+              Click + button on the right to add a new QR plate
             </div>
           </div>
         )}

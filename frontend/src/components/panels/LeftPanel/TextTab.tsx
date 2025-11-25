@@ -22,32 +22,21 @@ export function TextTab({ plate }: TextTabProps) {
     label: info.label,
   }));
 
-  const labelStyle = {
-    display: 'block',
-    marginBottom: '8px',
-    fontWeight: 600,
-    fontSize: '16px',
-    color: '#333',
-    ...(isMobile && {
-      textShadow: '0 0 8px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.9)',
-    }),
-  };
-
   return (
     <div>
-      {/* 텍스트 추가 버튼 */}
+      {/* Add Text Button */}
       <div style={{ marginBottom: '15px' }}>
         <div style={{ width: '100%' }}>
           <Button
             onClick={() => addText(plate.id, '')}
             variant="primary"
           >
-            + 텍스트 추가
+            + Add Text
           </Button>
         </div>
       </div>
 
-      {/* 텍스트 리스트 */}
+      {/* Text List */}
       {(plate.texts || []).map((txt, index) => (
         <div
           key={txt.id}
@@ -67,33 +56,33 @@ export function TextTab({ plate }: TextTabProps) {
               marginBottom: '10px',
             }}
           >
-            <span style={{ fontSize: '14px', fontWeight: 600 }}>텍스트 {index + 1}</span>
+            <span style={{ fontSize: '14px', fontWeight: 600 }}>Text {index + 1}</span>
             <Button
               onClick={() => removeText(plate.id, txt.id)}
               variant="danger"
               size="sm"
             >
-              제거
+              Remove
             </Button>
           </div>
 
           <FormField
-            label="내용"
+            label="Content"
             type="text"
             value={txt.content}
             onChange={(value) => updateText(plate.id, txt.id, { content: value })}
-            placeholder="텍스트 입력"
+            placeholder="Enter text"
           />
 
           <FormSelect
-            label="폰트"
+            label="Font"
             value={txt.font}
             onChange={(value) => updateText(plate.id, txt.id, { font: value })}
             options={fontOptions}
           />
 
           <RangeSlider
-            label="크기"
+            label="Size"
             value={txt.size}
             onChange={(val) => updateText(plate.id, txt.id, { size: val })}
             min={2}
@@ -105,7 +94,7 @@ export function TextTab({ plate }: TextTabProps) {
           />
 
           <RangeSlider
-            label="높이"
+            label="Vertical Position"
             value={txt.heightOffset}
             onChange={(val) => updateText(plate.id, txt.id, { heightOffset: val })}
             min={plate.productType === 'card' ? -plate.cardHeight / 2 : -50}
@@ -117,7 +106,7 @@ export function TextTab({ plate }: TextTabProps) {
           />
 
           <RangeSlider
-            label="좌우"
+            label="Horizontal Position"
             value={txt.horizontalOffset}
             onChange={(val) => updateText(plate.id, txt.id, { horizontalOffset: val })}
             min={plate.productType === 'card' ? -plate.cardWidth / 2 : -30}
@@ -139,7 +128,7 @@ export function TextTab({ plate }: TextTabProps) {
             fontSize: '14px',
           }}
         >
-          텍스트를 추가하세요
+          Add text to your QR plate
         </div>
       )}
     </div>

@@ -1,12 +1,9 @@
 /**
  * Plate Card Component
- * Individual plate card with preview, controls, and price breakdown
+ * Individual plate card with preview and controls
  */
 import React, { useState } from 'react';
 import type { QRPlateConfig } from '../../../store/useDesignStore';
-import type { PricingSettings } from '../../../utils/api';
-import { calculatePlatePrice } from '../../../utils/pricing';
-import { formatPrice } from '../../../utils/formatters';
 import { COLORS } from '../../../constants/colors';
 import { QRPreview } from './QRPreview';
 import { PlateControls } from './PlateControls';
@@ -14,7 +11,6 @@ import { PlateControls } from './PlateControls';
 interface PlateCardProps {
   plate: QRPlateConfig;
   isSelected: boolean;
-  pricingSettings: PricingSettings | null;
   isMobile: boolean;
   onSelect: () => void;
   onQuantityChange: (delta: number) => void;
@@ -23,12 +19,11 @@ interface PlateCardProps {
 }
 
 /**
- * Full plate card including preview, controls, and price details
+ * Full plate card including preview and controls
  */
 export function PlateCard({
   plate,
   isSelected,
-  pricingSettings,
   isMobile,
   onSelect,
   onQuantityChange,
@@ -57,6 +52,9 @@ export function PlateCard({
     position: 'relative',
   };
 
+  // Get product type label
+  const productTypeLabel = plate.productType === 'card' ? 'Card' : 'Stand';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
       {/* Card */}
@@ -75,85 +73,28 @@ export function PlateCard({
         />
       </div>
 
-      {/* Price breakdown */}
-      {pricingSettings && (
-        <div
-          style={{
-            fontSize: '12px',
-            color: COLORS.UI.TEXT_PRIMARY,
-            padding: '6px 8px',
-            backgroundColor: isMobile
-              ? 'rgba(249, 249, 249, 0.4)'
-              : COLORS.UI.BACKGROUND,
-            border: `1px solid ${COLORS.UI.BORDER}`,
-            borderRadius: '4px',
-            ...(isMobile && {
-              textShadow: '0 0 6px rgba(255,255,255,0.9)',
-            }),
-          }}
-        >
-          {/* Base price */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-            <span>기본 ({plate.productType === 'card' ? '명함' : '거치대'})</span>
-            <span>
-              {formatPrice(
-                plate.productType === 'card'
-                  ? pricingSettings.card_base_price
-                  : pricingSettings.base_price
-              )}
-            </span>
-          </div>
-
-          {/* Text addon */}
-          {(plate.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-              <span>+ 텍스트 {(plate.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length}개</span>
-              <span>{formatPrice(pricingSettings.text_price * (plate.texts || []).filter(txt => txt.content && txt.content.trim().length > 0).length)}</span>
-            </div>
-          )}
-
-          {/* Image addon */}
-          {(plate.images || []).length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-              <span>+ 이미지 {(plate.images || []).length}개</span>
-              <span>{formatPrice(pricingSettings.image_price * (plate.images || []).length)}</span>
-            </div>
-          )}
-
-          {/* Unit price */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              paddingTop: '4px',
-              marginTop: '4px',
-              borderTop: `1px solid ${COLORS.UI.BORDER_LIGHT}`,
-              fontWeight: 600,
-              color: COLORS.UI.TEXT_PRIMARY,
-            }}
-          >
-            <span>개당</span>
-            <span>{formatPrice(calculatePlatePrice(plate, pricingSettings))}</span>
-          </div>
-
-          {/* Total (with quantity) */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              paddingTop: '4px',
-              marginTop: '4px',
-              borderTop: `1px solid ${COLORS.UI.BORDER_LIGHT}`,
-              fontSize: '14px',
-              fontWeight: 700,
-              color: COLORS.PRIMARY,
-            }}
-          >
-            <span>× {plate.quantity}개</span>
-            <span>{formatPrice(calculatePlatePrice(plate, pricingSettings) * plate.quantity)}</span>
-          </div>
-        </div>
-      )}
+      {/* Info row - product type and quantity */}
+      <div
+        style={{
+          fontSize: '12px',
+          color: COLORS.UI.TEXT_PRIMARY,
+          padding: '6px 8px',
+          backgroundColor: isMobile
+            ? 'rgba(249, 249, 249, 0.4)'
+            : COLORS.UI.BACKGROUND,
+          border: `1px solid ${COLORS.UI.BORDER}`,
+          borderRadius: '4px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          ...(isMobile && {
+            textShadow: '0 0 6px rgba(255,255,255,0.9)',
+          }),
+        }}
+      >
+        <span style={{ fontWeight: 500 }}>{productTypeLabel}</span>
+        <span style={{ fontWeight: 600 }}>× {plate.quantity}</span>
+      </div>
     </div>
   );
 }

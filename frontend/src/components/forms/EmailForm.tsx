@@ -6,8 +6,8 @@ interface EmailFormProps {
 }
 
 /**
- * Email QR 코드 입력 폼
- * 수신자, 제목, 본문을 입력받음
+ * Email QR Code Input Form
+ * Input for recipient, subject, and body
  */
 export function EmailForm({ data, onChange }: EmailFormProps) {
   const handleChange = (field: keyof EmailData, value: string) => {
@@ -16,16 +16,16 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
-      {/* 수신자 입력 */}
+      {/* Recipient input */}
       <div>
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
-          수신자 (To) *
+          Recipient (To) *
         </label>
         <input
           type="email"
           value={data.recipient}
           onChange={(e) => handleChange('recipient', e.target.value)}
-          placeholder="예: contact@example.com"
+          placeholder="e.g., contact@example.com"
           style={{
             width: '100%',
             padding: '8px 10px',
@@ -39,20 +39,20 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
           onBlur={(e) => (e.currentTarget.style.borderColor = '#ddd')}
         />
         <div style={{ marginTop: '4px', fontSize: '11px', color: '#999' }}>
-          여러 수신자는 쉼표로 구분 (예: a@example.com, b@example.com)
+          Multiple recipients can be separated by comma (e.g., a@example.com, b@example.com)
         </div>
       </div>
 
-      {/* 제목 입력 */}
+      {/* Subject input */}
       <div>
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
-          제목 (Subject)
+          Subject
         </label>
         <input
           type="text"
           value={data.subject}
           onChange={(e) => handleChange('subject', e.target.value)}
-          placeholder="예: 문의사항"
+          placeholder="e.g., Inquiry"
           style={{
             width: '100%',
             padding: '8px 10px',
@@ -67,15 +67,15 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
         />
       </div>
 
-      {/* 본문 입력 */}
+      {/* Body input */}
       <div>
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '16px', fontWeight: 600 }}>
-          본문 (Body)
+          Body
         </label>
         <textarea
           value={data.body}
           onChange={(e) => handleChange('body', e.target.value)}
-          placeholder="이메일 본문 내용을 입력하세요"
+          placeholder="Enter email body content"
           rows={4}
           style={{
             width: '100%',
@@ -93,7 +93,7 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
         />
       </div>
 
-      {/* 안내 메시지 */}
+      {/* Info message */}
       <div
         style={{
           padding: '10px',
@@ -103,7 +103,7 @@ export function EmailForm({ data, onChange }: EmailFormProps) {
           color: '#666',
         }}
       >
-        💡 스마트폰에서 QR 코드를 스캔하면 이메일 앱이 열리며 작성된 내용이 자동으로 입력됩니다.
+        Scan this QR code with your smartphone to open the email app with pre-filled content.
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ export function Header() {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // 현재 경로 확인
+  // Check current path
   const currentPath = window.location.pathname;
 
   return (
@@ -28,7 +28,7 @@ export function Header() {
       position: 'relative',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '1rem' : '2rem' }}>
-        {/* 모바일 햄버거 버튼 */}
+        {/* Mobile hamburger button */}
         {isMobile && (
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -50,7 +50,7 @@ export function Header() {
           3D QR DESIGNER
         </h1>
 
-        {/* 데스크톱 네비게이션 */}
+        {/* Desktop navigation */}
         {!isMobile && (
           <nav style={{ display: 'flex', gap: '1rem' }}>
           <a href="/" style={{
@@ -58,30 +58,22 @@ export function Header() {
             color: currentPath === '/' ? '#000' : '#666',
             fontSize: '18px',
             fontWeight: currentPath === '/' ? 600 : 400
-          }}>홈</a>
+          }}>Home</a>
           {isAdmin && (
             <a href="/debug" style={{
               textDecoration: 'none',
               color: currentPath === '/debug' ? '#000' : '#666',
               fontSize: '18px',
               fontWeight: currentPath === '/debug' ? 600 : 400
-            }}>디버그</a>
+            }}>Debug</a>
           )}
-          <SignedIn>
-            <a href="/my-orders" style={{
-              textDecoration: 'none',
-              color: currentPath === '/my-orders' ? '#000' : '#666',
-              fontSize: '18px',
-              fontWeight: currentPath === '/my-orders' ? 600 : 400
-            }}>내 주문</a>
-          </SignedIn>
           {isAdmin && (
             <a href="/admin" style={{
               textDecoration: 'none',
               color: currentPath === '/admin' ? '#000' : '#666',
               fontSize: '18px',
               fontWeight: currentPath === '/admin' ? 600 : 400
-            }}>관리자</a>
+            }}>Admin</a>
           )}
           </nav>
         )}
@@ -101,7 +93,7 @@ export function Header() {
               fontWeight: 600,
               outline: 'none',
             }}>
-              로그인
+              Sign In
             </button>
           </SignInButton>
         </SignedOut>
@@ -120,7 +112,7 @@ export function Header() {
         </SignedIn>
       </div>
 
-      {/* 모바일 드로어 메뉴 */}
+      {/* Mobile drawer menu */}
       {isMobile && isMenuOpen && (
         <div
           style={{
@@ -147,7 +139,7 @@ export function Header() {
                 borderBottom: '1px solid #f0f0f0',
               }}
             >
-              홈
+              Home
             </a>
             {isAdmin && (
               <a
@@ -162,25 +154,9 @@ export function Header() {
                   borderBottom: '1px solid #f0f0f0',
                 }}
               >
-                디버그
+                Debug
               </a>
             )}
-            <SignedIn>
-              <a
-                href="/my-orders"
-                onClick={() => setIsMenuOpen(false)}
-                style={{
-                  padding: '16px 20px',
-                  textDecoration: 'none',
-                  color: currentPath === '/my-orders' ? '#000' : '#666',
-                  fontSize: '16px',
-                  fontWeight: currentPath === '/my-orders' ? 600 : 400,
-                  borderBottom: '1px solid #f0f0f0',
-                }}
-              >
-                내 주문
-              </a>
-            </SignedIn>
             {isAdmin && (
               <a
                 href="/admin"
@@ -193,7 +169,7 @@ export function Header() {
                   fontWeight: currentPath === '/admin' ? 600 : 400,
                 }}
               >
-                관리자
+                Admin
               </a>
             )}
           </nav>

@@ -23,7 +23,7 @@ interface MobileLayoutProps {
     qrColor: string;
     zScale: number;
   }) => void;
-  onCheckout: () => void;
+  onDownload: () => void;
   onLoadingComplete?: () => void;
 }
 
@@ -32,14 +32,14 @@ type PanelHeight = "closed" | "half" | "full";
 
 const PANEL_HEIGHTS = {
   closed: 200,
-  half: 40,    // 상단에서 40% 내려온 위치
-  full: 100,   // 전체 화면
+  half: 40,    // 40% from top
+  full: 100,   // Full screen
 };
 
 export function MobileLayout({
   onGltfsLoaded,
   onQRGeometriesReady,
-  onCheckout,
+  onDownload,
   onLoadingComplete,
 }: MobileLayoutProps) {
   const [activeTab, setActiveTab] = useState<TabType>("edit");
@@ -49,10 +49,10 @@ export function MobileLayout({
   const handleBarRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // 패널 높이 계산
+  // Calculate panel Y position
   const calculatePanelY = (): string => {
     if (isDragging) {
-      // 드래그 중일 때는 실시간 위치
+      // Real-time position during drag
       const baseHeight =
         panelHeight === "closed"
           ? window.innerHeight - PANEL_HEIGHTS.closed
@@ -61,13 +61,13 @@ export function MobileLayout({
           : window.innerHeight * (1 - PANEL_HEIGHTS.full / 100);
 
       const newY = baseHeight + dragOffset;
-      // 최소/최대 제한
-      const minY = window.innerHeight * 0.1; // 최대 90%
-      const maxY = window.innerHeight - PANEL_HEIGHTS.closed; // 최소 닫힘
+      // Min/max limits
+      const minY = window.innerHeight * 0.1; // Max 90%
+      const maxY = window.innerHeight - PANEL_HEIGHTS.closed; // Min closed
       return `${Math.max(minY, Math.min(maxY, newY))}px`;
     }
 
-    // 드래그 안할 때는 정해진 높이
+    // Fixed height when not dragging
     if (panelHeight === "closed") {
       return `calc(100vh - ${PANEL_HEIGHTS.closed}px)`;
     } else if (panelHeight === "half") {
@@ -77,7 +77,7 @@ export function MobileLayout({
     }
   };
 
-  // 핸들 바에만 수직 스와이프 적용
+  // Apply vertical swipe only to handle bar
   useSwipeGesture(handleBarRef, {
     onSwipeUp: () => {
       if (panelHeight === "closed") {
@@ -98,7 +98,7 @@ export function MobileLayout({
       setDragOffset(deltaY);
     },
     onDragEnd: () => {
-      // 드래그 끝나면 가장 가까운 높이로 스냅
+      // Snap to closest height when drag ends
       const panel = handleBarRef.current?.parentElement;
       const currentY = panel?.getBoundingClientRect().top || 0;
       const viewportHeight = window.innerHeight;
@@ -126,7 +126,7 @@ export function MobileLayout({
     },
   });
 
-  // 콘텐츠 영역에만 수평 스와이프 적용
+  // Apply horizontal swipe only to content area
   useSwipeGesture(contentRef, {
     onSwipeLeft: () => {
       setActiveTab("cart");
@@ -146,7 +146,7 @@ export function MobileLayout({
         backgroundColor: "#f5f3f0",
       }}
     >
-      {/* 3D 미리보기 (전체 화면) */}
+      {/* 3D preview (full screen) */}
       <div
         style={{
           width: "100%",
@@ -164,7 +164,7 @@ export function MobileLayout({
         <ColorPalette />
       </div>
 
-      {/* 슬라이드 패널 */}
+      {/* Slide panel */}
       <div
         style={{
           position: "absolute",
@@ -183,7 +183,7 @@ export function MobileLayout({
           zIndex: 100,
         }}
       >
-        {/* 핸들 바 */}
+        {/* Handle bar */}
         <div
           ref={handleBarRef}
           style={{
@@ -198,7 +198,7 @@ export function MobileLayout({
             cursor: "grab",
           }}
         >
-          {/* 드래그 핸들 */}
+          {/* Drag handle */}
           <div
             style={{
               width: "40px",
@@ -208,7 +208,7 @@ export function MobileLayout({
             }}
           />
 
-          {/* 페이지 인디케이터 */}
+          {/* Tab indicators */}
           <div
             style={{
               display: "flex",
@@ -238,7 +238,7 @@ export function MobileLayout({
                     : "0 0 4px rgba(255,255,255,0.9)",
               }}
             >
-              ✏️ 편집
+              Edit
             </button>
             <button
               onClick={() => setActiveTab("cart")}
@@ -262,12 +262,12 @@ export function MobileLayout({
                     : "0 0 4px rgba(255,255,255,0.9)",
               }}
             >
-              🛒 장바구니
+              Cart
             </button>
           </div>
         </div>
 
-        {/* 콘텐츠 영역 (스크롤 가능) */}
+        {/* Content area (scrollable) */}
         <div
           ref={contentRef}
           style={{
@@ -285,7 +285,7 @@ export function MobileLayout({
               display: "flex",
             }}
           >
-            {/* 편집 패널 */}
+            {/* Edit panel */}
             <div
               style={{
                 width: "50%",
@@ -299,7 +299,7 @@ export function MobileLayout({
               </div>
             </div>
 
-            {/* 장바구니 패널 */}
+            {/* Cart panel */}
             <div
               style={{
                 width: "50%",
@@ -309,7 +309,7 @@ export function MobileLayout({
                 backgroundColor: "rgba(255, 255, 255, 0.7)",
               }}
             >
-              <RightPanel onCheckout={onCheckout} />
+              <RightPanel onDownload={onDownload} />
             </div>
           </div>
         </div>
