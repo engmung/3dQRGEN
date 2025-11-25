@@ -25,13 +25,10 @@ export function Landing() {
       </section>
 
       {/* Gallery Section */}
-      <section className="landing-section">
+      <section className="landing-section landing-section-gallery">
         <h2 className="section-title">Gallery</h2>
-        <p className="section-description">
-          Check out what you can create with 3D QR Generator
-        </p>
         <div className="gallery-grid">
-          <div className="gallery-item">
+          <div className="gallery-item gallery-item-portrait">
             <img
               src="/images/landing/gallery-1.jpg"
               alt="3D printed business card with QR code"
@@ -39,7 +36,7 @@ export function Landing() {
             />
             <p className="gallery-caption">3D Printed Business Card</p>
           </div>
-          <div className="gallery-item">
+          <div className="gallery-item gallery-item-square">
             <img
               src="/images/landing/gallery-2.jpg"
               alt="Various 3D printed QR plates"
@@ -104,20 +101,48 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Tutorial Video Section */}
+      {/* Tutorial Images Section */}
       <section className="landing-section">
-        <h2 className="section-title">Video Tutorial</h2>
+        <h2 className="section-title">Step-by-Step Tutorial</h2>
         <p className="section-description">
-          Watch the step-by-step guide
+          Visual guide from design to print
         </p>
-        <div className="video-container">
-          <div className="video-placeholder">
-            <div className="video-placeholder-content">
-              <svg className="video-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-              <p>Video coming soon</p>
-            </div>
+        <div className="tutorial-images">
+          <div className="tutorial-item">
+            <div className="tutorial-step-badge">1</div>
+            <img
+              src="/images/tutorial/step1-design.png"
+              alt="Design your QR code in the web editor and download"
+              className="tutorial-image"
+            />
+            <p className="tutorial-caption">Design & Download</p>
+          </div>
+          <div className="tutorial-item">
+            <div className="tutorial-step-badge">2</div>
+            <img
+              src="/images/tutorial/step2-blender.png"
+              alt="Import to Blender, select all vertices, and merge by distance"
+              className="tutorial-image"
+            />
+            <p className="tutorial-caption">Blender: Merge by Distance</p>
+          </div>
+          <div className="tutorial-item">
+            <div className="tutorial-step-badge">3</div>
+            <img
+              src="/images/tutorial/step3-export.png"
+              alt="Export as OBJ file from Blender"
+              className="tutorial-image"
+            />
+            <p className="tutorial-caption">Export OBJ</p>
+          </div>
+          <div className="tutorial-item">
+            <div className="tutorial-step-badge">4</div>
+            <img
+              src="/images/tutorial/step4-slicer.png"
+              alt="Import to slicer software like Bambu Studio"
+              className="tutorial-image"
+            />
+            <p className="tutorial-caption">Slice & Print</p>
           </div>
         </div>
       </section>
