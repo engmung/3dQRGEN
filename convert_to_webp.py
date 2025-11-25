@@ -17,22 +17,22 @@ base_dir = Path(__file__).parent / "frontend" / "public" / "images"
 
 # Image conversion settings
 conversions = [
-    # Gallery images - 80% quality
-    {"path": base_dir / "landing" / "gallery-1.jpg", "quality": 80},
-    {"path": base_dir / "landing" / "gallery-2.jpg", "quality": 80},
+    # Gallery images - 80% quality, rotate 90 degrees clockwise
+    {"path": base_dir / "landing" / "gallery-1.jpg", "quality": 80, "rotate": 90},
+    {"path": base_dir / "landing" / "gallery-2.jpg", "quality": 80, "rotate": 90},
 
     # Tutorial images - 85% quality (needs clarity)
-    {"path": base_dir / "tutorial" / "step1-design.png", "quality": 85},
-    {"path": base_dir / "tutorial" / "step2-blender.png", "quality": 85},
-    {"path": base_dir / "tutorial" / "step3-export.png", "quality": 85},
-    {"path": base_dir / "tutorial" / "step4-slicer.png", "quality": 85},
+    {"path": base_dir / "tutorial" / "step1-design.png", "quality": 85, "rotate": 0},
+    {"path": base_dir / "tutorial" / "step2-blender.png", "quality": 85, "rotate": 0},
+    {"path": base_dir / "tutorial" / "step3-export.png", "quality": 85, "rotate": 0},
+    {"path": base_dir / "tutorial" / "step4-slicer.png", "quality": 85, "rotate": 0},
 
     # Preset images - 70% quality + compression
-    {"path": base_dir / "wifi.png", "quality": 70},
-    {"path": base_dir / "insta.png", "quality": 70},
+    {"path": base_dir / "wifi.png", "quality": 70, "rotate": 0},
+    {"path": base_dir / "insta.png", "quality": 70, "rotate": 0},
 ]
 
-def convert_to_webp(input_path: Path, quality: int):
+def convert_to_webp(input_path: Path, quality: int, rotate: int = 0):
     """Convert image to WebP format"""
     if not input_path.exists():
         print(f"❌ File not found: {input_path}")
@@ -44,6 +44,10 @@ def convert_to_webp(input_path: Path, quality: int):
     # Open and convert
     try:
         img = Image.open(input_path)
+
+        # Rotate if needed (clockwise)
+        if rotate != 0:
+            img = img.rotate(-rotate, expand=True)  # Negative for clockwise
 
         # Convert RGBA to RGB if needed
         if img.mode == 'RGBA':
@@ -72,7 +76,7 @@ def main():
     print("Converting images to WebP format...\n")
 
     for item in conversions:
-        convert_to_webp(item["path"], item["quality"])
+        convert_to_webp(item["path"], item["quality"], item.get("rotate", 0))
         print()
 
     print("✅ Conversion complete!")
