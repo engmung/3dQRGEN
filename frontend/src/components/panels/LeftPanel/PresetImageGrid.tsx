@@ -5,8 +5,8 @@ interface PresetImageGridProps {
 }
 
 const presetImages = [
-  { src: '/images/insta.png', name: 'insta.png', label: 'Instagram' },
-  { src: '/images/wifi.png', name: 'wifi.png', label: 'WiFi' },
+  { src: '/images/insta.webp', name: 'insta.webp', label: 'Instagram' },
+  { src: '/images/wifi.webp', name: 'wifi.webp', label: 'WiFi' },
 ];
 
 const buttonStyle: React.CSSProperties = {
@@ -29,7 +29,7 @@ export function PresetImageGrid({ plateId }: PresetImageGridProps) {
   const handlePresetClick = async (src: string, name: string) => {
     const response = await fetch(src);
     const blob = await response.blob();
-    const file = new File([blob], name, { type: 'image/png' });
+    const file = new File([blob], name, { type: 'image/webp' });
     useDesignStore.getState().addImage(plateId, file);
   };
 
