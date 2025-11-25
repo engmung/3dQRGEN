@@ -21,7 +21,9 @@
       "Bash(pip install:*)",
       "Bash(git reset:*)",
       "Bash(git checkout:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(nslookup:*)",
+      "Bash(ipconfig:*)"
     ],
     "deny": [],
     "ask": []
