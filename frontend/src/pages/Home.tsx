@@ -99,25 +99,35 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
         objTransforms
       );
 
-      // Download OBJ file
-      const objUrl = URL.createObjectURL(objBlobs.modelObjBlob);
+      // 타임스탬프로 고유 파일명 생성 (중복 다운로드 시 파일명 불일치 방지)
+      const timestamp = Date.now();
+      const filename = `qr_plate_${i + 1}_${timestamp}`;
+
+      let objText = await objBlobs.modelObjBlob.text();
+      const mtlText = await objBlobs.modelMtlBlob.text();
+
+      // OBJ 파일 내 mtllib 참조를 실제 파일명으로 수정
+      objText = objText.replace(/mtllib .+\.mtl/, `mtllib ${filename}.mtl`);
+
+      // OBJ 다운로드
+      const objBlob = new Blob([objText], { type: 'text/plain' });
       const objLink = document.createElement('a');
-      objLink.href = objUrl;
-      objLink.download = `qr_plate_${i + 1}.obj`;
+      objLink.href = URL.createObjectURL(objBlob);
+      objLink.download = `${filename}.obj`;
       document.body.appendChild(objLink);
       objLink.click();
       document.body.removeChild(objLink);
-      URL.revokeObjectURL(objUrl);
+      URL.revokeObjectURL(objLink.href);
 
-      // Download MTL file
-      const mtlUrl = URL.createObjectURL(objBlobs.modelMtlBlob);
+      // MTL 다운로드
+      const mtlBlob = new Blob([mtlText], { type: 'text/plain' });
       const mtlLink = document.createElement('a');
-      mtlLink.href = mtlUrl;
-      mtlLink.download = `qr_plate_${i + 1}.mtl`;
+      mtlLink.href = URL.createObjectURL(mtlBlob);
+      mtlLink.download = `${filename}.mtl`;
       document.body.appendChild(mtlLink);
       mtlLink.click();
       document.body.removeChild(mtlLink);
-      URL.revokeObjectURL(mtlUrl);
+      URL.revokeObjectURL(mtlLink.href);
 
       // Small delay between downloads to avoid browser blocking
       if (i < plates.length - 1) {

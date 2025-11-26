@@ -84,54 +84,6 @@ export function Landing() {
           <div className="usage-step-with-image usage-step-reverse">
             <div
               className="step-image-container"
-              onClick={() => openLightbox('/images/tutorial/step2-blender.webp')}
-            >
-              <img
-                src="/images/tutorial/step2-blender.webp"
-                alt="Import to Blender and merge by distance"
-                className="step-image"
-              />
-            </div>
-            <div className="step-text-container">
-              <h3>2. Post-process in Blender</h3>
-              <p className="step-warning">
-                <strong>Important:</strong> Do NOT slice the OBJ file directly!
-              </p>
-              <div className="blender-steps">
-                <ol>
-                  <li>Open Blender and import the OBJ file</li>
-                  <li>Press <kbd>Tab</kbd> to enter Edit Mode</li>
-                  <li>Press <kbd>A</kbd> to select all vertices</li>
-                  <li>Press <kbd>M</kbd> and select <strong>"By Distance"</strong></li>
-                  <li>This merges duplicate vertices (Merge by Distance)</li>
-                  <li>Export as OBJ again</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 3 - Image Left */}
-          <div className="usage-step-with-image">
-            <div
-              className="step-image-container"
-              onClick={() => openLightbox('/images/tutorial/step3-export.webp')}
-            >
-              <img
-                src="/images/tutorial/step3-export.webp"
-                alt="Export as OBJ file from Blender"
-                className="step-image"
-              />
-            </div>
-            <div className="step-text-container">
-              <h3>3. Export from Blender</h3>
-              <p>After merging vertices, export the model as OBJ format. Make sure to include both the .obj and .mtl files for proper material information.</p>
-            </div>
-          </div>
-
-          {/* Step 4 - Image Right */}
-          <div className="usage-step-with-image usage-step-reverse">
-            <div
-              className="step-image-container"
               onClick={() => openLightbox('/images/tutorial/step4-slicer.webp')}
             >
               <img
@@ -141,8 +93,8 @@ export function Landing() {
               />
             </div>
             <div className="step-text-container">
-              <h3>4. Slice and Print</h3>
-              <p>Import the processed OBJ into your slicer (e.g., Bambu Studio, PrusaSlicer, Cura). Configure your print settings and start printing your 3D QR code!</p>
+              <h3>2. Slice and Print</h3>
+              <p>Import the OBJ file directly into your slicer (e.g., Bambu Studio, PrusaSlicer, Cura). Configure your print settings and start printing your 3D QR code!</p>
             </div>
           </div>
         </div>
