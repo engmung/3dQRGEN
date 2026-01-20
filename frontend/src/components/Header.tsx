@@ -40,7 +40,7 @@ export function Header() {
           }}
           onClick={() => navigate('/')}
         >
-          3D QR DESIGNER
+          QRCRAFT 3D
         </h1>
 
         {/* Navigation Links next to logo */}

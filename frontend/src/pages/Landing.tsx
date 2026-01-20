@@ -23,7 +23,7 @@ export function Landing() {
       {/* Hero Section - Left Text + Right Gallery */}
       <section className="landing-hero">
         <div className="hero-left">
-          <h1 className="hero-title">3D QR DESIGNER</h1>
+          <h1 className="hero-title">QRCRAFT 3D</h1>
           <p className="hero-subtitle">
             Create custom 3D printable QR codes with text and images.<br />
             Perfect for business cards, signage, and creative projects.
@@ -141,7 +141,7 @@ export function Landing() {
 
       {/* Footer */}
       <footer className="landing-footer">
-        <p>3D QR Generator</p>
+        <p>QRCraft 3D</p>
       </footer>
 
       {/* Lightbox Modal */}
