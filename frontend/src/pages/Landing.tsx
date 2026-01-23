@@ -1,5 +1,7 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../components/SEO';
 import './Landing.css';
 
 export function Landing() {
@@ -20,17 +22,28 @@ export function Landing() {
 
   return (
     <div className="landing">
+      <SEO 
+        title="3D QR Designer - Create Free 3D Printable QR Codes"
+        description="The best free tool to create custom 3D printable QR codes. Add text, convert images to 3D, and export as STL/OBJ for 3D printing."
+      />
       {/* Hero Section - Left Text + Right Gallery */}
-      <section className="landing-hero">
+      <section className="landing-hero" aria-label="Introduction">
         <div className="hero-left">
           <h1 className="hero-title">3D QR DESIGNER</h1>
           <p className="hero-subtitle">
             Create custom 3D printable QR codes with text and images.<br />
             Perfect for business cards, signage, and creative projects.
           </p>
-          <button className="hero-cta" onClick={handleStartClick}>
-            Start Creating
-          </button>
+          <div className="hero-actions">
+            <button className="hero-cta" onClick={handleStartClick}>
+              Start Creating
+            </button>
+            <div className="hero-specs">
+              <span className="spec-tag">✨ Free & No Login</span>
+              <span className="spec-tag">🔒 Client-Side Privacy</span>
+              <span className="spec-tag">🖨️ STL / OBJ Export</span>
+            </div>
+          </div>
         </div>
         <div className="hero-right">
           <div className="gallery-grid">
@@ -55,15 +68,16 @@ export function Landing() {
       </section>
 
       {/* Usage Guide Section with Images */}
-      <section className="landing-section landing-section-alt">
-        <h2 className="section-title">How to Use</h2>
-        <p className="section-description">
+      <section className="landing-section landing-section-alt" itemScope itemType="https://schema.org/HowTo">
+        <h2 className="section-title" itemProp="name">How to Make a 3D QR Code</h2>
+        <p className="section-description" itemProp="description">
           Follow these steps to create your 3D printed QR code
         </p>
 
         <div className="usage-steps">
           {/* Step 1 - Image Left */}
-          <div className="usage-step-with-image">
+          <div className="usage-step-with-image" itemProp="step" itemScope itemType="https://schema.org/HowToStep">
+            <meta itemProp="position" content="1" />
             <div
               className="step-image-container"
               onClick={() => openLightbox('/images/tutorial/step1-design.webp')}
@@ -72,16 +86,18 @@ export function Landing() {
                 src="/images/tutorial/step1-design.webp"
                 alt="Design your QR code in the web editor"
                 className="step-image"
+                itemProp="image"
               />
             </div>
             <div className="step-text-container">
-              <h3>1. Create Your Design</h3>
-              <p>Use our editor to design your QR code with custom text and images. Adjust size, colors, and positioning. When ready, click the download button to export your design.</p>
+              <h3 itemProp="name">1. Create Your Design</h3>
+              <p itemProp="text">Use our editor to design your QR code with custom text and images. Adjust size, colors, and positioning. When ready, click the download button to export your design.</p>
             </div>
           </div>
 
           {/* Step 2 - Image Right */}
-          <div className="usage-step-with-image usage-step-reverse">
+          <div className="usage-step-with-image usage-step-reverse" itemProp="step" itemScope itemType="https://schema.org/HowToStep">
+            <meta itemProp="position" content="2" />
             <div
               className="step-image-container"
               onClick={() => openLightbox('/images/tutorial/step4-slicer.webp')}
@@ -90,40 +106,17 @@ export function Landing() {
                 src="/images/tutorial/step4-slicer.webp"
                 alt="Import to slicer software"
                 className="step-image"
+                itemProp="image"
               />
             </div>
             <div className="step-text-container">
-              <h3>2. Slice and Print</h3>
-              <p>Import the OBJ file directly into your slicer (e.g., Bambu Studio, PrusaSlicer, Cura). Configure your print settings and start printing your 3D QR code!</p>
+              <h3 itemProp="name">2. Slice and Print</h3>
+              <p itemProp="text">Import the OBJ file directly into your slicer (e.g., Bambu Studio, PrusaSlicer, Cura). Configure your print settings and start printing your 3D QR code!</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Video Tutorial Section */}
-      <section className="landing-section">
-        <h2 className="section-title">Video Tutorial</h2>
-        <p className="section-description">
-          Watch a complete walkthrough of the 3D QR creation process
-        </p>
-        <div className="video-container">
-          {/* Placeholder for YouTube video - add iframe src later */}
-          <div className="video-placeholder">
-            <p>Video tutorial coming soon!</p>
-            <p className="video-note">YouTube video will be embedded here</p>
-          </div>
-          {/* Example iframe structure (uncomment and add video ID when ready):
-          <iframe
-            className="video-iframe"
-            src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
-            title="3D QR Generator Tutorial"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-          */}
-        </div>
-      </section>
 
       {/* Feedback Section */}
       <section className="landing-section landing-section-alt">

@@ -11,6 +11,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { generateOBJFromCartItem } from '../utils/objGenerator';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
+import { SEO } from '../components/SEO';
 
 interface HomeProps {
   onLoadingComplete?: () => void;
@@ -142,6 +143,7 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
   if (isMobile) {
     return (
       <>
+        <SEO title="Editor | 3D QR Designer" description="Customize your 3D QR code. Adjust parameters, add text, and export for 3D printing." />
         <MobileLayout
           onGltfsLoaded={(loadedGltfs) => setGltfs(loadedGltfs)}
           onQRGeometriesReady={(plateId, geometries) => {
@@ -174,6 +176,7 @@ export function Home({ onLoadingComplete }: HomeProps = {}) {
       height: 'calc(100vh - 50px)',
       overflow: 'hidden'
     }}>
+      <SEO title="Editor | 3D QR Designer" description="Customize your 3D QR code. Adjust parameters, add text, and export for 3D printing." />
       {/* Left: Edit panel (40%) */}
       <LeftPanel />
 

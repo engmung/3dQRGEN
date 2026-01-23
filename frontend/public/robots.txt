@@ -5,6 +5,9 @@ Allow: /
 # Sitemap location
 Sitemap: https://3dqr.design/sitemap.xml
 
+# LLM Context
+Allow: /llms.txt
+
 # Disallow non-essential paths
 Disallow: /api/
 Disallow: /*.json$
@@ -13,3 +16,4 @@ Disallow: /*.json$
 Allow: /images/
 Allow: /fonts/
 Allow: /favicon/
+
