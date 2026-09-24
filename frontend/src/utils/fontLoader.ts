@@ -62,26 +62,11 @@ export const AVAILABLE_FONTS = {
     label: 'Roboto Condensed Bold Italic',
     file: 'Roboto/Roboto_Condensed-BoldItalic.ttf'
   },
-
-  // 어그로체 (한글, 디자인)
-  'AggroB': {
-    name: '어그로체',
-    label: '어그로 Bold',
-    file: '어그로체/SB 어그로 B.ttf'
-  },
-  'AggroM': {
-    name: '어그로체',
-    label: '어그로 Medium',
-    file: '어그로체/SB 어그로 M.ttf'
-  },
-  'AggroL': {
-    name: '어그로체',
-    label: '어그로 Light',
-    file: '어그로체/SB 어그로 L.ttf'
-  },
 } as const;
 
 export type FontKey = keyof typeof AVAILABLE_FONTS;
+
+const DEFAULT_FONT: FontKey = 'Pretendard-Bold';
 
 /**
  * TTF 폰트를 로드하여 THREE.Font 객체로 변환
@@ -89,6 +74,9 @@ export type FontKey = keyof typeof AVAILABLE_FONTS;
  * 동시 요청 시 같은 Promise를 재사용하여 중복 로딩 방지
  */
 export async function loadFont(fontKey: FontKey, retries: number = 3): Promise<Font> {
+  // 저장된 디자인에 목록에서 빠진 폰트가 남아 있으면 기본 폰트 사용
+  if (!(fontKey in AVAILABLE_FONTS)) fontKey = DEFAULT_FONT;
+
   // 1. 캐시 확인 (이미 로드된 폰트)
   if (fontCache.has(fontKey)) {
     return fontCache.get(fontKey)!;

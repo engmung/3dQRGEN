@@ -36,4 +36,4 @@ Lee Seunghun ([GitHub](https://github.com/engmung), [portfolio](https://lshsprot
 
 ## License
 
-[MIT](./LICENSE)
+Code is [MIT](./LICENSE). Bundled fonts (Pretendard, Roboto) are under the SIL Open Font License 1.1.
