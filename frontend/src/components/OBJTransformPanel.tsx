@@ -168,7 +168,7 @@ export const OBJTransformPanel = () => {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <h3 style={{ margin: 0, fontSize: '18px' }}>🎛️ OBJ Transform 컨트롤</h3>
+        <h3 style={{ margin: 0, fontSize: '18px' }}>OBJ Transform</h3>
         <button
           onClick={resetAllTransforms}
           style={{
@@ -191,28 +191,28 @@ export const OBJTransformPanel = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
         {/* Back */}
         <TransformControls
-          title="🔹 Back 파츠"
+          title="Back"
           transform={backTransform}
           onUpdate={updateBackTransform}
         />
 
         {/* Brige */}
         <TransformControls
-          title="🔹 Brige 파츠"
+          title="Bridge"
           transform={brigeTransform}
           onUpdate={updateBrigeTransform}
         />
 
         {/* Front (QR/텍스트/이미지 포함) */}
         <TransformControls
-          title="🔹 Front 파츠 (+ QR/텍스트/이미지)"
+          title="Front (+ QR/text/image)"
           transform={frontTransform}
           onUpdate={updateFrontTransform}
         />
 
         {/* Pin */}
         <TransformControls
-          title="🔹 Pin 파츠"
+          title="Pin"
           transform={pinTransform}
           onUpdate={updatePinTransform}
         />

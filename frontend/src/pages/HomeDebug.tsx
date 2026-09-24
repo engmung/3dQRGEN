@@ -65,7 +65,7 @@ export function HomeDebug({ onLoadingComplete }: HomeDebugProps = {}) {
   // 현재 선택된 plate만 Export
   const handleExportOBJ = () => {
     if (!selectedPlate) {
-      alert('선택된 판이 없습니다.');
+      alert('No plate selected.');
       return;
     }
 

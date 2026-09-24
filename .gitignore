@@ -1,7 +1,14 @@
-# Frontend environment
-frontend/.env.local
-frontend/node_modules
+# Dependencies / build
+node_modules/
 frontend/dist
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Local Claude Code settings
+.claude/settings.local.json
 
 # OS
 .DS_Store
@@ -9,4 +16,3 @@ Thumbs.db
 
 # Logs
 *.log
-node_modules/

@@ -54,12 +54,12 @@ export function useOBJExport(params: UseOBJExportParams) {
   ) => {
     // 거치대 모드일 때만 GLB 체크
     if (plate.productType === 'stand' && !gltfs) {
-      alert('GLB 파츠가 아직 로드되지 않았습니다.');
+      alert('Stand parts are still loading.');
       return;
     }
 
     if (!plateGeometries) {
-      alert('3D 모델이 아직 로드되지 않았습니다.');
+      alert('3D model is still loading.');
       return;
     }
 
@@ -126,7 +126,7 @@ export function useOBJExport(params: UseOBJExportParams) {
       exportCollectedMeshesToOBJ(allMeshes, `3d_qr_plate_${plateIndex}`);
     } catch (error) {
       console.error('OBJ export failed:', error);
-      alert('OBJ export에 실패했습니다.');
+      alert('OBJ export failed.');
     }
   };
 
@@ -140,11 +140,11 @@ export function useOBJExport(params: UseOBJExportParams) {
     // 거치대가 있는지 확인
     const hasStand = plates.some(plate => plate.productType === 'stand');
     if (hasStand && !gltfs) {
-      alert('GLB 파츠가 아직 로드되지 않았습니다.');
+      alert('Stand parts are still loading.');
       return;
     }
 
-    alert(`${plates.length}개의 판을 개별 파일로 다운로드합니다.\n각 판마다 plate_1.obj, plate_2.obj... 형식으로 저장됩니다.`);
+    alert(`Downloading ${plates.length} plates as separate OBJ files.`);
 
     // 각 plate마다 순회하며 export
     plates.forEach((plate, index) => {

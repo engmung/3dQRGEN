@@ -37,7 +37,7 @@ export const AddPlateButton = () => {
         e.currentTarget.style.transform = 'scale(1)';
         e.currentTarget.style.background = '#4CAF50';
       }}
-      title="새 QR 판 추가"
+      title="Add plate"
     >
       +
     </button>

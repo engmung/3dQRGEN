@@ -13,7 +13,7 @@ The app has moved to [3d-qrgen.vercel.app](https://3d-qrgen.vercel.app). The old
 - QR content: URL, Wi-Fi, email
 - 3D text (Pretendard font)
 - Image to 3D shape (marching squares)
-- Plate and stand bases
+- Stand or business card base (sharp, rounded, or chamfered corners)
 - OBJ export with each part as a separate object, for multi-color printing (Bambu AMS, Prusa MMU, etc.)
 - No backend: what you type, including Wi-Fi passwords, never leaves the browser
 
