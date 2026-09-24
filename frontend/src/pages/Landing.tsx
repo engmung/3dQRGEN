@@ -24,7 +24,7 @@ export function Landing() {
     <div className="landing">
       <SEO 
         title="3D QR Designer - Create Free 3D Printable QR Codes"
-        description="The best free tool to create custom 3D printable QR codes. Add text, convert images to 3D, and export as STL/OBJ for 3D printing. Open source project."
+        description="The best free tool to create custom 3D printable QR codes. Add text, convert images to 3D, and export as OBJ for 3D printing. Open source project."
       />
 
       {/* Notice Banner - Domain Migration & Open Source */}
@@ -32,7 +32,7 @@ export function Landing() {
         <div className="banner-content">
           <span className="banner-badge">Notice</span>
           <span className="banner-text">
-            본 서비스는 오픈소스로 전환되어 <strong>3d-qrgen.vercel.app</strong>에서 영구 무료로 제공됩니다. (기존 3dqr.design 도메인은 2026년 10월까지 유지)
+            3D QR Designer is now open source and has moved to <strong>3d-qrgen.vercel.app</strong>. The old domain, 3dqrdesign.site, stays up until October 2026.
           </span>
           <a
             href="https://github.com/engmung/3dQRGEN"
@@ -40,7 +40,7 @@ export function Landing() {
             rel="noopener noreferrer"
             className="banner-link"
           >
-            GitHub 코드 보기 ➔
+            View on GitHub &rarr;
           </a>
         </div>
       </div>
@@ -58,10 +58,10 @@ export function Landing() {
               Start Creating
             </button>
             <div className="hero-specs">
-              <span className="spec-tag">⭐ Open Source</span>
-              <span className="spec-tag">✨ Free & No Login</span>
-              <span className="spec-tag">🔒 Client-Side Privacy</span>
-              <span className="spec-tag">🖨️ STL / OBJ Export</span>
+              <span className="spec-tag">Open Source</span>
+              <span className="spec-tag">Free & No Login</span>
+              <span className="spec-tag">Client-Side Privacy</span>
+              <span className="spec-tag">OBJ Export</span>
             </div>
           </div>
         </div>
@@ -140,12 +140,11 @@ export function Landing() {
       {/* Creator & Patternflow Section */}
       <section className="landing-section creator-section">
         <div className="creator-card">
-          <div className="creator-badge">Creator's New Project ✨</div>
+          <div className="creator-badge">From the Creator</div>
           <h2 className="creator-title">Patternflow</h2>
-          <p className="creator-tagline">Where Sound Meets Light — LED Visual Synthesizer</p>
+          <p className="creator-tagline">An open-source LED audiovisual synthesizer</p>
           <p className="creator-description">
-            3D QR Designer 제작자 <strong>이승훈(Lee Seunghun)</strong>의 새로운 프로젝트입니다.<br />
-            소리와 빛의 인터랙션을 직관적인 피지컬 하드웨어로 조작할 수 있는 오픈소스 LED 신디사이저 <strong>Patternflow</strong>를 만나보세요.
+            My next project: an LED synthesizer you play with physical knobs and buttons.
           </p>
           <div className="creator-actions">
             <a
@@ -154,7 +153,7 @@ export function Landing() {
               rel="noopener noreferrer"
               className="creator-btn primary"
             >
-              Patternflow 구경하러 가기 ➔
+              Visit Patternflow &rarr;
             </a>
             <a
               href="https://github.com/engmung"
@@ -162,7 +161,7 @@ export function Landing() {
               rel="noopener noreferrer"
               className="creator-btn secondary"
             >
-              제작자 GitHub
+              GitHub Profile
             </a>
           </div>
         </div>
@@ -173,8 +172,8 @@ export function Landing() {
         <div className="feedback-content">
           <h2 className="section-title">Feedback & Inquiries</h2>
           <p className="section-description">
-            질문, 제안사항, 버그 제보가 있으신가요?<br />
-            편하게 이메일이나 GitHub 이슈로 남겨주세요!
+            Questions, suggestions, or found a bug?<br />
+            Open an issue or send me an email.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href="mailto:lsh678902@gmail.com" className="feedback-email">
@@ -196,16 +195,16 @@ export function Landing() {
       {/* Footer */}
       <footer className="landing-footer">
         <div className="footer-links">
-          <span>Created by <strong>Lee Seunghun (이승훈)</strong></span>
+          <span>Created by <strong>Lee Seunghun</strong></span>
           <span className="footer-dot">•</span>
           <a href="https://patternflow.work" target="_blank" rel="noopener noreferrer">Patternflow</a>
           <span className="footer-dot">•</span>
-          <a href="https://github.com/engmung/3dQRGEN" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+          <a href="https://github.com/engmung/3dQRGEN" target="_blank" rel="noopener noreferrer">GitHub</a>
           <span className="footer-dot">•</span>
           <a href="https://lshsprotfolio.netlify.app/en/" target="_blank" rel="noopener noreferrer">Portfolio</a>
         </div>
         <p className="footer-subtext">
-          3D QR Designer is now an open-source project hosted on Vercel (<a href="https://3d-qrgen.vercel.app">3d-qrgen.vercel.app</a>).
+          3D QR Designer is an open-source project hosted on Vercel (<a href="https://3d-qrgen.vercel.app">3d-qrgen.vercel.app</a>).
         </p>
       </footer>
 
