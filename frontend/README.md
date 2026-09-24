@@ -1,12 +1,15 @@
 # 3D QR 플랫폼 Frontend
 
-React + Three.js 기반 3D QR 코드 생성 플랫폼의 프론트엔드
+React + Three.js 기반 3D QR 코드 생성 플랫폼의 프론트엔드입니다.  
+**Live Demo:** [https://3d-qrgen.vercel.app](https://3d-qrgen.vercel.app)
+
+* 제작자: [이승훈 (Lee Seunghun)](https://github.com/engmung)
+* 신규 프로젝트: [Patternflow (patternflow.work)](https://patternflow.work) — 오픈소스 LED 오디오비주얼 신디사이저
 
 ## 기술 스택
 - React 19 + TypeScript
 - Three.js (R3F, Drei)
 - Zustand (상태 관리)
-- Clerk (인증)
 - Vite (빌드 도구)
 
 ## 개발 환경 설정

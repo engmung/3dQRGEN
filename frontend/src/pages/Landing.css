@@ -3,6 +3,53 @@
   background-color: #f8f6f3;
 }
 
+/* Announcement Banner */
+.landing-banner {
+  background: linear-gradient(90deg, #fff3e8 0%, #ffe8dd 100%);
+  border-bottom: 1px solid #fed7c3;
+  padding: 12px 20px;
+  color: #5a301a;
+}
+
+.banner-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  text-align: center;
+}
+
+.banner-badge {
+  background: #d64536;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.banner-text {
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.banner-link {
+  color: #c93b2c;
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+.banner-link:hover {
+  opacity: 0.8;
+}
+
 /* Hero Section - Left Text + Right Gallery */
 .landing-hero {
   background-color: #f5f3f0;
@@ -249,18 +296,164 @@
   color: #fff;
 }
 
+/* Creator Section */
+.creator-section {
+  padding: 60px 20px;
+}
+
+.creator-card {
+  background: linear-gradient(135deg, #2b2d42 0%, #1a1a2e 100%);
+  border-radius: 16px;
+  padding: 48px 40px;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.creator-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 50% 20%, rgba(255, 107, 107, 0.18), transparent 60%);
+  pointer-events: none;
+}
+
+.creator-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  color: #ffd8cf;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.creator-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.creator-tagline {
+  font-size: 1.15rem;
+  color: #ff9e80;
+  margin: 0 0 20px 0;
+  font-weight: 500;
+}
+
+.creator-description {
+  font-size: 1.05rem;
+  color: #e2e8f0;
+  line-height: 1.7;
+  max-width: 680px;
+  margin: 0 auto 32px auto;
+}
+
+.creator-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.creator-btn {
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.creator-btn.primary {
+  background-color: #FF6B6B;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(255, 107, 107, 0.4);
+}
+
+.creator-btn.primary:hover {
+  background-color: #FF5252;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+}
+
+.creator-btn.secondary {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.creator-btn.secondary:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
 /* Footer */
 .landing-footer {
   background: #f5f3f0;
   border-top: 1px solid #e5e0db;
-  color: #999;
+  color: #777;
   text-align: center;
-  padding: 24px 20px;
-  font-size: 0.9rem;
+  padding: 32px 20px;
+  font-size: 0.95rem;
 }
 
-.landing-footer p {
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.footer-links strong {
+  color: #333;
+}
+
+.footer-links a {
+  color: #4a5568;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #FF6B6B;
+}
+
+.footer-dot {
+  color: #cbd5e0;
+}
+
+.footer-subtext {
+  font-size: 0.85rem;
+  color: #888;
   margin: 0;
+}
+
+.footer-subtext a {
+  color: #555;
+  text-decoration: underline;
 }
 
 /* Responsive */

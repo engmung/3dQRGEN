@@ -91,28 +91,85 @@ export function Header() {
         </nav>
       </div>
 
-      {/* Right side - Developer link */}
-      <a
-        href="https://lshsprotfolio.netlify.app/en/"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          background: 'none',
-          border: 'none',
-          color: '#333',
-          fontSize: isMobile ? '14px' : '16px',
-          fontWeight: 500,
-          cursor: 'pointer',
-          padding: '6px 12px',
-          borderRadius: '4px',
-          transition: 'background-color 0.2s',
-          textDecoration: 'none',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-      >
-        Developer
-      </a>
+      {/* Right side - Links */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px' }}>
+        <a
+          href="https://patternflow.work"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Creator's new project: Patternflow"
+          style={{
+            background: '#ffefe8',
+            border: '1px solid #ffd4c7',
+            color: '#d64536',
+            fontSize: isMobile ? '12px' : '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            padding: isMobile ? '4px 8px' : '5px 12px',
+            borderRadius: '6px',
+            transition: 'all 0.2s',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#ffdcd3';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#ffefe8';
+          }}
+        >
+          <span>Patternflow</span>
+          <span style={{ fontSize: '11px' }}>✨</span>
+        </a>
+
+        <a
+          href="https://github.com/engmung/3dQRGEN"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#333',
+            fontSize: isMobile ? '13px' : '15px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            padding: isMobile ? '4px 8px' : '6px 10px',
+            borderRadius: '4px',
+            transition: 'background-color 0.2s',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+        >
+          GitHub
+        </a>
+
+        {!isMobile && (
+          <a
+            href="https://lshsprotfolio.netlify.app/en/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#666',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              padding: '6px 10px',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            About
+          </a>
+        )}
+      </div>
 
       {/* Debug link (commented out - manually type /debug in URL to access) */}
       {/* <a href="/debug">Debug</a> */}

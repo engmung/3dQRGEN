@@ -11,10 +11,10 @@ export function SEO({
   title = "3D QR Designer - Create Custom 3D Printable QR Codes",
   description = "Design and create custom 3D printable QR codes with text and images. Perfect for business cards, signage, gifts, and creative projects.",
   keywords,
-  image = "https://3dqr.design/images/og-image.webp",
+  image = "https://3d-qrgen.vercel.app/images/og-image.webp",
   url
 }: SEOProps) {
-  const siteUrl = "https://3dqr.design";
+  const siteUrl = "https://3d-qrgen.vercel.app";
   const currentUrl = url || (typeof window !== 'undefined' ? window.location.href : siteUrl);
 
   return (
@@ -47,7 +47,7 @@ export function SEO({
           "name": "3D QR Designer",
           "applicationCategory": "DesignApplication",
           "operatingSystem": "Web Browser",
-          "url": "https://3dqr.design",
+          "url": "https://3d-qrgen.vercel.app",
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -62,7 +62,7 @@ export function SEO({
             "Client-side processing (Privacy focused)"
           ],
           "browserRequirements": "Requires WebGL support",
-          "screenshot": "https://3dqr.design/images/og-image.webp",
+          "screenshot": "https://3d-qrgen.vercel.app/images/og-image.webp",
           "creator": {
             "@type": "Organization",
             "name": "3D QR Designer"
