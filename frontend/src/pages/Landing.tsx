@@ -28,6 +28,24 @@ export function Landing() {
         description="The best free tool to create custom 3D printable QR codes. Add text, convert images to 3D, and export as OBJ for 3D printing. Open source project."
       />
 
+      {/* Notice Banner - Domain Migration & Open Source */}
+      <div className="landing-banner">
+        <div className="banner-content">
+          <span className="banner-badge">Notice</span>
+          <span className="banner-text">
+            3D QR Designer is now open source and has moved to <strong>3d-qrgen.vercel.app</strong>. The old domain, 3dqrdesign.site, stays up until October 2026.
+          </span>
+          <a
+            href="https://github.com/engmung/3dQRGEN"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="banner-link"
+          >
+            View on GitHub &rarr;
+          </a>
+        </div>
+      </div>
+
       {/* Hero Section - Left Text + Right Gallery */}
       <section className="landing-hero" aria-label="Introduction">
         <div className="hero-left">
@@ -125,7 +143,7 @@ export function Landing() {
         <h2 className="section-title">About</h2>
         <p className="section-description about-text">
           3D QR Designer is a free, browser-based tool that turns QR codes into 3D-printable models.
-          It is built and operated by Lee Seunghun and Lee Junghun as an independent, open-source project.
+          It is built and operated by Lee Seunghun as an independent, open-source project.
           Everything runs on your device, so what you type never leaves your browser.
         </p>
       </section>
@@ -139,8 +157,8 @@ export function Landing() {
             Open an issue or send me an email.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="mailto:contact@3dqrdesign.site" className="feedback-email">
-              contact@3dqrdesign.site
+            <a href="mailto:lsh678902@gmail.com" className="feedback-email">
+              lsh678902@gmail.com
             </a>
             <a
               href="https://github.com/engmung/3dQRGEN/issues"

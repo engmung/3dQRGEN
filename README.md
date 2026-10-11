@@ -2,7 +2,7 @@
 
 A web tool for making 3D-printable QR codes. Built with React and Three.js, and it runs entirely in the browser.
 
-Live: [www.3dqrdesign.site](https://www.3dqrdesign.site)
+Live: [3d-qrgen.vercel.app](https://3d-qrgen.vercel.app)
 
 ## Features
 

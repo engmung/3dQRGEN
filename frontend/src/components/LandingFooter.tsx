@@ -15,7 +15,7 @@ export function LandingFooter() {
         <span className="footer-dot">•</span>
         <Link to="/terms">Terms</Link>
         <span className="footer-dot">•</span>
-        <a href="mailto:contact@3dqrdesign.site">Contact</a>
+        <a href="mailto:lsh678902@gmail.com">Contact</a>
         <span className="footer-dot">•</span>
         <a href="https://github.com/engmung/3dQRGEN" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
