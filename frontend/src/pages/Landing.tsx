@@ -125,7 +125,7 @@ export function Landing() {
         <h2 className="section-title">About</h2>
         <p className="section-description about-text">
           3D QR Designer is a free, browser-based tool that turns QR codes into 3D-printable models.
-          It is built and operated by Lee Seunghun as an independent, open-source project.
+          It is built and operated by Lee Seunghun and Lee Junghun as an independent, open-source project.
           Everything runs on your device, so what you type never leaves your browser.
         </p>
       </section>
