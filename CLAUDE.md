@@ -1,7 +1,7 @@
 # 3D QR Designer
 
 브라우저에서 3D 프린팅용 QR 코드를 만드는 프론트엔드 전용 앱. 백엔드 없음 (2025-11에 제거).
-배포: Vercel (https://www.3dqrdesign.site), 레포는 MIT 오픈소스.
+배포: Vercel (https://3d-qrgen.vercel.app), 레포는 MIT 오픈소스.
 
 ## 스택
 React 19, TypeScript, Vite, Three.js, React Three Fiber, Zustand

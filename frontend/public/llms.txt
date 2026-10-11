@@ -2,7 +2,7 @@
 
 > Free, open-source web app for making 3D-printable QR codes. Runs entirely in the browser and exports OBJ files for FDM printing.
 
-- Live: https://www.3dqrdesign.site
+- Live: https://3d-qrgen.vercel.app
 - Source: https://github.com/engmung/3dQRGEN (MIT)
 - Author: Lee Seunghun (https://github.com/engmung)
 

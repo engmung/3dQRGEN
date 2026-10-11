@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.3dqrdesign.site/sitemap.xml
+Sitemap: https://3d-qrgen.vercel.app/sitemap.xml
 
 # LLM Context
 Allow: /llms.txt

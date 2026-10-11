@@ -157,8 +157,8 @@ export function Landing() {
             Open an issue or send me an email.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="mailto:contact@3dqrdesign.site" className="feedback-email">
-              contact@3dqrdesign.site
+            <a href="mailto:lsh678902@gmail.com" className="feedback-email">
+              lsh678902@gmail.com
             </a>
             <a
               href="https://github.com/engmung/3dQRGEN/issues"

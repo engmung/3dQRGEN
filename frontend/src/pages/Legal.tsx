@@ -3,7 +3,7 @@ import { SEO } from '../components/SEO';
 import { LandingFooter } from '../components/LandingFooter';
 import './Landing.css';
 
-const CONTACT_EMAIL = 'contact@3dqrdesign.site';
+const CONTACT_EMAIL = 'lsh678902@gmail.com';
 const LAST_UPDATED = 'October 12, 2026';
 
 function LegalPage({ title, description, children }: { title: string; description: string; children: ReactNode }) {
