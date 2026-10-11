@@ -6,6 +6,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { Home } from './pages/Home';
 import { HomeDebug } from './pages/HomeDebug';
 import { Landing } from './pages/Landing';
+import { Privacy, Terms } from './pages/Legal';
 
 function AppContent() {
   const location = useLocation();
@@ -29,6 +30,8 @@ function AppContent() {
         <div style={{ flex: 1, overflow: isEditorPage ? 'hidden' : 'visible' }}>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/editor" element={<Home onLoadingComplete={() => setIsResourcesLoaded(true)} />} />
             {/* Debug mode: manually navigate to /debug */}
             <Route path="/debug" element={<HomeDebug onLoadingComplete={() => setIsResourcesLoaded(true)} />} />

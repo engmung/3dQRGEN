@@ -2,11 +2,7 @@
 
 A web tool for making 3D-printable QR codes. Built with React and Three.js, and it runs entirely in the browser.
 
-Live: [3d-qrgen.vercel.app](https://3d-qrgen.vercel.app)
-
-## Domain change
-
-The app has moved to [3d-qrgen.vercel.app](https://3d-qrgen.vercel.app). The old domain, 3dqrdesign.site, will stay up until October 2026.
+Live: [www.3dqrdesign.site](https://www.3dqrdesign.site)
 
 ## Features
 
@@ -32,7 +28,7 @@ Use `npm run build` for a production build.
 
 ## Author
 
-Lee Seunghun ([GitHub](https://github.com/engmung), [portfolio](https://lshsprotfolio.netlify.app/en/)). I'm also working on [Patternflow](https://patternflow.work), an open-source LED audiovisual synthesizer.
+Lee Seunghun ([GitHub](https://github.com/engmung), [portfolio](https://lshsprotfolio.netlify.app/en/)).
 
 ## License
 
