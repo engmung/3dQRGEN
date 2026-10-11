@@ -14,7 +14,7 @@ frontend/
   src/hooks/        useQRGeometry, useTextGeometry, useImageGeometry, useOBJExport
   src/utils/        imageUtils/(Marching Squares), obj/, objExporter, meshCollector, fontLoader
   public/models/    거치대 GLB 파츠
-vercel.json         빌드/캐시/SPA rewrite 설정
+  vercel.json       빌드/캐시/SPA rewrite 설정 (Vercel Root Directory가 frontend라 여기 있어야 적용됨)
 ```
 
 ## 기능
