@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '../components/SEO';
+import { LandingFooter } from '../components/LandingFooter';
 import './Landing.css';
 
 export function Landing() {
@@ -26,24 +27,6 @@ export function Landing() {
         title="3D QR Designer - Create Free 3D Printable QR Codes"
         description="The best free tool to create custom 3D printable QR codes. Add text, convert images to 3D, and export as OBJ for 3D printing. Open source project."
       />
-
-      {/* Notice Banner - Domain Migration & Open Source */}
-      <div className="landing-banner">
-        <div className="banner-content">
-          <span className="banner-badge">Notice</span>
-          <span className="banner-text">
-            3D QR Designer is now open source and has moved to <strong>3d-qrgen.vercel.app</strong>. The old domain, 3dqrdesign.site, stays up until October 2026.
-          </span>
-          <a
-            href="https://github.com/engmung/3dQRGEN"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="banner-link"
-          >
-            View on GitHub &rarr;
-          </a>
-        </div>
-      </div>
 
       {/* Hero Section - Left Text + Right Gallery */}
       <section className="landing-hero" aria-label="Introduction">
@@ -137,34 +120,14 @@ export function Landing() {
         </div>
       </section>
 
-      {/* Creator & Patternflow Section */}
-      <section className="landing-section creator-section">
-        <div className="creator-card">
-          <div className="creator-badge">From the Creator</div>
-          <h2 className="creator-title">Patternflow</h2>
-          <p className="creator-tagline">An open-source LED audiovisual synthesizer</p>
-          <p className="creator-description">
-            My next project: an LED synthesizer you play with physical knobs and buttons.
-          </p>
-          <div className="creator-actions">
-            <a
-              href="https://patternflow.work"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="creator-btn primary"
-            >
-              Visit Patternflow &rarr;
-            </a>
-            <a
-              href="https://github.com/engmung"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="creator-btn secondary"
-            >
-              GitHub Profile
-            </a>
-          </div>
-        </div>
+      {/* About Section */}
+      <section className="landing-section" id="about">
+        <h2 className="section-title">About</h2>
+        <p className="section-description about-text">
+          3D QR Designer is a free, browser-based tool that turns QR codes into 3D-printable models.
+          It is built and operated by Lee Seunghun as an independent, open-source project.
+          Everything runs on your device, so what you type never leaves your browser.
+        </p>
       </section>
 
       {/* Feedback Section */}
@@ -176,8 +139,8 @@ export function Landing() {
             Open an issue or send me an email.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="mailto:lsh678902@gmail.com" className="feedback-email">
-              lsh678902@gmail.com
+            <a href="mailto:contact@3dqrdesign.site" className="feedback-email">
+              contact@3dqrdesign.site
             </a>
             <a
               href="https://github.com/engmung/3dQRGEN/issues"
@@ -193,20 +156,7 @@ export function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
-        <div className="footer-links">
-          <span>Created by <strong>Lee Seunghun</strong></span>
-          <span className="footer-dot">•</span>
-          <a href="https://patternflow.work" target="_blank" rel="noopener noreferrer">Patternflow</a>
-          <span className="footer-dot">•</span>
-          <a href="https://github.com/engmung/3dQRGEN" target="_blank" rel="noopener noreferrer">GitHub</a>
-          <span className="footer-dot">•</span>
-          <a href="https://lshsprotfolio.netlify.app/en/" target="_blank" rel="noopener noreferrer">Portfolio</a>
-        </div>
-        <p className="footer-subtext">
-          3D QR Designer is an open-source project hosted on Vercel (<a href="https://3d-qrgen.vercel.app">3d-qrgen.vercel.app</a>).
-        </p>
-      </footer>
+      <LandingFooter />
 
       {/* Lightbox Modal */}
       {lightboxImage && (

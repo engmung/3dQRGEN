@@ -94,28 +94,6 @@ export function Header() {
       {/* Right side - Links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px' }}>
         <a
-          href="https://patternflow.work"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#333',
-            fontSize: isMobile ? '13px' : '15px',
-            fontWeight: 500,
-            cursor: 'pointer',
-            padding: isMobile ? '4px 8px' : '6px 10px',
-            borderRadius: '4px',
-            transition: 'background-color 0.2s',
-            textDecoration: 'none',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e5e0db')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-        >
-          Patternflow
-        </a>
-
-        <a
           href="https://github.com/engmung/3dQRGEN"
           target="_blank"
           rel="noopener noreferrer"
@@ -139,9 +117,7 @@ export function Header() {
 
         {!isMobile && (
           <a
-            href="https://lshsprotfolio.netlify.app/en/"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/#about"
             style={{
               background: 'none',
               border: 'none',
