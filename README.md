@@ -28,7 +28,7 @@ Use `npm run build` for a production build.
 
 ## Author
 
-Lee Seunghun ([GitHub](https://github.com/engmung), [portfolio](https://lshsprotfolio.netlify.app/en/)).
+Lee Seunghun ([GitHub](https://github.com/engmung), [portfolio](https://lshsprotfolio.netlify.app/en/)). I'm also working on [Patternflow](https://patternflow.work), an open-source LED audiovisual synthesizer.
 
 ## License
 

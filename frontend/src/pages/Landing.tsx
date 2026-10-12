@@ -138,6 +138,36 @@ export function Landing() {
         </div>
       </section>
 
+      {/* Creator & Patternflow Section */}
+      <section className="landing-section creator-section">
+        <div className="creator-card">
+          <div className="creator-badge">From the Creator</div>
+          <h2 className="creator-title">Patternflow</h2>
+          <p className="creator-tagline">An open-source LED audiovisual synthesizer</p>
+          <p className="creator-description">
+            My next project: an LED synthesizer you play with physical knobs and buttons.
+          </p>
+          <div className="creator-actions">
+            <a
+              href="https://patternflow.work"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="creator-btn primary"
+            >
+              Visit Patternflow &rarr;
+            </a>
+            <a
+              href="https://github.com/engmung"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="creator-btn secondary"
+            >
+              GitHub Profile
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* About Section */}
       <section className="landing-section" id="about">
         <h2 className="section-title">About</h2>
